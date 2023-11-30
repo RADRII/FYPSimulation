@@ -1,0 +1,325 @@
+* TOOLS
+
+** using r_stats
+
+*** POP TOTALS plot_people(..) timeline of pop totals (r_stats)
+
+  plot_people(FileName,First,Last)
+
+  timeline of tribeA tribeB totals TYPEA  TYPEB in r_stats file
+
+  TYPEA red
+  TYPEB blue
+
+  FileName: some r_stats file
+  First:    first date
+  Last:     last date
+
+  plot_people_type(FileName,First,Last,Type)
+
+   to plot just specified type; might want diff vert scale for diff types to see details
+
+*** has_extinction(FileName,Type)  FileName is r_stats file, Type is 'A' or 'B'
+
+returns date of extinction, or -1 if there isn't one by processing the TYPEA, TYPEB pop stats
+
+to get extinction dates on a run of expts
+
+
+ put names into /tmp/r_stats_list 
+
+
+Files <- read.table("/tmp/r_stats_names",header=T);
+Pref = "SOME_DIRECTORY_PATH/r_stats_";
+exts = c();
+for(i in c(1:14)) { Name = as.character(Files$File[i]); FileName = paste(Pref,Name,sep=""); E = has_extinction(FileName,'A'); print(E); exts = c(exts,E);} 
+
+summary(exts)
+
+** using pop_snapshots
+
+-> adjust People_tester.cpp with some appropriate 'write_pop_snapshot(..) lines <-
+
+*** POP HISTOGRAM: plot_snapshot(..) histograms frm pop_snapshots file (pop_snapshots)
+
+  plot_snapshot(FileName,Date,Type='B')
+
+  uses pop_snapshots file, containing columns DATE TYPE AGE EN EATEN
+  makes histogram from AGE vals restricted to specified Date and Type
+
+  adjust source to do same for EN or EATEN  
+
+
+  NB: need adjust lines in People_tester.cpp to get lines for particular dates written into 
+      file. defaults to no lines as a lot of data due to one line per person
+
+  NB: might want grid of histograms over sequece of days via 
+
+      for(d in c(11350:(11350+23))) { plot_snapshot(FileName,d) }
+
+*** POP EATEN EN check_means(..) means of energy and consumption on given dates (pop_snapshots)
+
+  check_means(FileName,StartDate,FinishDate,Type='B') 
+
+  for given type prints sequence of means for EN and EATEN running over given dates
+
+* R CHEAT
+
+WHERE IS MANUAL
+***************
+
+ /usr/share/doc/r-doc-html/manual/R-intro.html#
+
+READING A TABLE
+****************
+
+ Data <- read.table("some_file",header=T)
+
+if a column header is X can refer to it with Data$X
+
+LOADING A SCRIPT
+*****************
+
+   source("plotting_for_konvens_poster.R")
+
+LOADING A LIBRARY
+*****************
+
+eg. 'boot' library
+
+ library(boot)
+
+searches in some global library dir. To get further libraries installed there from CRAN repository, eg. 'changepoint':
+
+ install.packages(c("changepoint"))
+
+fetches also prerequisites
+
+
+HARDCOPY
+********
+
+sizes are in inches
+
+METHOD 1
+--------
+
+ - set postscript target eg.
+
+  postscript("some_file.ps",horizontal=FALSE,width=4.0,height=3.5,onefile=FALSE)
+
+ - then all plotting instructions go there, including parameter settings eg.
+
+  par(mai=c(0.5,0.5,0,0))
+  par(mgp=c(1.5,0.3,0))
+  newstartplot(0)
+
+ - then have to turn off the postscript output 
+
+  dev.off(3)
+
+check which number by get list of all devices with
+
+  dev.list()
+
+METHOD 2
+--------
+
+ - just carry until the X11 R graphics output looks about right 
+
+ - then use dev.copy eg.
+
+   dev.copy(postscript,"some_file.ps",horizontal=FALSE,width=4.0,height=3.5,onefile=FALSE)
+
+ - same dev.list(), dev.off(N) thing
+
+HARDCOPY SIZES
+**************
+  
+ when you make the size given to the postscript commmand smaller 
+
+   postscript("file_name,horizontal=FALSE,
+               width=<SOME W>,height=<SOME H>,
+             onefile=FALSE)
+
+ it makes file of size WxH
+
+ but leaves plot elements (letters, digits, points) the same absolute
+ size no matter what you choose for WxH
+
+ so might well thin out tick marks (and data points?) to suit WxH
+
+ ==> so its not just a *zoom* from what you would see in the X11
+     output window
+
+default seems to be about 12pt for text. To shrink the size at which text 
+and digits are shown
+
+  par(cex=0.80)
+
+should make it look acceptable in a 10pt document
+
+manual says there is a pointsize=N parameter for postscript(..) or dev.copy(..)
+but as far as I can see it makes no difference
+
+MARGINS
+*******
+    
+ to see current parameters
+
+  par()
+
+ to save current parameters
+
+  oldpar = par()
+
+ and reset to these:
+
+  par(oldpar)
+
+ to reset bottom, left, top and right margins, respectively, with 
+
+  par(mai=c(0.5,0.5,0,0))
+
+ so should have narrow bottom and left, and zero top and right
+
+ to make axis label closer to axis, and put tick marks inside not outside
+
+   par(tck=0.01)
+   par(mgp=c(1,-1.5,0))
+
+
+INTERACTION WITH PLOT
+*********************
+
+  x <- locator();
+
+will cause execution to pause till you right click in the R window 
+and then it stores coordinates of click in x
+
+INDEXING
+********
+
+to restrict a table to cases where variables have particular values
+
+eg. CatOutcomes has vars Year It True Inferred
+
+  ItYearCatOutcomes = CatOutcomes[which(CatOutcomes$It==40 & CatOutcomes$Year==2001),];
+
+STRINGS FILENAMES as.character() ETC
+************************************
+
+if you have a file containing a list of filenames eg
+
+names
+a/b/jake
+wally
+:
+
+can read as table, but the values are treated as 'levels' of variable,
+essentially visible names for discrete set of values for the
+variable. They are not really *strings*. For example if 'wally' were another 
+file of values, you could not read it with:
+
+ Vals <- read.table(names[2],header=T)
+
+But can generate a string so this will work with 
+
+ Vals <- read.table(as.character(names[2]),header=T)
+
+PASSING A COLUMN NAME
+
+can pass a table and column like this:
+
+pickit <- function(Table, VarName) {
+  Table[[VarName]];
+}
+
+--> have to pick with [[VarName]], not with $
+--> have to call it with pickit(Vals,"A") or pickit(Vals,'A')
+
+ARGS: DEFAULTS, NAMES, POSITIONS
+********************************
+
+[] in call takes out any named args out and matches rest by position
+
+means that with:
+
+fun3 <- function(x,y=2,z) {
+ print(c("x: ",x));
+ print(c("y: ",y));
+ print(c("z: ",z));
+}
+
+if have no named arg, and call with 2 args eg
+
+ fun3(5,6)
+
+it does not work -- matches x and y and complains z is missing. So it *does not* try to match the args without defaults positionally
+
+so only way can benefit from default is by passing other as named
+
+ fun3(x=5,z=6)
+
+but if function body does not use z, fun(5,6) will work
+
+can put the named argument anywhere in call
+
+ fun3(5,y=7,6)
+ fun3(5,6,y=7)
+
+tho main docs say 'the argument sequence may begin in the unnamed, positional form, and specify named arguments after the positional arguments'.
+
+[] if have default final args, can just pass initial positional ones
+
+means that with
+
+fun4 <- function(x,z,y=2) {
+ print(c("x: ",x));
+ print(c("y: ",y));
+ print(c("z: ",z));
+}
+
+can call with 2 args
+
+ fun4(5,6) 
+
+
+ALTERNATING WINDOWS
+*******************
+
+ dev.new() : sets up a fresh window and plotting goes there
+ dev.list() : numbers for windows
+ dev.cur() : gives number for the active window
+ dev.set(N) : make the window whose number is N become active 
+
+LOCAL DOCS
+**********
+
+eg.
+
+/usr/share/R/doc/manual
+
+locate installed files via synaptic of r-doc-html
+
+MISCELLANEOUS
+*************
+
+mode(..) says what kind of things it argument is
+
+unlist(x,use.names=F) turns a 'list' into a 'vector'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

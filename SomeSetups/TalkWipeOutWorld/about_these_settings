@@ -1,0 +1,71 @@
+these are settings to run a test with 2 types of people
+
+ A: who retain_info, about wipe_outs, but do not impart_info (ie. communicate)
+ B: who retain_info, about wipe_outs, and also do impart_info
+
+the populations are set quite large -- 40 each -- and the resources
+are expanded to make it possible that around this amount of people could survive (and to have occasional wipeouts)
+
+the effect: B drives A to extinction ( on day 16025)
+
+TO RUN
+------
+
+the needed files are
+
+ People_tester.cpp
+ Resource.cpp
+ world_setup.cpp
+ Makefile
+ 
+these should be copied to the main directory (NB: possibly saving elsewhwere any customised versions of these
+files that have been made there)
+
+ make People_tester
+ ./People_tester
+
+outcomes files in /tmp/Toss
+
+   sim_setup	 
+   r_stats		 
+   pop_snapshots	 
+   starvation_stats 
+   gains_info       
+
+
+
+People_tester.cpp
+-----------------
+
+set to run 25000 iterations
+
+randomisation is left to default setting, so repeats will give same outcomes
+
+activating the line
+
+ sim_params.random_seed_policy = "via_time";
+
+makes repeat runs make different random choices
+
+may want to activate
+
+  sim_params.time_stamp = true; // default is false
+
+if want to keep and disinguish such randomly different outcomes
+
+
+world_setup.cpp and Resource.cpp
+--------------------------------
+
+the populations are set quite large -- 40 each -- and the resources set up 
+so around this amount of people could survive
+
+ 5 areas  each with p_wipeout = 0.01
+ 10 locations in each
+ 2 patches of each crop-type at each location
+ each patch yields 100
+
+most of this is controlled by code in world_setup.cpp
+
+the exception is p_wipeout, which is set in Resource.cpp
+	 

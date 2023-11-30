@@ -1,0 +1,133 @@
+* posting EndEat 
+****************
+
+processing Arrive or EndEat or EndWait e at t can lead to
+
+ 'starting to eat at t'  = posting an EndEat
+
+
+[] ArriveEvent_proc(e,..) : where p = e->p, updates p's locations
+
+ --> then calls attemptEat_proc(..) to possibly start to eat at that location
+
+[] EndEatEvent_proc(e,..) : where p = e->p, updates crops, p's energy
+ 
+ --> then calls attemptEat_proc(e,..) to possibly continue to eat at that location
+
+[] EndWaitEvent_proc(e,..)
+
+ --> calls attemptEat_proc(e,..) to possibly start to eat at that location
+
+** attemptEat_proc(e..) 
+***********************
+
+sets (have_patches_here) to indicate patches unoccupied and non-empty
+
+[] (have_patches_here) case leads to random choice of a patch, calc of amount to be eaten, then where
+
+       t = e->t
+       p = e->p
+       h = handling time based on amount to be eaten
+       
+ -->  post EndEat e' for t+h  (ie. 'start eating')
+
+[] (!have_patches_here) case leads mainly to moving via attemptMoveOn_proc(..)
+
+exception is if there are occupied patches and this loc is last possibility for p in this area 
+(by p->visit_sched, p->revisit_sched) and then p is caused to wait a little bit
+
+ --> post EndWait e' for t+wait (ie. 'start waiting')
+
+with processing EndWait just leading to attemptEat_proc(e',..) being called again 
+
+* posting Arrive
+****************
+
+happens when processing EndStage for a route which ends at an area entry
+
+ --> post Arrive e for first loc of an area
+
+which will *initiate* exploration of an area
+
+otherwise arise *during* exploration of an area when the above noted event processing has lead 
+via attemptEat_proc(..) to attemptMoveOn_proc(..)
+
+** attemptMoveOn_proc(e ..)
+**************************
+
+called from attemptEat_proc(.. e ..) when p cannot eat at current location
+
+if there is further loc x' in current area ( via p->visit_sched )
+
+ --> post Arrive event e' (t',p, x')  where x' is next place, t' is time given speed of p
+       insert e' 
+     
+else if there is further area to explore ( via p->todo_sched), set route to reach nxt frm todo_sched
+
+ x -- ei -- hub -- ej 
+
+ --> post EndStage event e' for first stage of that route (ei)
+
+else set route to reach home
+
+ x -- ei -- hub -- home 
+
+  --> post EndStage event e' for first stage of that route (ei)
+
+
+
+
+
+* posting EndStage and processing EndStage
+******************************************
+
+when not moving thru a Resource area, movement is planned via route eg.
+
+ 
+ home -- hub -- ei       (to first reach an area)
+
+ x -- ei -- hub -- ej    (to get from one area to another area)
+
+ x -- ei -- hub -- home  (to get from an area to home)
+
+when a route is created an EndStage event is posted concerning movement to the location route[1]
+
+processing this initial EndStage event will lead to a process which in time will create EndStage events for 
+the subsequent locations in the route
+
+processing mid-route EndStage event for an entry ei will spawn an EndStage event for the 'hub'
+
+processing an EndStage event for the 'hub' on a route between areas will first post an EndRest event,
+and its processing will post an EndStage event for the end of route
+
+processing an EndStage event for the end of a route being an ei will spawn an Arrive event for the first 
+location in the area 
+
+* processing EndEat
+
+the earlier posted EndEat  e = (t, p, [+g,-u]) contains the anticipated increment to energy and decrement to crop units
+
+those updates are made
+
+if p would still like to eat more,
+
+  attempt made to do that via attemptEat_proc(..)
+
+and if p would not like to eat more,
+
+   set route to home
+   post EndStage event e' for first part of that route
+
+* processing Arrive
+
+just updates location and then attempts to eat via call to attemptEat_proc(..)
+
+* process EndWait
+
+only occasionally used : the EndWait was posted during earlier call to attemptEat_proc(..)
+to avoid premature leaving an area when 
+
+  at a location with occupied patches 
+  and this loc is last possibility for p in this area  
+
+now the situation in re-evaluated by calling attemptEat_proc(e',..) again 
