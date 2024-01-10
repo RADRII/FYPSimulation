@@ -210,7 +210,7 @@ public:
 
   // from a location to the indices of the CropPatchs in resources
   // having that location
-  map<Location,vector<size_t>> loc_to_indices;
+  map<Location,vector<size_t> > loc_to_indices;
   void set_loc_to_indices();
   
   
