@@ -1,0 +1,38 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+    {
+        "label": "run program",
+        "type": "shell",
+        "command": "./People_tester",
+        "group":  {
+            "kind": "build",
+            "isDefault": true
+        },
+        "presentation": {
+            "reveal":"always"
+        },
+        "problemMatcher": "$msCompile",
+        "dependsOn":["make project"]
+    },
+    {
+        "label": "make project",
+        "type": "shell",
+        "command": "make People_tester ",
+        "group": {
+            "kind": "build",
+        },
+        "problemMatcher": "$gcc",
+        "dependsOn":["make clean"]
+    },
+    {
+        "label": "make clean",
+        "type": "shell",
+        "command": "make clean ",
+        "group": {
+            "kind": "build",
+        },
+        "problemMatcher": "$gcc"
+    }
+	]
+   }

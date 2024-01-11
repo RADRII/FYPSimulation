@@ -77,5 +77,5 @@ Location.o: Location.cpp Location.h Debug.h
 
 
 clean:
-	rm People_tester.o world_setup.o People.o Knowledge.o InfoTypes.o AreaGain.o Resource.o Location.o Event.o Util.o DayStats.o Debug.o CmdLineVersions.o People_tester
+	rm -f People_tester.o world_setup.o People.o Knowledge.o InfoTypes.o AreaGain.o Resource.o Location.o Event.o Util.o DayStats.o Debug.o CmdLineVersions.o People_tester
 

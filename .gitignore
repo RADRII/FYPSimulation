@@ -4,10 +4,8 @@
 # no ~ files
 *~
 # no temp files
-./tmp/Toss/*
-
-# no vscode
-.vscode/*
-
+tmp/*
+# no peopletester
+People_tester
 
 
