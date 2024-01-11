@@ -3,6 +3,11 @@
 *.o
 # no ~ files
 *~
+# no temp files
+.tmp/*
+
+# no vscode
+.vscode/*
 
 
 
