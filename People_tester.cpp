@@ -5,6 +5,7 @@
 #include "Debug.h"
 #include "CmdLineVersions.h"
 #include <iostream>
+#include <ctime>
 
 //older code relating to visualisation
 //not recently used and prob not entirely compatible
@@ -22,7 +23,7 @@ extern void set_up_population();
 int main(int argc, char **argv) {
 
   //sim_params.time_stamp = true; // default is false
-  sim_params.results_dir = "/tmp/Toss"; // default is .
+  sim_params.results_dir = "tmp/Toss"; // default is .
   //sim_params.results_dir = "../Results_via_cut_down"; // default is .
 
 

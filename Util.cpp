@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <ctime>
 
 gsl_rng *r_global = 0;
 
@@ -288,7 +289,6 @@ void open_an_output(ofstream& strm, string name) {
     full_name += "_";
     full_name += sim_params.output_suffix;
   }
-  
   strm.open(full_name);
   if (!strm) {
     cout << "prob opening " << full_name << endl;
