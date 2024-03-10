@@ -42,6 +42,7 @@ Person::Person() {
   fam_plan.planned_offspring = 0;
   speed = 2.0;
 
+  at_a_resource = false;
   has_todo_limit = false;
   todo_limit = 0;
 
@@ -60,9 +61,6 @@ Person::Person() {
   todo_choice_method = "uniform";
   
   route_index = 0;
-  vis_index = -1; // represent not visiting anywhere
-  at_a_resource = false;
-  res_ptr = NULL;
   home_loc = NULL;
   at_home = false;
   
@@ -117,157 +115,16 @@ void Person::show_defaults(ostream& o) {
 
 const size_t Person::NO_TODO = numeric_limits<size_t>::max();
 
-void Person::init_visit_sched() {
-  visit_sched.clear();
-  for(size_t i = 0; i < res_ptr->locs.size(); i++) {
-    LocPtr l = &(res_ptr->locs[i]);
-
-    visit_sched.push_back(l); 
-    
-  }
-  //vis_index = 0;
-  vis_index = -1;
-}
-
-void Person::remove_frm_visit_sched(LocPtr loc) {
-  vector<LocPtr>::iterator v_itr;
-  v_itr = visit_sched.begin();
-  while(v_itr != visit_sched.end()) {
-    if((*v_itr) == loc) {
-      v_itr = visit_sched.erase(v_itr);
-    }
-    else {
-      v_itr++;
-    }
-  }
-
-}
-void Person::show_visit_sched() { // perhaps show only from vis_index on
-  for(size_t i = 0; i < visit_sched.size(); i++) {
-    db(visit_sched[i]->tostring()); db('/');
-  }
-  db("\n");
-
-}
-
-void Person::init_revisit_sched() {
-  revisit_sched.clear();
-}
-
-void Person::show_revisit_sched() {
- for(size_t i = 0; i < revisit_sched.size(); i++) {
-    db(revisit_sched[i]->tostring()); db('/');
-  }
-  db("\n");
-
-}
-
-void Person::add_to_revisit_sched(Location *loc) {
-  revisit_sched.push_back(loc); // check if there already ?
-}
-
-void Person::set_res_loc() {
-  loc = visit_sched[vis_index];
-}
-
-// LocPtr Person::get_location() {
-//   return visit_sched[vis_index];
-// }
-
-// IF NOT AT THE END OF THEIR VISIT_SCHED
-// on entering
-// visit_sched: .. x y z   revisit_sched: b d g
-// vis_index:i       ^
-// ---> 
-// visit_sched: .. x y z   revisit_sched: b d g (y)
-// vis_index:i       ^
-// nxt_index:i+1       ^
-// y added to revisit_sched if stuff at y is 'being_eaten'
-// l -> z  loc still -> y
-// 
-// IF AT THE END OF THEIR VISIT_SCHED TRICKIER
-// visit_sched: .. x y z   revisit_sched: b d g
-// vis_index:i         ^
-// ---> 
-// visit_sched: z g d b revisit_sched: (z)
-// vis_index:0  ^
-// nxt_index:1    ^
-// z added to revisit_sched if stuff at z is 'being_eaten'
-// l -> g  loc still -> z
-// 
-bool Person::get_nxt_location(LocPtr& l, int& nxt_index) {
-
-  bool add_current_to_revis = false;
-  
-  LocPtr poss_revis = visit_sched[vis_index];
-
-  add_current_to_revis = res_ptr->being_eaten_patches_at_location(poss_revis);
-    
-  if(vis_index < visit_sched.size()-1) {
-    if(add_current_to_revis) {
-      add_to_revisit_sched(poss_revis);
-    }
-
-    nxt_index = vis_index + 1;
-    l = visit_sched[nxt_index];
-
-    return true;
-  }
-  else if(revisit_sched.size() > 0) { 
-      add_to_revisit_sched(poss_revis);
-      // this add is a bit of a hack to get right next visit_sched
-
-    
-    visit_sched = revisit_sched;
-    reverse(visit_sched.begin(),visit_sched.end());
-
-    revisit_sched.clear();
-    if(add_current_to_revis) {
-      add_to_revisit_sched(poss_revis);
-      // this add is really setting up the revisit_sched
-    }
-
-    #if DEBUG
-    db("had to switch over to revisit sched\n");
-    #endif
-    
-    vis_index = 0;
-    nxt_index = vis_index + 1;
-    l = visit_sched[nxt_index];
-
-    return true;
-  }
-  else { // no next on visit_sched, no revisit_sched so no real 'next' location
-    return false;
-  }  
-
-}
-
-
-
-float Person::get_trav_time(LocPtr start, LocPtr end) {
-
-  float xdiff = end->x - start->x;
-  float ydiff = end->y - start->y;
-  float dist =  sqrt(pow(xdiff, 2) + pow(ydiff, 2));
-  float trav_time = dist/speed;
-
-  return trav_time;
-
-}
-
-
 // give a person their major sequence of locations they wish to get to
 // primarily the resource entries. could also include the final home location
 // after these but possibly should skip that as it is not really any kind of choice
 /* if person has neg info about a Resoures area exclude its entry from the entries being considered */
 /* randomly pick a first from those being considered, then add the rest */
-
 bool Person::set_todo_sched() {
 
   todo_sched.clear();
-  size_t start_loc = NO_TODO;
-  vector<LocPtr> to_consider;
+  LocNode* start_loc = NULL;
+  vector<LocNode*> to_consider;
 
   #if DEBUG
   //if(type == 'B') {
@@ -280,59 +137,36 @@ bool Person::set_todo_sched() {
   // defined unwanted as having wipeout info on it with till_non_zero > 0
   for(size_t i=0; i < all_res.size(); i++) {
     ResPtr r = all_res[i];
-    LocPtr e;
     //if(knows_about(r)) {
     if(retains[WIPE] && mind.has_wipeout_info_about(r)) {
       WipeoutInfo wi;
       for(size_t w=0; w < mind.wipeouts.size(); w++) {
-	if(mind.wipeouts[w].res_to_ignore == r) {
-	  wi = mind.wipeouts[w];
-	}
+        if(mind.wipeouts[w].res_to_ignore == r) {
+          wi = mind.wipeouts[w];
+        }
       }
       if(wi.till_non_zero <= 0) {
-        r->get_res_entry(e);
-	to_consider.push_back(e);
+        to_consider.push_back(r->locPointer);
       }
       else {
-	#if DEBUG
-	db(r->id); db(" excluded due to "); db(wi.tostring()); db("\n");
-	#endif
+        #if DEBUG
+        db(r->id); db(" excluded due to "); db(wi.tostring()); db("\n");
+        #endif
       }
-      
     }
     else {
-      r->get_res_entry(e);
-      to_consider.push_back(e);
+      to_consider.push_back(r->locPointer);
     }
   } // should have made a subset of the entry locations
 
-  // convert the entry locations to their indices in all_res_entry_loc
-  vector<size_t> to_consider_indices;
-  for(size_t i = 0; i < to_consider.size(); i++) {
-    to_consider_indices.push_back(res_loc_index_frm_ptr(to_consider[i]));
+  //Shuffle randomly to_consider into todo
+  for(int i = 0; i < to_consider.size(); i++)
+  {
+    int rand_index = rand() % to_consider.size();
+    todo_sched.push_back(to_consider[rand_index]);
+    to_consider.erase(to_consider.begin()+rand_index);
   }
 
-  bool ok = false;
-  // choose first according to some method
-  // currently only "uniform"
-  ok = choose_first_res(to_consider_indices, todo_choice_method, start_loc);
-
-  if(!ok) { return false;}
-
-  #if DEBUG
-  //if(type == 'B') {
-  db("chose index "); db(to_string(start_loc)); db("\n");
-  //}
-  #endif
-
-  // put first in
-  todo_sched.push_back(to_consider_indices[start_loc]);
-
-  if(to_consider_indices.size() > 1) {
-  // put others in
-    set_rest_todo_sched_random(start_loc, to_consider_indices);
-  }
-  
   // check if have too many
   if(has_todo_limit && todo_sched.size() > todo_limit) {
     todo_sched.resize(todo_limit);
@@ -346,154 +180,46 @@ string Person::todo_sched_tostring() {
 
   string s = "";
   for(size_t i = 0; i < todo_sched.size(); i++) {
-    s += to_string(todo_sched[i]);
+    s += todo_sched[i]->tostring();
     if(i != (todo_sched.size()-1)) { s += " > "; }
   }
   return s;
 
 }
 
-void Person::set_rest_todo_sched_random(size_t start, vector<size_t>& to_consider_indices) {
-
-  // make random shuffe of what remains
-  int *todo_rest;
-  int todo_rest_size = to_consider_indices.size()-1;
-  todo_rest= new int[todo_rest_size];
-  // todo_rest should contain the vals in to_consider_indices != the chosen start
-  int i=0;
-  for(size_t ci = 0; ci < to_consider_indices.size(); ci++) {
-    if(ci != start) {
-      todo_rest[i] = to_consider_indices[ci];
-      i++;
-    }
-  }
-  gsl_ran_shuffle(r_global, todo_rest, todo_rest_size, sizeof(int));
-  for(int i = 0; i < todo_rest_size; i++) {
-    //    todo_sched.push_back(to_consider_indices[todo_rest[i]]);
-        todo_sched.push_back(todo_rest[i]);
-  }
-  delete [] todo_rest;
-}
-
-
-bool Person::get_nxt_frm_todo_sched(LocPtr& res_entry_loc, size_t& nxt_todo) {
+bool Person::get_nxt_frm_todo_sched(LocNode* res_entry_loc, size_t& nxt_todo) {
   if(todo_index != todo_sched.size()-1) {
     nxt_todo = todo_index+1;
-    res_entry_loc = all_res_entry_loc[todo_sched[nxt_todo]];
+    res_entry_loc = todo_sched[nxt_todo];
     return true;
   }
   else {
-
     return false;
   }
-
 }
 
 // use nature of last on route to determine if heading  home
 bool Person::heading_home() {
-  if(route.back()->kind == HAB_ZONE) {
+  if(route.back()->type == HAB_ZONE) {
     return true;
   }
   else {
     return false;
   }
-
 }
 
-
-// only reason this a Person method is use of res_ptr to figure out
-// first loc if in a resource
-// see code circa 24/6/20 for version for geometry with linear series of entries 
-bool Person::set_route(LocPtr fst, LocPtr lst) {
-
+bool Person::set_route(LocNode* fst, LocNode* lst) {
   route.clear();
-  route.push_back(fst);
   route_index = 0;
   
-  if(fst->kind == HAB_ZONE) {
+  route = mind.internalWorld.findPath(fst, lst);
 
-    if(lst->kind == RES_ENTRY) { // extend to h -- n -- e
-      LocPtr hub;
-      home_loc->trace_fst(NODE_L,hub);
-      route.push_back(hub);
-      route.push_back(lst);
-      #if DEBUG
-      db(toid()); db(" "); db(route_tostring()); db("\n");
-      #endif
-      return true;
-    }
-    else {
-      return false; // unexpected lst
-    }
-  } // end case for fst is HAB_ZONE
-
-  if(fst->kind == PATCH) {
-    // extend to p -- ei -- n
-    LocPtr e;
-    bool found_entry = res_ptr->get_res_entry(e);
-    if(!found_entry) { return false; }
-    else {
-      route.push_back(e);
-    }
-
-    LocPtr hub;
-    e->trace_fst(NODE_L,hub);
-    route.push_back(hub);
-    
-    if(lst->kind == RES_ENTRY) {
-      // extend further to p -- ei -- n -- ej
-      route.push_back(lst);    
-#if DEBUG
-      db(toid()); db(" "); db(route_tostring()); db("\n");
-#endif
-      return true; 
-    }
-    else if(lst->kind == HAB_ZONE) {
-      // extend further to p -- ei -- n -- h
-      route.push_back(lst);
-#if DEBUG
-      db(toid()); db(" "); db(route_tostring()); db("\n");
-#endif
-      return true;
-    }
-    else {
-      return false; // unexpect kind of lst
-    }
-  } // end case for fst is PATCH
-  
-
-  if(fst->kind == NODE) {
-    if(lst->kind == RES_ENTRY) { // extend to n -- e
-      route.push_back(lst);
-#if DEBUG
-      db(toid()); db(" "); db(route_tostring()); db("\n");
-#endif
-      return true;
-    }
-    else if(lst->kind == HAB_ZONE) { // extend to n -- h
-      route.push_back(lst);
-#if DEBUG
-      db(toid()); db(" "); db(route_tostring()); db("\n");
-#endif
-      return true;
-    }
-    else {
-      return false; // unexpected kind of lst
-    }
-  } // end case for fst is NODE
-
-  return false; // redundant?
-
-
+  return false;
 }
 
 void Person::set_route_loc() {
   loc = route[route_index];
 }
-
-// LocPtr Person::get_route_loc() {
-//   return route[route_index];
-// }
 
 void Person::show_route() {
   for(size_t i = 0; i < route.size(); i++) {
@@ -510,24 +236,6 @@ string Person::route_tostring() {
     if(i != (route.size()-1)) { s += " -- "; }
   }
  return s;
-
-}
-
-
-float Person::get_time_to_nxt() {
-  int nxt_vis_index = vis_index + 1;
-
-
-  float nxt_pos;
-  nxt_pos = visit_sched[nxt_vis_index]->x;
-
-  float current_pos;
-  current_pos = visit_sched[vis_index]->x;
-
-  float trav_time;
-  trav_time = (nxt_pos - current_pos)/(speed);
-
-  return trav_time;
 
 }
 
@@ -616,45 +324,10 @@ bool Person::will_stop() {
   }
 }
 
-// check if others of same type eating at the same location
+// check if others are eating at the same location
 bool Person::others_at_loc(vector<PerPtr>& others) {
-
-  others.clear();
-  if(loc->kind == PATCH) {
-    vector<size_t> patches;
-    patches = res_ptr->loc_to_indices[*loc];
-    for(size_t i=0; i < patches.size(); i++) {
-      CropPatch c;
-      c = res_ptr->resources[patches[i]]; 
-      if(c.being_eaten && (c.eater != this) && (c.eater->type == type) ) {
-	others.push_back(c.eater);
-      }
-    }
-  }
-  else if(loc->kind == NODE) {
-    // TODO: replace with smthg more efficient
-    for(size_t i=0; i < pop.population.size(); i++) {
-      PerPtr o = pop.population[i];
-      if((o != this) && (o->type == type)) {
-	others.push_back(o);
-      }
-    }
-  }
-  else {
-#if DEBUG1
-    db(" unexpected type of location\n");
-#endif
-  }
-  
-  if(others.size() > 0) {
-    return true;
-  }
-  else {
-    return false;
-  }
+  return loc->resourceObject->being_eaten_patches_at_location();
 }
-
-
 
 string Person::toid() {
   string s = "";
@@ -687,31 +360,10 @@ void Person::show_home_time() {
   db(" Hm:"); db(home_time);
 }
 
-// void Person::show_num_places_eaten() {
-//   db(" Pl:"); db(num_places_eaten);
-
-// }
-
 void Person::show_num_places() {
-
-  //db(" Pl:"); db(num_places_eaten);
   db(" Ple:"); db(num_places_eaten);
   db(" Plx:"); db(num_places_explored);
 
-}
-
-size_t Person::res_loc_index_frm_ptr(LocPtr l) {
-  size_t i = 0;
-  for(i = 0; i < all_res_entry_loc.size(); i++) {
-    if(all_res_entry_loc[i] == l) {
-      return i;
-    }
-  }
-
-    // just to satisfy compiler: don't think any code checks this
-  cout << "prob should never reach this: failing to decode via res_loc_index_frm_ptr(..); \n";
-  
-  return string::npos;
 }
 
 /* need just for stats */
@@ -1220,7 +872,7 @@ void Population::update_by_move_and_feed(int date) {
 void Population::EndStageEvent_proc(EndStageEvent *stg_ptr,EventLoop& loop) {
   PerPtr p;
   p = stg_ptr->p;
-  LocPtr cur_loc;
+  LocNode* cur_loc;
   /*********************/
   /* not at route end  */
   /*********************/
@@ -1233,51 +885,27 @@ void Population::EndStageEvent_proc(EndStageEvent *stg_ptr,EventLoop& loop) {
     // just for book-keeping 
     if(p->move_state == LEAVING_AREA) {
       p->move_state == UNDEF;
-      p->area_gains.set_an_area_duration(p->res_ptr, stg_ptr->t);
+      p->area_gains.set_an_area_duration(p->loc->resourceObject, stg_ptr->t);
     }
     
     cur_loc = p->loc;
-    LocPtr prev_loc;
+    LocNode* prev_loc;
     prev_loc = p->route[p->route_index-1];
-    
-    //bool posted_rest = false;
 
     EndRestEvent *rst;
 
-    //if((cur_loc->kind == NODE) && ) { // rest, speak
-    if((cur_loc->kind == NODE) && !(p->heading_home()) && (prev_loc->kind != HAB_ZONE)) { // rest, speak
-      //if((cur_loc->kind == NODE)) { // rest, speak
-      // rest
-      rst = new EndRestEvent;
-      rst->p = p;
-      //rst->t = stg_ptr->t + EndRestEvent::rest_duration_def;
-      rst->t = stg_ptr->t + p->rest;
-
-#if DEBUG
-      db(p->toid()); db(" rest till:"); db(rst->t); db("\n");
-#endif
-      loop.insert(rst);
-      //posted_rest = true;
-
-     
-
-    }
-    else { // move on
-    
-      float start_t = stg_ptr->t; 
-      LocPtr nxt_loc = p->route[p->route_index+1];
-      EndStageEvent *nxt = new EndStageEvent;
-      nxt->p = p;
-      nxt->route_index = p->route_index+1;
-      nxt->t = start_t + p->get_trav_time(cur_loc,nxt_loc);
-      nxt->st = start_t;
-#if DEBUG
-      db(p->toid()); db(" plan:"); db(cur_loc->tostring()); db(" --> "); db(nxt_loc->tostring()); db("\n");
-#endif
-      loop.insert(nxt);
-      //delete e;
-      //return;
-    }
+    // move on
+    float start_t = stg_ptr->t; 
+    LocNode* nxt_loc = p->route[p->route_index+1];
+    EndStageEvent *nxt = new EndStageEvent;
+    nxt->p = p;
+    nxt->route_index = p->route_index+1;
+    nxt->t = start_t + 1;
+    nxt->st = start_t;
+    #if DEBUG
+        db(p->toid()); db(" plan:"); db(cur_loc->tostring()); db(" --> "); db(nxt_loc->tostring()); db("\n");
+    #endif
+    loop.insert(nxt);
   }
   /*********************/
   /* at route end      */
@@ -1287,59 +915,52 @@ void Population::EndStageEvent_proc(EndStageEvent *stg_ptr,EventLoop& loop) {
     p->route_index = stg_ptr->route_index;
     p->set_route_loc();
     cur_loc = p->loc;
-    if(cur_loc->kind == RES_ENTRY) { 
+    if(cur_loc->type == RESOURCE) { 
       // FURTHER CHANGES 
-      LocPtr nxt_loc;
-      cur_loc->trace_fst(RES_L, nxt_loc); // should check
-      ResPtr res_ptr;
-      res_ptr = loc_to_res[nxt_loc]; // should check
-      p->res_ptr = res_ptr;
       p->at_a_resource = true;
 
-      p->init_visit_sched();
-      p->init_revisit_sched();
       // set person's area entry time to this arrival time at the entry 
       // not doing this in ArriveEvent at first loc
       // cos can re-arrive at first loc of area several times
       // just for book-keeping
       p->move_state = EXPLORING_AREA; 	  
-      p->area_gains.set_an_area_entry_time(res_ptr,stg_ptr->t);
+      p->area_gains.set_an_area_entry_time(cur_loc->resourceObject,stg_ptr->t);
 	  
       // INSERTS
       ArriveEvent *fst = new ArriveEvent;
       fst->p = stg_ptr->p;
       fst->vis_index = 0;  // p->vis_index is prob -1 at the moment
-      fst->t = stg_ptr->t + p->get_trav_time(cur_loc, nxt_loc);
+      fst->t = stg_ptr->t + 1;
       fst->st = stg_ptr->t;
 	  
-#if DEBUG
-      db(p->toid()); db(" plan:"); db(cur_loc->tostring()); db(" --> "); db(nxt_loc->tostring()); db("\n");
-#endif
+      #if DEBUG
+            db(p->toid()); db(" plan:"); db(cur_loc->tostring()); db(" --> "); db(nxt_loc->tostring()); db("\n");
+      #endif
       loop.insert(fst);
       //delete e;
     }
-    else if(cur_loc->kind == HAB_ZONE) { 
+    else if(cur_loc->type == HAB_ZONE) { 
       // FURTHER CHANGES
       p->at_home = true;
-#if DEBUG
-      db(p->toid()); db(" reached home:"); db("( "); db(p->home_loc->tostring()); db(")\n");
-#endif
+      #if DEBUG
+            db(p->toid()); db(" reached home:"); db("( "); db(p->home_loc->tostring()); db(")\n");
+      #endif
 
       // lines below only for tracking whats going on, don't influence anything
       p->home_time = time_reached;
       if((time_reached > hml) && (p->current_energy >= p->daily_use) && (p->eaten_today > 0)) {
-	hml = time_reached;
+	      hml = time_reached;
       }
       if((time_reached > hmd) && (p->current_energy < p->daily_use)) {
-	hmd = time_reached;
+	      hmd = time_reached;
       }
 
       if((time_reached > max_time_for_two) && (p->num_places_eaten == 2)) {
-	max_time_for_two = time_reached;
+	      max_time_for_two = time_reached;
       }
 
       if(p->num_places_eaten > max_places_eaten) {
-	max_places_eaten = p->num_places_eaten;
+	      max_places_eaten = p->num_places_eaten;
       }
 
       if(p->num_places_explored > max_places_explored) {
@@ -1350,12 +971,10 @@ void Population::EndStageEvent_proc(EndStageEvent *stg_ptr,EventLoop& loop) {
       //delete e;
     }
   }
-#if DEBUG
-  db("loc occupancy\n"); show_occupancy();
-#endif
+  #if DEBUG
+    db("loc occupancy\n"); show_occupancy();
+  #endif
   qt_show_occupancy();
-
-
 }
 
 // roughly, post fresh EndStage event e for next on route 
@@ -2137,14 +1756,14 @@ bool compare_person(Person *p1, Person *p2) {
 
 
 
-bool Person::choose_first_res(vector<size_t> to_consider_indices, string method, size_t& start_loc) {
-  // eg to_consider_indices: { 0 1 3 } so 2 4 already skipped
-  size_t n = to_consider_indices.size();
+bool Person::choose_first_res(vector<LocNode*> res_locations, string method, LocNode* start_loc) {
+  size_t n = res_locations.size();
   // going to sample from 0 to n-1 according to some probs
 
   if(method == "uniform") {
     // treat all as equi-prob
-    start_loc = gsl_rng_uniform_int(r_global,to_consider_indices.size());
+    int rand_index = gsl_rng_uniform_int(r_global,res_locations.size());
+    start_loc = res_locations[rand_index];
     return true; 
   }
   else {

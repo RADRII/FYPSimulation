@@ -166,11 +166,9 @@ class Person {
   /* following relating to planning ie. creating todo_sched */
   /**********************************************************/
   // selection frm all_res_entry_loc coded by index eg { e1, e2 }
-  vector<size_t> todo_sched; 
+  vector<LocNode*> todo_sched; 
   size_t todo_index;
   bool set_todo_sched();
-
-  void set_rest_todo_sched_random(size_t start, vector<size_t>& to_consider_indices);
   
   bool reset_todo_sched();   
   static const size_t NO_TODO;
@@ -179,32 +177,6 @@ class Person {
 
   string todo_choice_method;
 
-  bool choose_first_res(vector<size_t> res_indices, string method, size_t& start_loc );
-
-  /*************************************************************/
-  /* following relate to navigation INSIDE a Resources object  */
-  /*************************************************************/
-  vector<LocNode*> visit_sched;
-  int vis_index;
-  vector<LocNode*> revisit_sched;
-  bool at_a_resource;
-  ResPtr res_ptr;
-  void init_visit_sched();
-  void init_revisit_sched();
-  void add_to_revisit_sched(LocNode* loc);
-  void remove_frm_visit_sched(LocNode* loc);
-  
-  void show_visit_sched();
-  void show_revisit_sched();
-  
-  void set_res_loc(); // uses vis_index
-  bool get_nxt_location(LocNode& l, int& nxt_index);
-  float get_trav_time(LocNode* start, LocNode* end); // time from start to end given speed
-
-  float get_time_to_nxt(); // poss redundant
-
-
-  
   /*******************************************************/
   /* relating to what a Person might know and talk about */
   /*******************************************************/
@@ -246,7 +218,6 @@ class Person {
 
   
  private:
-  size_t res_loc_index_frm_ptr(LocNode l);
   void show_home_time();
   //void show_num_places_eaten();
   void show_num_places();
