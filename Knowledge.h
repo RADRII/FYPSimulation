@@ -2,8 +2,8 @@
 #define KNOWLEDGE_h
 
 // things a Person may come to know which can be used to influence choices
-#include "InfoTypes.h"
 #include "Grid.h"
+#include "InfoTypes.h"
 #include <set>
 //#include "Resource.h"
 

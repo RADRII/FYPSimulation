@@ -185,11 +185,12 @@ void CropPatch::show_bars() {
 
 Resources::Resources() {}
 
-Resources::Resources(int idd, LocNode* locP, int patch_yield, float energy_conv, int patch_rep) {
+Resources::Resources(int idd, int xx, int yy, int patch_yield, float energy_conv, int patch_rep) {
   id = idd;
   setup_record << "Resource " << id << endl;
-  
-  locPointer = locP;
+
+  x = xx;
+  y = yy;
 
   in_wipeout = false;
   //p_wipeout = 0.01;
@@ -471,9 +472,9 @@ string Resources::tostring() {
   string s;
   s += id;
   s += "(";
-  s += f_to_s(locPointer->x);
+  s += f_to_s(x);
   s += ",";
-  s += f_to_s(locPointer->y);
+  s += f_to_s(y);
   s += ")";
   return s;
 }

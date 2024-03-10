@@ -42,7 +42,7 @@ Resource.o: Resource.cpp Resource.h Grid.h Util.h DayStats.h
 Debug.o: Debug.cpp Debug.h
 	g++ -std=c++11 $(CPPFLAGS) $(INCPATH) -c Debug.cpp
 
-Knowledge.o: Knowledge.cpp Knowledge.h InfoTypes.h AreaGain.h Resource.h Grid.h Util.h DayStats.h
+Knowledge.o: Knowledge.cpp Knowledge.h InfoTypes.h AreaGain.h Resource.h Grid.h Util.h Grid.h
 	g++ -std=c++11 $(CPPFLAGS) $(INCPATH) -c Knowledge.cpp
 
 AreaGain.o: AreaGain.cpp AreaGain.h Resource.h
