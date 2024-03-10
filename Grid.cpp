@@ -1,4 +1,6 @@
 #include "Grid.h"
+#include "Resource.h" // needed for linking of res entry locations
+#include "Util.h"
 #include <iostream>
 #include <queue>
 
@@ -7,6 +9,23 @@ LocNode::LocNode(int x1, int y1, NodeKind k) {
     y = y1;
     type = k;
     occupancy = 0;
+}
+
+string LocNode::tostring() {
+    string s;
+    if(type == EMPTY) { s = "e"; }
+    else if(type == HAB_ZONE) { s = "h"; }
+    else if(type == OBSTACLE) { s = "o"; }
+    else if(type == RESOURCE) { s = "r"; }
+    else { s = "u"; }
+    s += "[";
+    // s += id;
+    // s += " ";
+    s += f_to_s(x);
+    s += ",";
+    s += f_to_s(y);
+    s += "]";
+    return s;
 }
 
 LocGrid::LocGrid(int s) {

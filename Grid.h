@@ -12,7 +12,9 @@ class LocNode {
   int occupancy;
   NodeKind type;
   LocNode* parent;
+  ResPtr resourceObject;
   LocNode(int x, int y, NodeKind type);
+  string tostring();
 };
 
 class LocGrid {
