@@ -2,6 +2,7 @@
 #define POPLOC_H
 #include <string>
 #include <vector>
+#include "Util.h"
 using namespace std;
 
 enum NodeKind {HAB_ZONE, RESOURCE, OBSTACLE, EMPTY};

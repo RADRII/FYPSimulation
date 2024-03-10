@@ -49,7 +49,6 @@ bool setup_all_resources_and_locations() {
   }
 
   //Add Resources Areas
-  std::vector<LocNode*> resourceNodes;
   success = 0;
 
   while(success < numResources)
@@ -60,41 +59,34 @@ bool setup_all_resources_and_locations() {
     if(world.getNode(xr, yr)->type == EMPTY)
     {
       world.getNode(xr, yr)->type = RESOURCE;
-      resourceNodes.push_back(world.getNode(xr, yr));
+      all_res_entry_loc.push_back(world.getNode(xr, yr));
       setup_record << "Resource: X " << xr << ", Y " << yr << endl;
       success++;
     }
   }
 
-  //Todo Setup resources properly
   setup_record << "**************\n";
   setup_record << "RESOURCE AREAS\n";
   setup_record << "**************\n";
 
-  
-  vector<int> yields;
-  yields = { 100, 100, 100, 100, 100};
+  int yeild = 100;
 
-  
   vector<int> patch_reps;
   int top_patch_rep = 2;
   int decline = 0;
 
-  for(size_t i = 0; i < areas_rep; i++) {
+  for(size_t i = 0; i < numResources; i++) {
      int this_patch_rep;
      this_patch_rep = top_patch_rep - (i * decline);
      patch_reps.push_back(this_patch_rep);
   }
-  
-  int loc_rep;
-  loc_rep = 5;
 
   float energy_conv;
-  energy_conv = 0.25;
+  energy_conv = 0.25; 
   
-  for(size_t i = 0; i < areas_rep; i++) {
+  for(size_t i = 0; i < numResources; i++) {
 
-    res_ptr = new Resources(res_names[i],all_res_entry_loc[i],yields[i],energy_conv,patch_reps[i],loc_rep);
+    ResPtr res_ptr = new Resources(i,all_res_entry_loc[i],yield,energy_conv,patch_reps[i]);
 
     all_res.push_back(res_ptr);
     // record association of between the area's locs and the area
