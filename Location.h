@@ -1,5 +1,5 @@
-#if !defined(POPLOC_H)
-#define POPLOC_H
+//#if !defined(POPLOC_H)
+//#define POPLOC_H
 #include <string>
 #include <vector>
 using namespace std;
@@ -52,5 +52,5 @@ class Location {
 extern vector<LocPtr> all_home_loc;
 extern vector<LocPtr> all_res_entry_loc;
 
-#endif
+//#endif
 

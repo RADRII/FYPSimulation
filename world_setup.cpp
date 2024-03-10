@@ -2,14 +2,16 @@
 #include "People.h"
 #include "Util.h"
 #include "Debug.h"
+#include "Grid.h"
 #include <cmath>
 #include <iostream>
 
-int areas_rep = 5;
+//Variables to fiddle with:
+int gridSize = 7;
+int numResources = 25;
+int numObstacles = 5;
 
 bool setup_all_resources_and_locations();
-bool link_all_locations(LocPtr n);
-
 void set_up_population();
 
 // this makes global all_home_loc contain pointers to new home locations
@@ -19,86 +21,52 @@ void set_up_population();
 // have to make entry locs first, with specific geometry, to pass to Resources contstructor
 // and get the contained locations in their turn in the right places
 bool setup_all_resources_and_locations() {
+  setup_record << "**************\n";
+  setup_record << "GEOMETRY\n";
+  setup_record << "**************\n";
 
-  /*************************/
-  /* home locations        */
-  /*************************/
-  LocPtr h_ptr = NULL;
-  h_ptr = new Location(HAB_ZONE);
-  all_home_loc.push_back(h_ptr);
-  h_ptr->x = -2;
-  h_ptr->y = 3;
-  h_ptr->id = "home";
+  //Setup Empty Grid
+  LocGrid world = LocGrid(gridSize);
+  setup_record << "Grid size " << gridSize << endl;
 
-  LocPtr n_ptr = NULL;
-  n_ptr = new Location(NODE);
-  n_ptr->x = 0;
-  n_ptr->y = 3;
-  n_ptr->id = "hub";
+  //Add Home
+  world.getNode(gridSize/2, gridSize/2)->type = HAB_ZONE;
+  setup_record << "Home Location: X " << gridSize/2 << ", Y " << gridSize/2 << endl;
 
-  
-  /************************/
-  /* res entries          */
-  /************************/
-  LocPtr entry = NULL;
+  //Add Obstacles Areas
+  int success = 0;
+  while(success < numObstacles)
+  {
+    int xr = rand() % gridSize;
+    int yr = rand() % gridSize;
 
-  for(size_t i = 0; i < areas_rep; i++) {
-
-      entry = new Location(RES_ENTRY);
-      all_res_entry_loc.push_back(entry);
+    if(world.getNode(xr, yr)->type == EMPTY)
+    {
+      world.getNode(xr, yr)->type = OBSTACLE;
+      setup_record << "Obstacle: X " << xr << ", Y " << yr << endl;
+      success++;
+    }
   }
 
-  // dont have coords yet
-  // should all be r from origin, spread round semi-circle
-  // they are straight-line dist 2 part tho in this version thats not important
-  
-  double r, a;
-  double pi = M_PI;
-  r = 1/sin(pi/8);
-  a = 1/(sqrt(2) * sin(pi/8));
+  //Add Resources Areas
+  std::vector<LocNode*> resourceNodes;
+  success = 0;
 
-  entry = all_res_entry_loc[0];  // N
-  entry->x = 0;
-  entry->y = (n_ptr->y) - r;
+  while(success < numResources)
+  {
+    int xr = rand() % gridSize;
+    int yr = rand() % gridSize;
 
-  entry = all_res_entry_loc[1]; // NE
-  entry->x =  a;
-  entry->y = (n_ptr->y) - a;
+    if(world.getNode(xr, yr)->type == EMPTY)
+    {
+      world.getNode(xr, yr)->type = RESOURCE;
+      resourceNodes.push_back(world.getNode(xr, yr));
+      setup_record << "Resource: X " << xr << ", Y " << yr << endl;
+      success++;
+    }
+  }
 
-  entry = all_res_entry_loc[2]; // E
-  entry->x = r;
-  entry->y = (n_ptr->y) - 0;
-
-  entry = all_res_entry_loc[3]; // SE
-  entry->x = a;
-  entry->y = (n_ptr->y) + a;
-
-  entry = all_res_entry_loc[4]; // S
-  entry->x = 0;
-  entry->y = (n_ptr->y) + r;
-
-  // // entry = all_res_entry_loc[5];  // NW
-  // // entry->x =  -a;
-  // // entry->y = (h_ptr->y) - a;
-
-  // // entry = all_res_entry_loc[6]; // W
-  // // entry->x = -r;
-  // // entry->y = (h_ptr->y) - 0;
-
-  // // entry = all_res_entry_loc[7]; // SW
-  // // entry->x = -a;
-  // // entry->y = (h_ptr->y) + a;
-
-  /*******************************/
-  /* resources from res  entries */
-  /*******************************/
-
-  //vector<string> res_names = {"one", "two", "three", "four", "five","six","seven","eight"};
-  vector<string> res_names = {"one", "two", "three", "four", "five"};
-  
-  ResPtr res_ptr = NULL;
-  LocPtr lp = NULL;
-
+  //Todo Setup resources properly
   setup_record << "**************\n";
   setup_record << "RESOURCE AREAS\n";
   setup_record << "**************\n";
@@ -137,71 +105,6 @@ bool setup_all_resources_and_locations() {
     // record index of this Resource obj in all_res
     res_to_index[res_ptr] = i;
   }
-
-  
-  link_all_locations(n_ptr);
-
-
-  return true;
-
-}
-
-
-// all location linking is also done, incl from initial locs in Resources
-// objects back to relevant res entry location
-// see LocKind enumeration
-// the 'home' (HAB_ZONE) is linked to the 'hub' (NODE) : n_ptr
-// the 'hub' is radially linked to the all the res entry entry locations (RES_ENTRY)
-// the 'entry' location for a resource area links to its first 'patch' (PATCH) locations
-// 'entry' locations not linked to each other
-
-bool link_all_locations(LocPtr n_ptr) {
-
-  LocPtr entry = NULL;
-  // leave entries having no mutual links
-
-  // set links between home and hub
-  LocPtr h_ptr;
-  h_ptr = all_home_loc[0];
-  h_ptr->add_arc(NODE_L,n_ptr);
-  n_ptr->add_arc(HAB_ZONE_L,h_ptr);
-
-  // set links between hub and res entries
-  for(size_t i = 0; i < areas_rep; i++) {
-    entry = all_res_entry_loc[i];
-    n_ptr->add_arc(RES_ENTRY_L,entry);
-    entry->add_arc(NODE_L, n_ptr);
-  }
-  
-  // don't have links between entries and (fst locs of) resources yet
-  // so set those
-  for(size_t i = 0; i < areas_rep; i++) {
-    entry = all_res_entry_loc[i];
-    entry->add_arc(RES_L, &(all_res[i]->locs[0]));
-    all_res[i]->locs[0].add_arc(RES_ENTRY_L, entry);
-  }
-
-  setup_record << "********\n";
-  setup_record << "GEOMETRY\n";
-  setup_record << "********\n";
-
-  h_ptr->show_links(setup_record);
-
-  n_ptr->show_links(setup_record);
-
-  
-  for(size_t i = 0; i < areas_rep; i++) {
-
-    entry = all_res_entry_loc[i];
-    entry->show_links(setup_record);
-  }
-
-  for(size_t j= 0; j < areas_rep; j++) {
-
-    all_res[j]->locs[0].show_links(setup_record);
-  }
-
-  
 
   return true;
 
