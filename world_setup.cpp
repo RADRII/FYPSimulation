@@ -31,6 +31,7 @@ bool setup_all_resources_and_locations() {
 
   //Add Home
   world.getNode(gridSize/2, gridSize/2)->type = HAB_ZONE;
+  all_home_loc.push_back(world.getNode(gridSize/2, gridSize/2));
   setup_record << "Home Location: X " << gridSize/2 << ", Y " << gridSize/2 << endl;
 
   //Add Obstacles Areas
@@ -43,6 +44,7 @@ bool setup_all_resources_and_locations() {
     if(world.getNode(xr, yr)->type == EMPTY)
     {
       world.getNode(xr, yr)->type = OBSTACLE;
+      all_obstacle_loc.push_back(world.getNode(xr, yr));
       setup_record << "Obstacle: X " << xr << ", Y " << yr << endl;
       success++;
     }
@@ -59,7 +61,7 @@ bool setup_all_resources_and_locations() {
     if(world.getNode(xr, yr)->type == EMPTY)
     {
       world.getNode(xr, yr)->type = RESOURCE;
-      all_res_entry_loc.push_back(world.getNode(xr, yr));
+      all_resource_loc.push_back(world.getNode(xr, yr));
       setup_record << "Resource: X " << xr << ", Y " << yr << endl;
       success++;
     }
@@ -69,7 +71,7 @@ bool setup_all_resources_and_locations() {
   setup_record << "RESOURCE AREAS\n";
   setup_record << "**************\n";
 
-  int yeild = 100;
+  int yield = 100;
 
   vector<int> patch_reps;
   int top_patch_rep = 2;
@@ -86,14 +88,12 @@ bool setup_all_resources_and_locations() {
   
   for(size_t i = 0; i < numResources; i++) {
 
-    ResPtr res_ptr = new Resources(i,all_res_entry_loc[i],yield,energy_conv,patch_reps[i]);
+    ResPtr res_ptr = new Resources(i,all_resource_loc[i],yield,energy_conv,patch_reps[i]);
 
     all_res.push_back(res_ptr);
-    // record association of between the area's locs and the area
-    for(size_t l=0; l < res_ptr->locs.size(); l++) {
-      lp = &(res_ptr->locs[l]);
-      loc_to_res[lp] = res_ptr;
-    }
+    // record association of between the resorce and the nodeloc
+    all_resource_loc[i]->resourceObject = res_ptr;
+
     // record index of this Resource obj in all_res
     res_to_index[res_ptr] = i;
   }

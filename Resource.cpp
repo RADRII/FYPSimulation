@@ -5,12 +5,12 @@
 
 using namespace std;
 
-CropPatch::CropPatch() : pos(PATCH) {
+CropPatch::CropPatch() {
   next_init_day = abs_init_day;
   bands.clear();
 }
 
-CropPatch::CropPatch(int day) : pos(PATCH) {
+CropPatch::CropPatch(int day) {
   abs_init_day = day;
   next_init_day = abs_init_day;
   bands.clear();
@@ -295,7 +295,7 @@ void Resources::show_bands() {
 
   // shows by crop type, by location
   for(int i = 0; i < resources.size(); i++) {
-    db(resources[i].sym); db(resources[i].pos.tostring()); db(":");
+    db(resources[i].sym); db(":");
     resources[i].show_bands();
   }
   // eg. 

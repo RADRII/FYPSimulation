@@ -29,8 +29,8 @@ class LocGrid {
 
 
 // globals vars
-extern vector<LocNode> all_home_loc;
-extern vector<LocNode> all_resource_loc;
-extern vector<LocNode> all_obstacle_loc;
+extern vector<LocNode*> all_home_loc;
+extern vector<LocNode*> all_resource_loc;
+extern vector<LocNode*> all_obstacle_loc;
 
 #endif

@@ -4,7 +4,7 @@
 #include <string>
 #include <list>
 //#include "People.h"
-#include "Location.h"
+#include "Grid.h"
 #include <vector>
 using namespace std;
 
