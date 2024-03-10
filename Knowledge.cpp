@@ -5,6 +5,7 @@
 Knowledge::Knowledge() {
   wipeouts.clear();
   internalWorld = LocGrid(gridSize);
+  internalWorld.getNode(gridSize/2, gridSize/2)->type = HAB_ZONE;
 }
 
 void Knowledge::update_time_dependent_info() {

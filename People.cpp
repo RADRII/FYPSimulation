@@ -23,6 +23,7 @@ Person::Person() {
   identifier = person_count;
   type = 'A';
   expiry_age = 500;  // will not live beyod this age could die earlier
+  curiosity = 0.2;
   
   init_energy = 5.0;
   current_energy = init_energy;

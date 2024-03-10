@@ -22,6 +22,7 @@ class Knowledge {
   /* Location Based knowledge */
   /**********************/
   LocGrid internalWorld;
+  std::vector<LocNode*> knownResources;
 
   /**********************/
   /* episodic knowledge */

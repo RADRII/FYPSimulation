@@ -57,6 +57,7 @@ class Person {
   
   char type; // used a symbol to distinguish different 'types' of people
   int expiry_age; // will not live beyond this age; could die earlier
+  float curiosity;
 
   // ENERGY
   float init_energy; // 'energy' at birth
