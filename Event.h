@@ -10,7 +10,7 @@ using namespace std;
 
 class Person; // forward decl
 
-enum EventKind {END_STAGE, END_REST, ARRIVE, END_EAT, REACH_HOME, END_WAIT};
+enum EventKind {END_STAGE, ARRIVE, END_EAT, REACH_HOME, END_WAIT};
 
 class Event {
  public:
@@ -38,25 +38,13 @@ class EndStageEvent : public Event {
 
 };
 
-class EndRestEvent : public Event {
- public:
-  EndRestEvent();
-  ~EndRestEvent(); // prob overkill at moment
-  Person *p;  // concerning who
-  string tostring();
-  static float rest_duration_def;
-};
-
-
 class ArriveEvent : public Event {
  public:
   ArriveEvent();
   ~ArriveEvent(); // prob overkill at moment
   Person *p;  // concerning who
   //Location *l; // where reached
-  int vis_index; // where to reach in visit_sched when executed
   string tostring();
-
 };
 
 class EndEatEvent : public Event {
@@ -87,13 +75,9 @@ class EndWaitEvent : public Event {
   static float wait_duration_def;
 };
 
- 
-
 class EventLoop {
  public:
   EventLoop();
-  // no longer used?
-  //  EventLoop(vector<Location> *the_locs);
   void init_from_population(vector<Person *>); 
   void show();
   void show_first();

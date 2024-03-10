@@ -65,7 +65,6 @@ Person::Person() {
   at_home = false;
   
   wait = EndWaitEvent::wait_duration_def;
-  rest = EndRestEvent::rest_duration_def;
   
   retains_info = false;
   retains[WIPE] = false;
@@ -96,7 +95,6 @@ void Person::show_defaults(ostream& o) {
   // fam_plan stuff?
   o << " speed:" << speed;
   o << " wait:" << EndWaitEvent::wait_duration_def;
-  o << " rest:" << EndRestEvent::rest_duration_def;
     
   o << " retains_info:" << retains_info;
   if(retains_info) {
@@ -791,38 +789,25 @@ void Population::update_by_move_and_feed(int date) {
       continue;
     }
 
-    /*********************************/
-    /* case EndRest                  */
-    /*********************************/
-    
-    if(e->kind == END_REST) {
-      EndRestEvent *rst_ptr;
-      rst_ptr = (EndRestEvent *)e;
-      EndRestEvent_proc(rst_ptr,loop);
-      delete e;
-      continue;
-    }
-
-    
     /**********************************/
     /*  case Arrive v EndEat          */
     /**********************************/
     if((e->kind == ARRIVE) || (e->kind == END_EAT)) { 
       
       if(e->kind == ARRIVE) { 
-	ArriveEvent *arr_ptr;	
-	arr_ptr = (ArriveEvent *)e;
-	ArriveEvent_proc(arr_ptr,loop,date);
-	delete e;
-	continue;
+        ArriveEvent *arr_ptr;	
+        arr_ptr = (ArriveEvent *)e;
+        ArriveEvent_proc(arr_ptr,loop,date);
+        delete e;
+        continue;
       }
    
       if(e->kind == END_EAT) {     // 'release' the patch which was being eaten, if any
-	EndEatEvent *eat_ptr;
-	eat_ptr =  (EndEatEvent *)e;
-	EndEatEvent_proc(eat_ptr,loop);
-	delete e;
-	continue;
+        EndEatEvent *eat_ptr;
+        eat_ptr =  (EndEatEvent *)e;
+        EndEatEvent_proc(eat_ptr,loop);
+        delete e;
+        continue;
       }
 
      } // ARRIVE v END_EAT
@@ -892,8 +877,6 @@ void Population::EndStageEvent_proc(EndStageEvent *stg_ptr,EventLoop& loop) {
     LocNode* prev_loc;
     prev_loc = p->route[p->route_index-1];
 
-    EndRestEvent *rst;
-
     // move on
     float start_t = stg_ptr->t; 
     LocNode* nxt_loc = p->route[p->route_index+1];
@@ -929,7 +912,6 @@ void Population::EndStageEvent_proc(EndStageEvent *stg_ptr,EventLoop& loop) {
       // INSERTS
       ArriveEvent *fst = new ArriveEvent;
       fst->p = stg_ptr->p;
-      fst->vis_index = 0;  // p->vis_index is prob -1 at the moment
       fst->t = stg_ptr->t + 1;
       fst->st = stg_ptr->t;
 	  
@@ -977,59 +959,6 @@ void Population::EndStageEvent_proc(EndStageEvent *stg_ptr,EventLoop& loop) {
   qt_show_occupancy();
 }
 
-// roughly, post fresh EndStage event e for next on route 
-void Population::EndRestEvent_proc(EndRestEvent *rest_ptr,EventLoop& loop) {
-  PerPtr p = rest_ptr->p;
-
-  LocPtr cur_loc; LocPtr nxt_loc;
-  cur_loc = p->loc;
-  
-
-  if(p->todo_index == -1) { // need route to home
-    p->set_route(cur_loc,p->home_loc);
-    nxt_loc = p->home_loc;
-    
-    #if DEBUG1
-    db(p->toid()); db(" plan (no choice):"); db(cur_loc->tostring()); db(" --> "); db(nxt_loc->tostring()); db("\n");
-    #endif
-  }
-  else { // has todo_sched ... j ...
-         //                    ^
-         //     route .. n -- ei
-         //              ^     
-    // check if route is consistent with todo_sched/todo_index
-    // ie does route end in ej?
-    nxt_loc = all_res_entry_loc[p->todo_sched[p->todo_index]];
-    if(p->route.back() != nxt_loc) {
-      // route needs updating. could edit or just replace
-      p->set_route(cur_loc,nxt_loc);
-      #if DEBUG1
-      db(p->toid()); db(" to nxt todo:"); db(to_string(p->todo_sched[p->todo_index]));
-      db(" route "); db(p->route_tostring()); db("\n");
-      
-      #endif
-      
-    }
-
-  }
-  
-
-  float start_t = rest_ptr->t; 
-
-  EndStageEvent *nxt = new EndStageEvent;
-  nxt->p = p;
-  nxt->route_index = p->route_index+1;
-  nxt->t = start_t + p->get_trav_time(cur_loc,nxt_loc);
-  nxt->st = start_t;
-  #if DEBUG
-  db(p->toid()); db(" plan:"); db(cur_loc->tostring()); db(" --> "); db(nxt_loc->tostring()); db("\n");
-  #endif
-  loop.insert(nxt);
-
-  //db(rest_ptr->p->toid()); db(" gone not avail\n"); 
-
-}
-
 // roughly if Arrive  e = (t, p, x) 
 //    CHANGES due to e:
 //       update location of p from x (i.e. vis_index)
@@ -1041,34 +970,7 @@ void Population::ArriveEvent_proc(ArriveEvent *arr_ptr,EventLoop& loop, int& dat
   PerPtr p;	
   p = arr_ptr->p;
   
-  p->vis_index = arr_ptr->vis_index;
-  p->set_res_loc();
-  if(p->at_home) { p->at_home = false;} // ? needed
-
-  //Note: could check reaching last loc for first time but if it is a wipeout
-  // going to leave; could save time on non-wipeout cases
-
-  // do possible learning update
-  if((p->retains[WIPE]) && (p->at_last_loc(p->res_ptr))) {
-    
-    ResPtr r = p->res_ptr;
-    // ? check on mind is prob redundant has would have been excluded
-    // ? from entering in Person::set_todo_sched()
-    if((r->in_wipeout) && (!(p->mind.has_wipeout_info_about(r)))) {
-
-      p->mind.detect_a_wipeout(r,
-			       (r->non_zero_after_wipeout) - date,
-			       (r->normal_after_wipeout) - date
-			       );
-    }
-  }
-
-  // below is just for stats
-  // NB: decide to keep entirely separate from 'real' updates
-  if(p->at_last_loc(p->res_ptr)) {
-    p->update_places_explored(p->res_ptr);
-
-  }
+  if(p->at_home) { p->at_home = false;}
 
   // see if can eat here, leading to possible inserts
   attemptEat_proc(arr_ptr,loop);
@@ -1100,7 +1002,7 @@ void Population::EndEatEvent_proc(EndEatEvent *eat_ptr,EventLoop& loop) {
     p->eaten_today += eat_ptr->gain;
     p->current_energy += eat_ptr->gain;
     // also update person's AreaGain info
-    p->area_gains.increment_an_area_gain(p->res_ptr, eat_ptr->gain);
+    p->area_gains.increment_an_area_gain(p->loc->resourceObject, eat_ptr->gain);
     // update patch	
     p->eating_patch->remove_units(eat_ptr->units_frm_patch);
     p->eating_patch->being_eaten = false;
@@ -1121,12 +1023,12 @@ void Population::EndEatEvent_proc(EndEatEvent *eat_ptr,EventLoop& loop) {
     db("loc occupancy\n"); show_occupancy();
 #endif
     qt_show_occupancy();
-    LocPtr cur_loc = p->loc;
+    LocNode* cur_loc = p->loc;
     p->set_route(cur_loc,p->home_loc); // should check
     EndStageEvent *nxt = new EndStageEvent;
     nxt->p = p;
     nxt->route_index = 1;
-    nxt->t = eat_ptr->t + p->get_trav_time(p->route[0],p->route[1]);
+    nxt->t = eat_ptr->t + 1;
     p->move_state = LEAVING_AREA; // relying on fact that route[1] will be res entry and trigger area-change update
 #if DEBUG
     db(p->toid()); db(" plan:"); db(cur_loc->tostring()); db(" --> "); db(p->route[1]->tostring()); db("\n");
@@ -1182,16 +1084,14 @@ void Population::attemptEat_proc(Event *e,EventLoop& loop) {
   // get all patches at x (i) not empty (ii) not occupied (ie. being_eaten is set true there)
   bool have_patches_here = false;
   vector<int> patches;
-  have_patches_here = p->res_ptr->patches_at_location(patches,p->loc);
+  have_patches_here = p->loc->resourceObject->patches_at_location(patches);
 
 
   if(!have_patches_here) {
     // so none non-empty or unoccupied so
     // if  at last poss location and some occupied patches there
     //   post EndWait event
-    if((p->revisit_sched.size() == 0) &&
-       (p->vis_index == (p->visit_sched.size()-1)) &&
-       p->res_ptr->being_eaten_patches_at_location(p->loc)) {
+    if(p->loc->resourceObject->being_eaten_patches_at_location()) {
       wait_ptr = new EndWaitEvent;
       wait_ptr->p = p;
       //wait_ptr->t = e->t + EndWaitEvent::wait_duration_def;
@@ -1215,21 +1115,21 @@ void Population::attemptEat_proc(Event *e,EventLoop& loop) {
     // so some non-empty and unoccupied
     
     // get a random one
-    int patch_index = p->res_ptr->choose_rand_patch(patches);
-    CropPatch& c = p->res_ptr->resources[patch_index];
+    int patch_index = p->loc->resourceObject->choose_rand_patch(patches);
+    CropPatch& c = p->loc->resourceObject->resources[patch_index];
     // set the patch as being eaten
     c.being_eaten = true;
     // set the eater of the patch
     c.eater = p;
     // set person to state of having a patch
     //p->at_a_patch = true;
-    p->eating_patch = &(p->res_ptr->resources[patch_index]);
+    p->eating_patch = &(p->loc->resourceObject->resources[patch_index]);
 #if DEBUG
     db("hiding "); db(p->eating_patch->sym); db(p->eating_patch->pos.tostring()); db("\n");
 #endif
 
     // TEMP: for sake of later stats gathering
-    p->update_places_eaten(p->res_ptr);
+    p->update_places_eaten(p->loc->resourceObject);
 	
     //  make p eat max poss from patch, calculating handling time 'handled'
     float gain;
@@ -1284,72 +1184,45 @@ void Population::attemptMoveOn_proc(Person *p, Event *e, EventLoop& loop) {
   // note if at final part of vis_sched involves use revisit_sched and basically swapping
   // revisit_sched for visit_sched: see get_nxt_location for details 
   bool found_next = false;
-  LocPtr nxt_loc; int nxt_index;
-  LocPtr cur_loc = p->loc;
+  LocNode* nxt_loc; int nxt_index;
+  LocNode* cur_loc = p->loc;
   size_t nxt_todo_index;
-  found_next = p->get_nxt_location(nxt_loc,nxt_index);
-  if(found_next) { // going to move on to somewhere else in current Resources ara
-    ArriveEvent *nxt = new ArriveEvent;
-    nxt->p = p;
-    nxt->vis_index = nxt_index;
-    nxt->t = e->t + p->get_trav_time(cur_loc, nxt_loc);
 
+  if(p->get_nxt_frm_todo_sched(nxt_loc,nxt_todo_index)) {
+    // moving on to whole other Resources ara
+    p->todo_index = nxt_todo_index;
+    p->set_route(cur_loc,nxt_loc);
+    EndStageEvent *nxt = new EndStageEvent;
+    nxt->p = p;
+    nxt->route_index = 1;
+    nxt->t = e->t + 1;
+    p->move_state = LEAVING_AREA; // relying on fact that route[1] will be res entry and trigger area-change update
+    #if DEBUG
+        db(p->toid()); db(" to nxt todo:"); db(to_string(p->todo_sched[p->todo_index]));
+        db(" route"); db(p->route_tostring()); db("\n");
+        db("loc occupancy\n"); show_occupancy();
+    #endif
+    qt_show_occupancy();
+    loop.insert(nxt);
+  }
+  else { // going to head home
+    // note might get here with only patches still occupied in last destination
+    // so really should wait and not go home
+    // not sure how to deal with this properly for the moment
+    p->set_route(cur_loc,p->home_loc); // should check
+    EndStageEvent *nxt = new EndStageEvent;
+    nxt->p = p;
+    nxt->route_index = 1;
+    nxt->t = e->t + 1;
+    p->move_state = LEAVING_AREA; // relying on fact that route[1] will be res entry and trigger area-change update	  	  #if DEBUG
 #if DEBUG
-    db(p->toid()); db(" plan:"); db(cur_loc->tostring()); db(" --> "); db(nxt_loc->tostring()); db("\n");
-    // tmp use this to go back to jun23 style
-    // db(p->toid()); db(cur_loc->tostring()); db(" --> "); db(nxt_loc->tostring()); db("\n");
-    db("vis sched:"); p->show_visit_sched();
-    db("revis sched:"); p->show_revisit_sched();
+    db(p->toid()); db(" plan (no choice):"); db(cur_loc->tostring()); db(" --> "); db(p->home_loc->tostring()); db("\n");
     db("loc occupancy\n"); show_occupancy();
 #endif
     qt_show_occupancy();
     loop.insert(nxt);
-
   }
-  else {
-
-    if(p->get_nxt_frm_todo_sched(nxt_loc,nxt_todo_index)) {
-      // moving on to whole other Resources ara
-      p->todo_index = nxt_todo_index;
-      p->set_route(cur_loc,nxt_loc);
-      EndStageEvent *nxt = new EndStageEvent;
-      nxt->p = p;
-      nxt->route_index = 1;
-      nxt->t = e->t + p->get_trav_time(cur_loc,p->route[1]);
-      p->move_state = LEAVING_AREA; // relying on fact that route[1] will be res entry and trigger area-change update
-#if DEBUG
-      db(p->toid()); db(" to nxt todo:"); db(to_string(p->todo_sched[p->todo_index]));
-      db(" route"); db(p->route_tostring()); db("\n");
-      db("loc occupancy\n"); show_occupancy();
-#endif
-      qt_show_occupancy();
-      loop.insert(nxt);
-    }
-    else { // going to head home
-      // note might get here with only patches still occupied in last destination
-      // so really should wait and not go home
-      // not sure how to deal with this properly for the moment
-      p->set_route(cur_loc,p->home_loc); // should check
-      EndStageEvent *nxt = new EndStageEvent;
-      nxt->p = p;
-      nxt->route_index = 1;
-      nxt->t = e->t + p->get_trav_time(cur_loc,p->route[1]);
-      p->move_state = LEAVING_AREA; // relying on fact that route[1] will be res entry and trigger area-change update	  	  #if DEBUG
-#if DEBUG
-      db(p->toid()); db(" plan (no choice):"); db(cur_loc->tostring()); db(" --> "); db(p->home_loc->tostring()); db("\n");
-      db("loc occupancy\n"); show_occupancy();
-#endif
-      qt_show_occupancy();
-      loop.insert(nxt);
-    }
-  }
-
-
- 
-
 }
-
-
 
 // this event posted from earlier call to attemptEat_proc cos at last possibility
 // within an area and had to wait because patches occupied
@@ -1470,7 +1343,7 @@ void Population::aggregate_area_gains(char type,AreaGains &agg, string what_to_n
       PerPtr p = sub_pop[i];
       map<ResPtr,AreaGain>::const_iterator pag_itr;
       for(pag_itr = p->area_gains.area_gains.begin();pag_itr != p->area_gains.area_gains.end(); pag_itr++) {
-	if((what_to_note == "first_sched_gains") && (all_res[p->todo_sched[0]] != pag_itr->first)) {
+	if((what_to_note == "first_sched_gains") && (p->todo_sched[0]->resourceObject != pag_itr->first)) {
 	// this area not relevant as not first on p's sched
 	continue;
 	}
@@ -1519,7 +1392,7 @@ void Population::aggregate_sched_gains(char type,vector<float> &sched_gains) {
   for(size_t i=0; i < sub_pop.size(); i++) {
     PerPtr p = sub_pop[i];
     for(size_t si = 0; si < p->todo_sched.size(); si++) {
-      ResPtr r = all_res[p->todo_sched[si]];
+      ResPtr r = p->todo_sched[si]->resourceObject;
       float g = 0;
       if(p->area_gains.get_gain(r,g)) {
         sched_gains[si] += g;
@@ -1584,7 +1457,8 @@ void Population::set_all_todo() {
 
 // this presupposes set_all_todo has run
 void Population::set_all_routes() {
-  LocPtr fst, lst;
+  LocNode* fst;
+  LocNode* lst;
   PerPtr p;
   
   for(size_t i=0; i < population.size(); i++) {
@@ -1593,7 +1467,7 @@ void Population::set_all_routes() {
     p->at_a_resource = false; // poss redundant?
     p->loc = p->home_loc; // poss redundant?
     fst = p->loc; 
-    lst = all_res_entry_loc[p->todo_sched[0]]; 
+    lst = p->todo_sched[0]; 
     if(p->set_route(fst,lst)) {
       #if DEBUG
       db(p->toid()); db(" route:"); db(p->route_tostring()); db("\n");
@@ -1754,30 +1628,6 @@ bool compare_person(Person *p1, Person *p2) {
 
 }
 
-
-
-bool Person::choose_first_res(vector<LocNode*> res_locations, string method, LocNode* start_loc) {
-  size_t n = res_locations.size();
-  // going to sample from 0 to n-1 according to some probs
-
-  if(method == "uniform") {
-    // treat all as equi-prob
-    int rand_index = gsl_rng_uniform_int(r_global,res_locations.size());
-    start_loc = res_locations[rand_index];
-    return true; 
-  }
-  else {
-    cout << "unexpected method\n";
-    return false;
-  }
-
-}
-
-
-
-
-
-
 string Person::info_type_to_string() {
   string s = "";
   s += "retains_info:"; s += to_string(retains_info);
@@ -1802,19 +1652,6 @@ void Person::info_type_show(){
   string s = info_type_to_string();
   db(s);
 }
-
-
-bool Person::at_last_loc(ResPtr r) {
-  if(loc == &(r->locs.back())) {
-    return true;
-  }
-  else {
-    return false;
-  }
-
-}
-
-
 
 void Population::show(){
   db("pop size: "); db((int)population.size()); db("\n");
@@ -1851,7 +1688,7 @@ void Population::show_occupancy() {
   calc_res_occupancy();
   calc_res_entry_occupancy();
   
-  LocPtr hptr = NULL;
+  LocNode* hptr = NULL;
   for(size_t i=0; i < all_home_loc.size(); i++) {
     hptr = all_home_loc[i];
     db(hptr->tostring()); db(": ");
@@ -1861,158 +1698,64 @@ void Population::show_occupancy() {
     // to show the actual occupants
     db(" "); show_occupants(hptr,rptr);
     db("\n");
-    LocPtr nptr;
-    hptr->trace_fst(NODE_L,nptr);
+    LocNode* nptr;
     db(nptr->tostring()); db(": ");
     db(nptr->occupancy);
     db(" "); show_occupants(nptr,rptr);
     db("\n");
   }
 
-  LocPtr eptr = NULL;
-  for(size_t i=0; i < all_res_entry_loc.size(); i++) {
-    eptr = all_res_entry_loc[i];
+  LocNode* eptr = NULL;
+  for(size_t i=0; i < all_resource_loc.size(); i++) {
+    eptr = all_resource_loc[i];
     db(eptr->tostring()); db(": ");
     db(eptr->occupancy); db("\n");
   }
-
-  for(size_t r=0; r < all_res.size(); r++) {
-    ResPtr r_ptr = all_res[r];
-    db(r_ptr->tostring()); r_ptr->show_total();
-    db("\n");
-    for(size_t i = 0; i < r_ptr->locs.size(); i++) {
-      db(r_ptr->locs[i].tostring()); db(": "); 
-      db(r_ptr->locs[i].occupancy);
-      // to show the actual occupants in the given area
-      show_occupants(&(r_ptr->locs[i]), r_ptr);
-      db("\n");
-    }
-    
-  }
-
   
 }
 
 
 void Population::calc_res_occupancy() {
 
-  for(size_t r=0; r < all_res.size(); r++) {
-    ResPtr r_ptr = all_res[r];
-    for(size_t i = 0; i < r_ptr->locs.size(); i++) {
-      r_ptr->locs[i].occupancy = 0;
-    }
+  for(size_t r=0; r < all_resource_loc.size(); r++) {
+    all_resource_loc[r]->occupancy = 0;
   }
 
   
   Person *p;
-  LocPtr l;
+  LocNode* l;
  
   for(size_t i=0; i < population.size(); i++) {
     p = population[i];
     l = p->loc;
-    if(l->kind == PATCH) { // p at home has at least vis_index == -1
+    if(l->type == RESOURCE) { // p at home has at least vis_index == -1
       l->occupancy++;
     }
  
   }
-  
-
-  
 }
 
 void Population::calc_home_occupancy() {
   Person *p;
-  LocPtr l;
+  LocNode* l;
 
   for(size_t i=0; i < all_home_loc.size(); i++) {
     l = all_home_loc[i];
     l->occupancy = 0;
-    LocPtr n_ptr;
-    l->trace_fst(NODE_L,n_ptr);
+    LocNode* n_ptr;
     n_ptr->occupancy = 0;
   }
     
   for(size_t i=0; i < population.size(); i++) {
     p = population[i];
     l = p->loc;
-    if(l->kind == HAB_ZONE) { 
-      l->occupancy++;
-    }
-    if(l->kind == NODE) { 
+    if(l->type == HAB_ZONE) { 
       l->occupancy++;
     }
     
   }
 
 }
-
-void Population::calc_res_entry_occupancy() {
-  Person *p;
-  LocPtr l;
-
-  for(size_t i=0; i < all_res_entry_loc.size(); i++) {
-    l = all_res_entry_loc[i];
-    l->occupancy = 0;
-  }
-    
-  for(size_t i=0; i < population.size(); i++) {
-    p = population[i];
-    l = p->loc;
-    if(l->kind == RES_ENTRY) { 
-      l->occupancy++;
-    }
-  }
-
-
-
-
-}
-
-
-
-
-void Population::show_occupants(LocPtr l, ResPtr r_ptr) {
-  if(l->kind == PATCH) {
-      // to show the actual occupants in the given area
-      vector<size_t> patches;
-      patches = r_ptr->loc_to_indices[*l];
-      if(patches.size() > 0) {
-	db(" eating:");
-	for(size_t p=0; p < patches.size(); p++) {
-	  CropPatch c;
-	  c = r_ptr->resources[patches[p]]; 
-	  if(c.being_eaten) {
-	    db(c.eater->toid()); db(" ");
-	  }
-	}
-      }
-  }
-  else if(l->kind == NODE) {
-    for(size_t i=0; i < population.size(); i++) {
-      PerPtr p = population[i];
-      if(p->loc == l) {
-	db(p->toid());
-	db(" ");
-      }
-    }
-  }
-  else if(l->kind == HAB_ZONE) {
-    for(size_t i=0; i < population.size(); i++) {
-      PerPtr p = population[i];
-      if(p->loc == l) {
-	db(p->toid());
-	if(!(p->at_home)) { db("*"); }
-	db(" ");
-      }
-    }
-  }
-  else {
-    db("unexpected type of location\n");
-  }
-
-  
-}
-
 
 void Population::qt_show_crops() {
 #if USE_QT

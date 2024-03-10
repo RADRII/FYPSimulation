@@ -165,7 +165,8 @@ class Person {
   /**********************************************************/
   /* following relating to planning ie. creating todo_sched */
   /**********************************************************/
-  // selection frm all_res_entry_loc coded by index eg { e1, e2 }
+  bool at_a_resource;
+
   vector<LocNode*> todo_sched; 
   size_t todo_index;
   bool set_todo_sched();
@@ -173,7 +174,7 @@ class Person {
   bool reset_todo_sched();   
   static const size_t NO_TODO;
   string todo_sched_tostring();
-  bool get_nxt_frm_todo_sched(LocNode& res_entry_loc, size_t& nxt_todo);
+  bool get_nxt_frm_todo_sched(LocNode* res_entry_loc, size_t& nxt_todo);
 
   string todo_choice_method;
 
@@ -189,9 +190,6 @@ class Person {
 
   string info_type_to_string();
   void info_type_show();
-
-  bool at_last_loc(ResPtr r);
-
   
   bool at_home;
   LocNode* home_loc;
@@ -269,8 +267,7 @@ class Population {
   void update_by_repro(int& num); // add new population members, set num to number born
   void update_by_move_and_feed(int date);
 
-  void EndStageEvent_proc(EndStageEvent *stage_ptr,EventLoop& loop); // DONE
-  void EndRestEvent_proc(EndRestEvent *rest_ptr,EventLoop& loop); // TODO
+  void EndStageEvent_proc(EndStageEvent *stage_ptr,EventLoop& loop);
   void ArriveEvent_proc(ArriveEvent *arr_ptr,EventLoop& loop, int& date);
   void EndEatEvent_proc(EndEatEvent *eat_ptr,EventLoop& loop);
   void EndWaitEvent_proc(EndWaitEvent *wait_ptr,EventLoop& loop);
@@ -308,7 +305,7 @@ class Population {
   void calc_res_occupancy();
   void calc_home_occupancy();
   void calc_res_entry_occupancy(); // TODO
-  void show_occupants(LocNode l, ResPtr r_ptr);
+  void show_occupants(LocNode* l, ResPtr r_ptr);
 
   void qt_show_crops();
   void qt_show_occupancy();
