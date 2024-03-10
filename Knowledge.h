@@ -3,6 +3,7 @@
 
 // things a Person may come to know which can be used to influence choices
 #include "InfoTypes.h"
+#include "Grid.h"
 #include <set>
 //#include "Resource.h"
 
@@ -17,6 +18,10 @@ class Knowledge {
   Person *who;
   Knowledge();
   
+  /**********************/
+  /* Location Based knowledge */
+  /**********************/
+  LocGrid internalWorld;
 
   /**********************/
   /* episodic knowledge */
@@ -49,7 +54,6 @@ class Knowledge {
 
   string tostring();
 
-  
 };
 
 #endif

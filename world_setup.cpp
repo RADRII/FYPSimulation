@@ -7,7 +7,7 @@
 #include <iostream>
 
 //Variables to fiddle with:
-int gridSize = 7;
+extern LocGrid world;
 int numResources = 25;
 int numObstacles = 5;
 
@@ -26,7 +26,7 @@ bool setup_all_resources_and_locations() {
   setup_record << "**************\n";
 
   //Setup Empty Grid
-  LocGrid world = LocGrid(gridSize);
+  world = LocGrid(gridSize);
   setup_record << "Grid size " << gridSize << endl;
 
   //Add Home

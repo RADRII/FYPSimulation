@@ -27,6 +27,9 @@ string LocNode::tostring() {
     return s;
 }
 
+LocGrid::LocGrid() {
+}
+
 LocGrid::LocGrid(int s) {
     size = s;
 

@@ -23,12 +23,15 @@ class LocGrid {
   int size;
   std::vector<std::vector<LocNode>> nodes;
   LocGrid(int s);
+  LocGrid();
   LocNode* getNode(int x, int y);
   std::vector<LocNode*> findPath(LocNode* startNode, LocNode* endNode);
 };
 
 
 // globals vars
+extern int gridSize = 7;
+
 extern vector<LocNode*> all_home_loc;
 extern vector<LocNode*> all_resource_loc;
 extern vector<LocNode*> all_obstacle_loc;

@@ -2,14 +2,10 @@
 #include "People.h"
 #include "Debug.h"
 
-
-
 Knowledge::Knowledge() {
   wipeouts.clear();
-
+  internalWorld = LocGrid(gridSize);
 }
-
-
 
 void Knowledge::update_time_dependent_info() {
 
