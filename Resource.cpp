@@ -515,17 +515,3 @@ void test_Resources() {
 
 // all the Resources areas
 vector<ResPtr> all_res;
-
-// // map from a Location to the Resources area it is part of
-// NB: not all Locations should map to a Resources area at all
-// NB: currently code in 'world_setup.cpp' sets this map only on
-// first of an area's Locations
-map<LocNode*, ResPtr> loc_to_res;
-
-void show_all_loc_to_res() {
-  map<LocNode*, ResPtr>::const_iterator m_itr;
-  for(m_itr = loc_to_res.begin(); m_itr != loc_to_res.end(); m_itr++) {
-
-    cout << "loc: " << m_itr->first->tostring() << " is in res: " << m_itr->second->tostring() << endl;
-  }
-}

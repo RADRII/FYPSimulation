@@ -220,13 +220,4 @@ typedef Resources * ResPtr;
 // all the Resources areas
 extern vector<ResPtr> all_res;
 
-// map from a Location to the Resources area it is part of
-// NB: not all Locations should map to a Resources area at all
-extern map<LocNode, ResPtr> loc_to_res;
-
-bool res_frm_loc(LocNode* l, ResPtr& r);
-void show_all_loc_to_res();
-
-extern map<ResPtr,size_t> res_to_index;
-
 #endif

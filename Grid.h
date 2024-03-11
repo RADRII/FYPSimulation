@@ -2,7 +2,7 @@
 #define POPLOC_H
 #include <string>
 #include <vector>
-#include "Util.h"
+#include "Resource.h"
 using namespace std;
 
 enum NodeKind {HAB_ZONE, RESOURCE, OBSTACLE, EMPTY};
@@ -30,10 +30,11 @@ class LocGrid {
 
 
 // globals vars
-extern int gridSize = 7;
 
 extern vector<LocNode*> all_home_loc;
 extern vector<LocNode*> all_resource_loc;
 extern vector<LocNode*> all_obstacle_loc;
+
+bool res_frm_loc(LocNode* l, ResPtr& r);
 
 #endif

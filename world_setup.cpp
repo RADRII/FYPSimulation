@@ -7,12 +7,16 @@
 #include <iostream>
 
 //Variables to fiddle with:
-extern LocGrid world;
 int numResources = 25;
 int numObstacles = 5;
+int gridSize = 7;
 
 bool setup_all_resources_and_locations();
 void set_up_population();
+
+LocGrid world = LocGrid(gridSize);
+vector<LocNode*> all_home_loc;
+vector<LocNode*> all_resource_loc;
 
 // this makes global all_home_loc contain pointers to new home locations
 // and makes global all_res_entry_loc contains pointers to new res entry locations
@@ -26,7 +30,6 @@ bool setup_all_resources_and_locations() {
   setup_record << "**************\n";
 
   //Setup Empty Grid
-  world = LocGrid(gridSize);
   setup_record << "Grid size " << gridSize << endl;
 
   //Add Home
@@ -44,6 +47,7 @@ bool setup_all_resources_and_locations() {
     if(world.getNode(xr, yr)->type == EMPTY)
     {
       world.getNode(xr, yr)->type = OBSTACLE;
+      vector<LocNode*> all_obstacle_loc;
       all_obstacle_loc.push_back(world.getNode(xr, yr));
       setup_record << "Obstacle: X " << xr << ", Y " << yr << endl;
       success++;
@@ -88,14 +92,11 @@ bool setup_all_resources_and_locations() {
   
   for(size_t i = 0; i < numResources; i++) {
 
-    ResPtr res_ptr = new Resources(i,all_resource_loc[i],yield,energy_conv,patch_reps[i]);
+    ResPtr res_ptr = new Resources(i,all_resource_loc[i]->x,all_resource_loc[i]->y,yield,energy_conv,patch_reps[i]);
 
     all_res.push_back(res_ptr);
     // record association of between the resorce and the nodeloc
     all_resource_loc[i]->resourceObject = res_ptr;
-
-    // record index of this Resource obj in all_res
-    res_to_index[res_ptr] = i;
   }
 
   return true;

@@ -2,6 +2,7 @@
 #include "Resource.h" // needed for linking of res entry locations
 #include <iostream>
 #include <queue>
+#include "Util.h"
 
 LocNode::LocNode(int x1, int y1, NodeKind k) {
     x = x1;

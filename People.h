@@ -333,6 +333,6 @@ class Population {
 };
 
 extern Population pop;
-
+extern LocGrid world;
 
 #endif

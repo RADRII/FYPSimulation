@@ -144,7 +144,7 @@ bool Person::set_todo_sched() {
         }
       }
       if(wi.till_non_zero <= 0) {
-        to_consider.push_back(r->locPointer);
+        to_consider.push_back(world.getNode(r->x, r->y));
       }
       else {
         #if DEBUG
@@ -153,7 +153,7 @@ bool Person::set_todo_sched() {
       }
     }
     else {
-      to_consider.push_back(r->locPointer);
+      to_consider.push_back(world.getNode(r->x, r->y));
     }
   } // should have made a subset of the entry locations
 
@@ -763,7 +763,6 @@ void Population::update_by_move_and_feed(int date) {
   #if DEBUG
   db("loc occupancy\n"); show_occupancy();
   #endif
-  qt_show_occupancy();
 
   while(!loop.is_empty()) {
 
@@ -869,7 +868,7 @@ void Population::EndStageEvent_proc(EndStageEvent *stg_ptr,EventLoop& loop) {
     // if heading out of an area update gains-related vars for that area
     // just for book-keeping 
     if(p->move_state == LEAVING_AREA) {
-      p->move_state == UNDEF;
+      p->move_state = UNDEF;
       p->area_gains.set_an_area_duration(p->loc->resourceObject, stg_ptr->t);
     }
     
@@ -956,7 +955,6 @@ void Population::EndStageEvent_proc(EndStageEvent *stg_ptr,EventLoop& loop) {
   #if DEBUG
     db("loc occupancy\n"); show_occupancy();
   #endif
-  qt_show_occupancy();
 }
 
 // roughly if Arrive  e = (t, p, x) 
@@ -1022,7 +1020,6 @@ void Population::EndEatEvent_proc(EndEatEvent *eat_ptr,EventLoop& loop) {
     db(p->toid()); db(" finished\n");
     db("loc occupancy\n"); show_occupancy();
 #endif
-    qt_show_occupancy();
     LocNode* cur_loc = p->loc;
     p->set_route(cur_loc,p->home_loc); // should check
     EndStageEvent *nxt = new EndStageEvent;
@@ -1156,7 +1153,6 @@ void Population::attemptEat_proc(Event *e,EventLoop& loop) {
 #if DEBUG
     db("loc occupancy\n"); show_occupancy();
 #endif
-    qt_show_occupancy(); 
 
 
   } // end have_patches_here
@@ -1202,7 +1198,6 @@ void Population::attemptMoveOn_proc(Person *p, Event *e, EventLoop& loop) {
         db(" route"); db(p->route_tostring()); db("\n");
         db("loc occupancy\n"); show_occupancy();
     #endif
-    qt_show_occupancy();
     loop.insert(nxt);
   }
   else { // going to head home
@@ -1219,7 +1214,6 @@ void Population::attemptMoveOn_proc(Person *p, Event *e, EventLoop& loop) {
     db(p->toid()); db(" plan (no choice):"); db(cur_loc->tostring()); db(" --> "); db(p->home_loc->tostring()); db("\n");
     db("loc occupancy\n"); show_occupancy();
 #endif
-    qt_show_occupancy();
     loop.insert(nxt);
   }
 }
@@ -1681,39 +1675,6 @@ void Population::show(){
 
 
 }
-
-void Population::show_occupancy() {
-  // res.locs
-  calc_home_occupancy();
-  calc_res_occupancy();
-  calc_res_entry_occupancy();
-  
-  LocNode* hptr = NULL;
-  for(size_t i=0; i < all_home_loc.size(); i++) {
-    hptr = all_home_loc[i];
-    db(hptr->tostring()); db(": ");
-    db(hptr->occupancy);
-    
-    ResPtr rptr;
-    // to show the actual occupants
-    db(" "); show_occupants(hptr,rptr);
-    db("\n");
-    LocNode* nptr;
-    db(nptr->tostring()); db(": ");
-    db(nptr->occupancy);
-    db(" "); show_occupants(nptr,rptr);
-    db("\n");
-  }
-
-  LocNode* eptr = NULL;
-  for(size_t i=0; i < all_resource_loc.size(); i++) {
-    eptr = all_resource_loc[i];
-    db(eptr->tostring()); db(": ");
-    db(eptr->occupancy); db("\n");
-  }
-  
-}
-
 
 void Population::calc_res_occupancy() {
 

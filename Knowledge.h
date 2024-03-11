@@ -8,9 +8,7 @@
 //#include "Resource.h"
 
 class Person;
-
-
-
+extern int gridSize;
 
 class Knowledge {
  public:
