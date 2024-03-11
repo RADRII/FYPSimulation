@@ -9,6 +9,7 @@ LocNode::LocNode(int x1, int y1, NodeKind k) {
     y = y1;
     type = k;
     occupancy = 0;
+    parent = nullptr;
 }
 
 bool LocNode::equals(LocNode* other) {
@@ -60,10 +61,17 @@ LocNode* LocGrid::getNode(int x, int y) {
         return nullptr;
 }
 
+void LocGrid::resetParents() {
+    for (int x = 0; x < gridSize; x++) {
+        for (int y = 0; y < gridSize; y++) {
+            nodes[x][y].parent = nullptr;
+        }
+    }
+}
+
+//Finds path between two nodes and returns in vector with startnode ommitted
 std::vector<LocNode*> LocGrid::findPath(LocNode* startNode, LocNode* endNode) {
     std::vector<LocNode*> path;
-    if (!startNode || !endNode)
-        return path;
 
     queue<LocNode*> frontier;
     frontier.push(startNode);
@@ -72,7 +80,7 @@ std::vector<LocNode*> LocGrid::findPath(LocNode* startNode, LocNode* endNode) {
         LocNode* current = frontier.front();
         frontier.pop();
 
-        if (current == endNode) {
+        if (current->equals(endNode)) {
             // Reconstruct path
             LocNode* temp = current;
             while (temp != nullptr) {
@@ -92,7 +100,7 @@ std::vector<LocNode*> LocGrid::findPath(LocNode* startNode, LocNode* endNode) {
             int newY = current->y + dy[i];
 
             LocNode* neighbor = getNode(newX, newY);
-            if (!neighbor || neighbor->type != OBSTACLE || neighbor->type != UNKNOWN || neighbor->parent)
+            if (!neighbor || neighbor->type == OBSTACLE || neighbor->type == UNKNOWN || neighbor->parent != nullptr)
                 continue;
 
             neighbor->parent = current;
@@ -100,5 +108,7 @@ std::vector<LocNode*> LocGrid::findPath(LocNode* startNode, LocNode* endNode) {
         }
     }
 
+    resetParents(); //Needed for future routing
+    path.erase(path.begin());
     return path;
 }

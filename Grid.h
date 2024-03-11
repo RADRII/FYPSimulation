@@ -26,6 +26,7 @@ class LocGrid {
   LocGrid(int s, bool isPerson);
   LocGrid();
   LocNode* getNode(int x, int y);
+  void resetParents();
   std::vector<LocNode*> findPath(LocNode* startNode, LocNode* endNode);
 };
 
