@@ -31,11 +31,14 @@ string LocNode::tostring() {
 LocGrid::LocGrid() {
 }
 
-LocGrid::LocGrid(int s) {
+LocGrid::LocGrid(int s, bool isPerson) {
     size = s;
 
-    //Create empty grid of size s
-    nodes.resize(size, std::vector<LocNode>(size, LocNode(0, 0, EMPTY)));
+    //Create grid of size s
+    if(isPerson)
+        nodes.resize(size, std::vector<LocNode>(size, LocNode(0, 0, UNKNOWN)));
+    else
+        nodes.resize(size, std::vector<LocNode>(size, LocNode(0, 0, EMPTY)));
     for (int x = 0; x < size; x++) {
         for (int y = 0; y < size; y++) {
             nodes[x][y].x = x;

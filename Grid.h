@@ -5,7 +5,7 @@
 #include "Resource.h"
 using namespace std;
 
-enum NodeKind {HAB_ZONE, RESOURCE, OBSTACLE, EMPTY};
+enum NodeKind {HAB_ZONE, RESOURCE, OBSTACLE, EMPTY, UNKNOWN};
 
 class LocNode {
  public:
@@ -22,7 +22,7 @@ class LocGrid {
  public:
   int size;
   std::vector<std::vector<LocNode>> nodes;
-  LocGrid(int s);
+  LocGrid(int s, bool isPerson);
   LocGrid();
   LocNode* getNode(int x, int y);
   std::vector<LocNode*> findPath(LocNode* startNode, LocNode* endNode);

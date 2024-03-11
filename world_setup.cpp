@@ -14,7 +14,7 @@ int gridSize = 7;
 bool setup_all_resources_and_locations();
 void set_up_population();
 
-LocGrid world = LocGrid(gridSize);
+LocGrid world = LocGrid(gridSize, false);
 vector<LocNode*> all_home_loc;
 vector<LocNode*> all_resource_loc;
 

@@ -4,7 +4,7 @@
 
 Knowledge::Knowledge() {
   wipeouts.clear();
-  internalWorld = LocGrid(gridSize);
+  internalWorld = LocGrid(gridSize, true);
   internalWorld.getNode(gridSize/2, gridSize/2)->type = HAB_ZONE;
 }
 
