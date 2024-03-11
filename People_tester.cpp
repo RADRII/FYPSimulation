@@ -285,7 +285,6 @@ int main(int argc, char **argv) {
 
     // this does all the updates
     pop.update(date);
-    cout << "IF YOURE READING THIS IT DIDNT BREAK" << endl;
     // side effect is lots updates to r_line
     // eg DEATHS(_AGE,_STARVE,_THREAT), BIRTHS, TYPEA, TYPEB, POP, A_EN, B_EN, A_EATEN, B_EATEN, HOMETIME_MAX  
 

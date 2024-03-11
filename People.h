@@ -161,7 +161,13 @@ class Person {
   void show_route();
   void set_route_loc(); // uses route_index (bad name as its set the loc frm the route)
 
-  
+  /**********************************************************/
+  /* following relating to planning actions */
+  /**********************************************************/
+  ActionPtr prevAction;
+  LocNode* route;
+  size_t routeIndex;
+
   /**********************************************************/
   /* following relating to planning ie. creating todo_sched */
   /**********************************************************/
