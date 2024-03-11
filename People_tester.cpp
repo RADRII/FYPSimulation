@@ -42,10 +42,7 @@ int main(int argc, char **argv) {
   open_an_output(r_stats,stats_name);
   r_line.write_header(r_stats);
 
-
   open_an_output(setup_record,"sim_setup");
-
-
 
   open_an_output(gains_info_history, "gains_info");
   write_gains_info_header(gains_info_history);
@@ -265,7 +262,7 @@ int main(int argc, char **argv) {
     
     pop.zero_eaten_today();
     pop.clear_all_area_gains();
-    
+
     // TEMP: zero records of num places eaten, num places explored
     for(size_t i = 0; i < pop.population.size(); i++) {
       pop.population[i]->clear_places_eaten();
@@ -288,6 +285,7 @@ int main(int argc, char **argv) {
 
     // this does all the updates
     pop.update(date);
+    cout << "IF YOURE READING THIS IT DIDNT BREAK" << endl;
     // side effect is lots updates to r_line
     // eg DEATHS(_AGE,_STARVE,_THREAT), BIRTHS, TYPEA, TYPEB, POP, A_EN, B_EN, A_EATEN, B_EATEN, HOMETIME_MAX  
 

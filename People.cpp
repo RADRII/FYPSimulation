@@ -551,7 +551,6 @@ bool Population::update(int date){
   r_line.DEATHS_AGE = deaths_age;
   r_line.DEATHS_STARVE = deaths_starve;
   
-
   #if DEBUG
   db("> age cull, expend nrg "); show(); db("\n");
   #endif
@@ -593,7 +592,7 @@ bool Population::update(int date){
   //db_level = 0;
   update_by_move_and_feed(date);
   //db_level = 1;
-
+  cout << "IF YOURE READING THIS IT DIDNT BREAK" << endl;
   // TEMP
   // to verify area_gains code working 
   // sanity_check_area_gains(population);
