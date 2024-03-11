@@ -16,6 +16,7 @@ class LocNode {
   ResPtr resourceObject;
   LocNode(int x, int y, NodeKind type);
   string tostring();
+  bool equals(LocNode*);
 };
 
 class LocGrid {

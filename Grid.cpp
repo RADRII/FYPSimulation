@@ -11,6 +11,12 @@ LocNode::LocNode(int x1, int y1, NodeKind k) {
     occupancy = 0;
 }
 
+bool LocNode::equals(LocNode* other) {
+    if(other->x == x && other->y == y)
+        return true;
+    return false;
+}
+
 string LocNode::tostring() {
     string s;
     if(type == EMPTY) { s = "e"; }
@@ -86,7 +92,7 @@ std::vector<LocNode*> LocGrid::findPath(LocNode* startNode, LocNode* endNode) {
             int newY = current->y + dy[i];
 
             LocNode* neighbor = getNode(newX, newY);
-            if (!neighbor || neighbor->type != OBSTACLE || neighbor->parent)
+            if (!neighbor || neighbor->type != OBSTACLE || neighbor->type != UNKNOWN || neighbor->parent)
                 continue;
 
             neighbor->parent = current;
