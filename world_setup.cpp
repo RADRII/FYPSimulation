@@ -162,7 +162,7 @@ void set_up_population() {
     PerPtr p = people.population[0];
     setup_record << "type: " << p->type;
     setup_record << "type:" << p->type;
-    setup_record << " speed:" << p->speed; // making special note of speed cos going to contrast on that
+    setup_record << " speed:" << p->speed;
 
     setup_record << endl;
   }
@@ -186,7 +186,7 @@ void set_up_population() {
     people_other.population[i]->home_loc = all_home_loc[0];
     people_other.population[i]->at_home = true;
     people_other.population[i]->loc = people_other.population[i]->home_loc;
-    people_other.population[i]->speed = 4.0;
+    people_other.population[i]->speed = 2.0;
     // all else left to default
   }
 
