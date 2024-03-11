@@ -2,14 +2,13 @@
 #define KNOWLEDGE_h
 
 // things a Person may come to know which can be used to influence choices
+#include "Grid.h"
 #include "InfoTypes.h"
 #include <set>
 //#include "Resource.h"
 
 class Person;
-
-
-
+extern int gridSize;
 
 class Knowledge {
  public:
@@ -17,6 +16,11 @@ class Knowledge {
   Person *who;
   Knowledge();
   
+  /**********************/
+  /* Location Based knowledge */
+  /**********************/
+  LocGrid internalWorld;
+  std::vector<LocNode*> knownResources;
 
   /**********************/
   /* episodic knowledge */
@@ -49,7 +53,6 @@ class Knowledge {
 
   string tostring();
 
-  
 };
 
 #endif

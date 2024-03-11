@@ -1,5 +1,5 @@
 #include "Resource.h"
-#include "Location.h"
+#include "Grid.h"
 #include "People.h"
 #include "Util.h"
 #include "Debug.h"

@@ -2,6 +2,7 @@
 #include "Resource.h" // needed for linking of res entry locations
 #include <iostream>
 #include <queue>
+#include "Util.h"
 
 LocNode::LocNode(int x1, int y1, NodeKind k) {
     x = x1;
@@ -25,6 +26,9 @@ string LocNode::tostring() {
     s += f_to_s(y);
     s += "]";
     return s;
+}
+
+LocGrid::LocGrid() {
 }
 
 LocGrid::LocGrid(int s) {

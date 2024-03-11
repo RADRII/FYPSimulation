@@ -44,32 +44,6 @@ string EndStageEvent::tostring() {
 
 }
 
-
-EndRestEvent::EndRestEvent() {
-  kind = END_REST;
-  t = 0.0;
-  st = 0.0;
-  p = NULL;
-}
-
-EndRestEvent::~EndRestEvent() {} 
-
-string EndRestEvent::tostring() {
-  string s = "(";
-  s += f_to_s(t);
-  s += " per:";
-  //  s += to_string(p->identifier);
-  s += p->toid();
-  s += " end-rest";
-  s += ")"; 
-  return s;
-
-}
-
-float EndRestEvent::rest_duration_def = 4.0;
-//float EndRestEvent::rest_duration_def = 0.1;
-//float EndRestEvent::rest_duration_def = 8.0;
-
 ArriveEvent::ArriveEvent() {
   kind = ARRIVE;
   t = 0.0;
@@ -86,10 +60,8 @@ string ArriveEvent::tostring() {
   //  s += to_string(p->identifier);
   s += p->toid();
   s += " reach ";
-  s += p->visit_sched[vis_index]->tostring();
   s += ")"; 
   return s;
-
 }
 
 EndEatEvent::~EndEatEvent(){};
@@ -135,7 +107,7 @@ string ReachHome::tostring() {
   s += " per:";
   s += p->toid();
   s += " ";
-  s += p->home_loc->id;
+  s += p->home_loc->tostring();
   s += "< )"; 
   return s;
 
@@ -168,18 +140,7 @@ Person *p;  // concerning who
 float EndWaitEvent::wait_duration_def = 1.0;
 
 
-
-
-
-
 EventLoop::EventLoop() {};
-
-// no longer needed?
-// EventLoop::EventLoop(vector<Location> *the_locs) {
-//   locs = the_locs;
-//   //  home_loc.x = 0.0;
-//   // home_loc.id = "home";
-// }
 
 void EventLoop::init_from_population(vector<Person *> persons) {
 
@@ -197,20 +158,17 @@ void EventLoop::init_from_population(vector<Person *> persons) {
   // for(int i=0; i < persons.size(); i++) {
   for(int o=0; o < people_ordering_size; o++) {
     int i = people_ordering[o];
-    LocPtr fst_loc = persons[i]->route[0];
-    LocPtr nxt_loc = persons[i]->route[1];
+    LocNode* fst_loc = persons[i]->route[0];
+    LocNode* nxt_loc = persons[i]->route[1];
     EndStageEvent *fst = new EndStageEvent;
     fst->p = persons[i];
     fst->route_index = 1;  
-    fst->t = persons[i]->get_trav_time(fst_loc, nxt_loc);
+    fst->t = 1;
     fst->st = 0.0;
     insert(fst); // automatically casts to base-class ptr ?
-    
-
   }
   delete [] people_ordering;
 }
-
 
 void EventLoop::show() {
   list<EventPtr>::iterator it;

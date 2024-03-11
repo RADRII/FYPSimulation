@@ -57,6 +57,7 @@ class Person {
   
   char type; // used a symbol to distinguish different 'types' of people
   int expiry_age; // will not live beyond this age; could die earlier
+  float curiosity;
 
   // ENERGY
   float init_energy; // 'energy' at birth
@@ -144,7 +145,7 @@ class Person {
   
   // relating to Location
 
-  LocPtr loc; // where the Person is
+  LocNode* loc; // where the Person is
 
   // relating to NAVIGATION
   MoveState move_state;
@@ -154,8 +155,8 @@ class Person {
   /* following relate to navigation  OUTSIDE a Resources object */
   /**************************************************************/
   size_t route_index;
-  bool set_route(LocPtr fst, LocPtr lst);
-  vector<LocPtr> route;
+  bool set_route(LocNode* fst, LocNode* lst);
+  vector<LocNode*> route;
   string route_tostring();
   void show_route();
   void set_route_loc(); // uses route_index (bad name as its set the loc frm the route)
@@ -164,46 +165,19 @@ class Person {
   /**********************************************************/
   /* following relating to planning ie. creating todo_sched */
   /**********************************************************/
-  // selection frm all_res_entry_loc coded by index eg { e1, e2 }
-  vector<size_t> todo_sched; 
+  bool at_a_resource;
+
+  vector<LocNode*> todo_sched; 
   size_t todo_index;
   bool set_todo_sched();
-
-  void set_rest_todo_sched_random(size_t start, vector<size_t>& to_consider_indices);
   
   bool reset_todo_sched();   
   static const size_t NO_TODO;
   string todo_sched_tostring();
-  bool get_nxt_frm_todo_sched(LocPtr& res_entry_loc, size_t& nxt_todo);
+  bool get_nxt_frm_todo_sched(LocNode* res_entry_loc, size_t& nxt_todo);
 
   string todo_choice_method;
 
-  bool choose_first_res(vector<size_t> res_indices, string method, size_t& start_loc );
-
-  /*************************************************************/
-  /* following relate to navigation INSIDE a Resources object  */
-  /*************************************************************/
-  vector<LocPtr> visit_sched;
-  int vis_index;
-  vector<LocPtr> revisit_sched;
-  bool at_a_resource;
-  ResPtr res_ptr;
-  void init_visit_sched();
-  void init_revisit_sched();
-  void add_to_revisit_sched(LocPtr loc);
-  void remove_frm_visit_sched(LocPtr loc);
-  
-  void show_visit_sched();
-  void show_revisit_sched();
-  
-  void set_res_loc(); // uses vis_index
-  bool get_nxt_location(LocPtr& l, int& nxt_index);
-  float get_trav_time(LocPtr start, LocPtr end); // time from start to end given speed
-
-  float get_time_to_nxt(); // poss redundant
-
-
-  
   /*******************************************************/
   /* relating to what a Person might know and talk about */
   /*******************************************************/
@@ -216,12 +190,9 @@ class Person {
 
   string info_type_to_string();
   void info_type_show();
-
-  bool at_last_loc(ResPtr r);
-
   
   bool at_home;
-  LocPtr home_loc;
+  LocNode* home_loc;
 
   /*************************************/
   /* relating to display of attributes */
@@ -245,7 +216,6 @@ class Person {
 
   
  private:
-  size_t res_loc_index_frm_ptr(LocPtr l);
   void show_home_time();
   //void show_num_places_eaten();
   void show_num_places();
@@ -297,8 +267,7 @@ class Population {
   void update_by_repro(int& num); // add new population members, set num to number born
   void update_by_move_and_feed(int date);
 
-  void EndStageEvent_proc(EndStageEvent *stage_ptr,EventLoop& loop); // DONE
-  void EndRestEvent_proc(EndRestEvent *rest_ptr,EventLoop& loop); // TODO
+  void EndStageEvent_proc(EndStageEvent *stage_ptr,EventLoop& loop);
   void ArriveEvent_proc(ArriveEvent *arr_ptr,EventLoop& loop, int& date);
   void EndEatEvent_proc(EndEatEvent *eat_ptr,EventLoop& loop);
   void EndWaitEvent_proc(EndWaitEvent *wait_ptr,EventLoop& loop);
@@ -336,7 +305,7 @@ class Population {
   void calc_res_occupancy();
   void calc_home_occupancy();
   void calc_res_entry_occupancy(); // TODO
-  void show_occupants(LocPtr l, ResPtr r_ptr);
+  void show_occupants(LocNode* l, ResPtr r_ptr);
 
   void qt_show_crops();
   void qt_show_occupancy();
@@ -364,6 +333,6 @@ class Population {
 };
 
 extern Population pop;
-
+extern LocGrid world;
 
 #endif

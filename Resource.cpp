@@ -185,11 +185,12 @@ void CropPatch::show_bars() {
 
 Resources::Resources() {}
 
-Resources::Resources(int idd, LocNode* locP, int patch_yield, float energy_conv, int patch_rep) {
+Resources::Resources(int idd, int xx, int yy, int patch_yield, float energy_conv, int patch_rep) {
   id = idd;
   setup_record << "Resource " << id << endl;
-  
-  locPointer = locP;
+
+  x = xx;
+  y = yy;
 
   in_wipeout = false;
   //p_wipeout = 0.01;
@@ -471,9 +472,9 @@ string Resources::tostring() {
   string s;
   s += id;
   s += "(";
-  s += f_to_s(locPointer->x);
+  s += f_to_s(x);
   s += ",";
-  s += f_to_s(locPointer->y);
+  s += f_to_s(y);
   s += ")";
   return s;
 }
@@ -514,17 +515,3 @@ void test_Resources() {
 
 // all the Resources areas
 vector<ResPtr> all_res;
-
-// // map from a Location to the Resources area it is part of
-// NB: not all Locations should map to a Resources area at all
-// NB: currently code in 'world_setup.cpp' sets this map only on
-// first of an area's Locations
-map<LocNode*, ResPtr> loc_to_res;
-
-void show_all_loc_to_res() {
-  map<LocNode*, ResPtr>::const_iterator m_itr;
-  for(m_itr = loc_to_res.begin(); m_itr != loc_to_res.end(); m_itr++) {
-
-    cout << "loc: " << m_itr->first->tostring() << " is in res: " << m_itr->second->tostring() << endl;
-  }
-}

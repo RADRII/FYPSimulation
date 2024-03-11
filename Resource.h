@@ -6,7 +6,6 @@
 #include <deque>
 #include <map>
 #include <utility>
-#include "Grid.h"
 using namespace std;
 
 // part of a CropPatch
@@ -154,12 +153,13 @@ public:
   //Resources(string name, LocPtr res_entry, int patch_yield);
   //Resources(string name, LocPtr res_entry, int patch_yield, int patch_rep);
   //Resources(string name, LocPtr res_entry, int patch_yield, int patch_rep, int loc_rep);
-  Resources(int idd, LocNode* locP, int patch_yield, float energy_conv, int patch_rep);
+  Resources(int idd, int xx, int yy, int patch_yield, float energy_conv, int patch_rep);
   string id;
   string tostring();
   
-  LocNode* locPointer;
   vector<CropPatch> resources;
+  int x;
+  int y;
 
   // these run functions of same name over its CropPatch's
   void show_bands(); 
@@ -219,14 +219,5 @@ typedef Resources * ResPtr;
 
 // all the Resources areas
 extern vector<ResPtr> all_res;
-
-// map from a Location to the Resources area it is part of
-// NB: not all Locations should map to a Resources area at all
-extern map<LocNode, ResPtr> loc_to_res;
-
-bool res_frm_loc(LocNode* l, ResPtr& r);
-void show_all_loc_to_res();
-
-extern map<ResPtr,size_t> res_to_index;
 
 #endif

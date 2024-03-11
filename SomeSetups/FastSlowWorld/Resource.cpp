@@ -621,39 +621,8 @@ void test_Resources() {
   
 }
 
-// sets r to relevant Resources pointer if l is in the loc_to_res map
-// and returns true/false accordingly 
-bool res_frm_loc(LocPtr l, ResPtr& r) {
-  map<LocPtr, ResPtr>::const_iterator m_itr;
-  m_itr =   loc_to_res.find(l);
-  if(m_itr != loc_to_res.end()) {
-    r = m_itr->second;
-    return true;
-  }
-  else {
-    return false;
-  }
-
-}
-
 // all the Resources areas
 vector<ResPtr> all_res;
-
-// // map from a Location to the Resources area it is part of
-// NB: not all Locations should map to a Resources area at all
-// NB: currently code in 'world_setup.cpp' sets this map only on
-// first of an area's Locations
-map<LocPtr, ResPtr> loc_to_res;
-
-
-
-void show_all_loc_to_res() {
-  map<LocPtr, ResPtr>::const_iterator m_itr;
-  for(m_itr = loc_to_res.begin(); m_itr != loc_to_res.end(); m_itr++) {
-
-    cout << "loc: " << m_itr->first->tostring() << " is in res: " << m_itr->second->tostring() << endl;
-  }
-}
 
 
 map<ResPtr,size_t> res_to_index;
