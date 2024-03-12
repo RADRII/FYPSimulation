@@ -23,8 +23,10 @@ ofstream pop_snapshots;
 
 ofstream starvation_stats;
 
+ofstream debug_record;
+
 void write_pop_snapshot_header(ostream& o) {
-  o << "DATE TYPE AGE EN EATEN FIRST\n";
+  o << "DATE TYPE AGE EN EATEN" << endl;
 }
 
 
@@ -54,7 +56,7 @@ void write_pop_snapshot(ostream& o) {
 
 
 void write_starvation_stats_header(ostream& o) {
-  o << "DATE ID TYPE AGE EN \n";
+  o << "DATE ID TYPE AGE EN" << endl;
 
 }
 
@@ -64,6 +66,7 @@ void write_starvation_stats_line(ostream& o,PerPtr p) {
   o << p->type << " ";
   o << p->age << " ";
   o << p->current_energy << " ";   
+  o << endl;
 }
 
 string f_to_s(float f) {

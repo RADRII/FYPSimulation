@@ -133,7 +133,7 @@ class Person {
   /**********************************************************/
   /* following relating to planning actions */
   /**********************************************************/
-  ActionPtr prevAction;
+  ActionKind prevAction;
   bool atResource;
   bool isHome;
   int currentTic;
@@ -198,7 +198,7 @@ class Population {
   string id;
 
   int currentTic;
-  int homeByTime;
+  int hbt;
 
   void updatePeopleTic(int tic);
   void resetDayBools();

@@ -50,7 +50,7 @@ Person::Person() {
   hasBeenEating = false;
   isHeadingHome = false;
   
-  prevAction = NULL;
+  prevAction = START;
   energyExploreAbove = 2.5;
 
   eating_patch = NULL;
@@ -116,6 +116,8 @@ void Person::update_places_explored(LocNode* l) {
     mind.internalWorld.getNode(l->x, l->y)->type = l->type;
     num_places_explored++;
 
+    //cout << "Explored: " << l->x << " " << l->y << " is " << l->type << endl;
+
     if(l->type == RESOURCE)
       knownResources.push_back(l);
   }
@@ -165,7 +167,8 @@ string Person::route_tostring() {
 //Their previous action + the time before they have to be home
 ActionPtr Person::getNextAction(bool failedEat)
 {
-  ActionKind prev = prevAction->kind;
+  //Set prev equal to the last actions kind, if the last action was null (meaning start of day, its set to START)
+  ActionKind prev = prevAction;
 
   if(prev == HOMEREST)
   {
@@ -194,12 +197,13 @@ ActionPtr Person::getNextAction(bool failedEat)
       return next;
     }
     //routed to resource, try to eat
-    else if(route.back()->type == HAB_ZONE)
+    else if(route.back()->type == RESOURCE)
     {
       EatAction *next = new EatAction;
       next->p = this;
       return next;
     }
+    cout << "Warning: Did not route to home or resource." << endl;
   }
   else if(prev == EAT && !failedEat)
   {
@@ -251,20 +255,6 @@ ActionPtr Person::getNextAction(bool failedEat)
     }
   }
 
-  if(failedEat)
-  {
-    if(loc->type != RESOURCE)
-      cout << "Warning: tried to eat at non resource somehow" << endl;
-    
-    //if not too many people waiting, wait
-    if(loc->resourceObject->numWaiters < loc->resourceObject->resources.size())
-    {
-      WaitAction *next = new WaitAction;
-      next->p = this;
-      return next;
-    }
-  }
-
   //if no time left, go home
   vector<LocNode*> pathHome = mind.internalWorld.findPath(loc, home_loc);
   int timeHome = pathHome.size();
@@ -280,11 +270,34 @@ ActionPtr Person::getNextAction(bool failedEat)
     return next;
   }
 
+  if(failedEat)
+  {
+    if(loc->type != RESOURCE)
+      cout << "Warning: tried to eat at non resource somehow" << endl;
+    
+    //if not too many people waiting, wait
+    if(loc->resourceObject->numWaiters < loc->resourceObject->resources.size())
+    {
+      WaitAction *next = new WaitAction;
+      next->p = this;
+      debug_record << identifier << " decided to " << WAIT << endl; 
+      return next;
+    }
+  }
+
   //Finally either route to a resource or explore
   //Route to a random (viable) resource if not full
   //Explore if not
   if(!knownResources.empty() && eaten_today < max_daily_eat)
   {
+    //Check if currently on a resource, try to eat if haven't failed already
+    if(loc->type == RESOURCE && !failedEat)
+    {
+      EatAction *next = new EatAction;
+      next->p = this;
+      return next;
+    }
+
     //remove non viable resources
     vector<LocNode*> viable;
     for(int i = 0; i < knownResources.size(); i++)
@@ -292,7 +305,7 @@ ActionPtr Person::getNextAction(bool failedEat)
       vector<LocNode*> potential = mind.internalWorld.findPath(loc, knownResources[i]);
       vector<LocNode*> backHome = mind.internalWorld.findPath(knownResources[i], home_loc);
 
-      if(homeByTime - currentTic > potential.size() + backHome.size())
+      if(homeByTime - currentTic > potential.size() + backHome.size() && !knownResources[i]->equals(loc)) //viable if not current location and if possible to get there in time
         viable.push_back(knownResources[i]);
     }
 
@@ -305,6 +318,9 @@ ActionPtr Person::getNextAction(bool failedEat)
       RouteAction *next = new RouteAction;
       next->p = this;
       next->route_index = route_index;
+
+      if(failedEat)
+        debug_record << identifier << " decided to " << ROUTE << endl; 
       return next;
     }
   }
@@ -312,6 +328,9 @@ ActionPtr Person::getNextAction(bool failedEat)
   //Finally just explore
   ExploreAction *next = new ExploreAction;
   next->p = this;
+
+  if(failedEat)
+    debug_record << identifier << " decided to " << EXPLORE << endl; 
   return next;
 }
 
@@ -325,10 +344,20 @@ float Person::eat_from(CropPatch& c, float& handling, int& units_frm_patch){
   #if DEBUG
   db(identifier); db(type); db(" frm "); db(c.pos.tostring()); db(c.sym); db("\n");
   #endif
-  
-  float gained = 0.0;
-  if(max_daily_eat > eaten_today && max_energy > current_energy && c.get_total() > 1)
+
+  if(max_daily_eat > eaten_today && max_energy > current_energy && c.get_total() > 0)
   {
+    //Get smaller of the two leftovers
+    float smallerMax;
+    if(max_daily_eat - eaten_today < max_energy - current_energy)
+      smallerMax = max_daily_eat - eaten_today;
+    else
+      smallerMax = max_energy - current_energy;
+
+    //return smaller gain if gain is bigger than the smaller leftover
+    //aka dont overfill
+    if(smallerMax < c.energy_conv)
+      return smallerMax;
     return c.energy_conv;
   }
 
@@ -500,6 +529,7 @@ Population::Population() {}
 Population::Population(string name, int size){ 
 
   id = name;
+  hbt = 20;
   for(int i=0; i < size; i++) {
     
 
@@ -507,11 +537,10 @@ Population::Population(string name, int size){
 
     p->age = ((float)i/size) * 500; // unif distrib over ages ?
     if(p->age > 350) { p->num_offspring = 1; }
+    p->homeByTime = hbt;
     population.push_back(p);
 
   }
-
-  int homeByTime = 20;
   currentTic = 0;
 }
 
@@ -531,7 +560,7 @@ void Population::resetDayBools() {
     (*p)->isHeadingHome = false;
     (*p)->hasBeenEating = false;
     (*p)->isHome = false;
-    (*p)->prevAction = nullptr;
+    (*p)->prevAction = START;
 
     p++;
   }
@@ -590,11 +619,8 @@ bool Population::update(int date){
     r_line.BIRTHS = 0;
     r_line.POP = 0;
     r_line.TYPEA = 0;
-    r_line.TYPEB = 0;
     r_line.A_EN = 0;
-    r_line.B_EN = 0;
     r_line.A_EATEN = 0;
-    r_line.B_EATEN = 0;
     r_line.MAX_NUM_PLACES_EATEN = 0;
     r_line.MAX_NUM_PLACES_EXPLORED = 0;
     // no other person related updates are possible so return
@@ -607,13 +633,15 @@ bool Population::update(int date){
   /* execute day's worth of moving about to find and consume food */
   /****************************************************************/
   //db_level = 0;
-  for(int tic = 0; tic < homeByTime; tic++)
+  for(int tic = 0; tic < hbt; tic++)
   {
+    //cout << "Tic: " << tic << endl;
+    debug_record << "TIC TIC TIC TIC TIC TIC" << endl;
     pop.currentTic = tic;
     updatePeopleTic(tic);
     update_by_action(date, tic);
   }
-
+  debug_record << "TOC TOC TOC TOC TOC TOC" << endl;
   #if DEBUG
   db("------------------------\n");
   db("> feeding\n ");
@@ -663,7 +691,6 @@ bool Population::update(int date){
   }
 
   r_line.TYPEA = numA;
-  r_line.TYPEB = numB;
 
   //reset peoples daily bools
   resetDayBools();
@@ -742,7 +769,7 @@ void Population::update_by_action(int date, int tic) {
       continue;
     }
 
-    if(a->kind == EAT) 
+    else if(a->kind == EAT) 
     { 
       EatAction *arr_ptr;	
       arr_ptr = (EatAction *)a;
@@ -751,7 +778,7 @@ void Population::update_by_action(int date, int tic) {
       continue;
     }
 
-    if(a->kind == EXPLORE) 
+    else if(a->kind == EXPLORE) 
     { 
       ExploreAction *arr_ptr;	
       arr_ptr = (ExploreAction *)a;
@@ -760,7 +787,7 @@ void Population::update_by_action(int date, int tic) {
       continue;
     }
 
-    if(a->kind == HOMEREST) 
+    else if(a->kind == HOMEREST) 
     { 
       HomeAction *arr_ptr;	
       arr_ptr = (HomeAction *)a;
@@ -769,7 +796,7 @@ void Population::update_by_action(int date, int tic) {
       continue;
     }
 
-    if(a->kind == WAIT) 
+    else if(a->kind == WAIT) 
     { 
       WaitAction *arr_ptr;	
       arr_ptr = (WaitAction *)a;
@@ -777,6 +804,7 @@ void Population::update_by_action(int date, int tic) {
       delete a;
       continue;
     }
+    cout << "Warning: not a valid action" << endl;
   }
 
   r_line.MAX_NUM_PLACES_EATEN = max_places_eaten;
@@ -788,7 +816,7 @@ void Population::RouteAction_proc(RouteAction *route_ptr, int tic)
   //Get person related to action and set it as their prev action
   PerPtr p;
   p = route_ptr->p;
-  p->prevAction = route_ptr;
+  p->prevAction = ROUTE;
   p->hasBeenEating = false;
 
   //update persons prevloc and newlocs occupancy
@@ -802,10 +830,10 @@ void Population::RouteAction_proc(RouteAction *route_ptr, int tic)
   p->loc = world.getNode(x,y);
 
   //Update persons route pointer
-  p->route_index = p->route_index++;
+  p->route_index = p->route_index + 1;
 
   //Update persons loc bools
-  if(p->loc->type == HAB_ZONE && route_ptr->route_index >= p->route.size())
+  if(p->loc->type == HAB_ZONE && p->route_index >= p->route.size())
   {
     p->isHome = true;
     if(p->num_places_eaten > max_places_eaten) 
@@ -816,7 +844,7 @@ void Population::RouteAction_proc(RouteAction *route_ptr, int tic)
 
   //Todo update energy
 
-  if(p->loc->type == RESOURCE && route_ptr->route_index >= p->route.size())
+  if(p->loc->type == RESOURCE && p->route_index >= p->route.size())
     p->atResource = true;
   else p->atResource = false;
 
@@ -829,9 +857,8 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
   //Get person related to action and set it as their prev action
   PerPtr p;
   p = expl_ptr->p;
-  p->prevAction = expl_ptr;
+  p->prevAction = EXPLORE;
   p->hasBeenEating = false;
-
 
   //Get list of unexplored neigbors
   vector<LocNode*> potentials = p->mind.internalWorld.getUnexploredNeighbors(p->loc);
@@ -849,11 +876,12 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
     toGo = pathToClosestUnknown[0];
   }
 
-  //Update mind
-  p->update_places_explored(toGo);
-
   int x = toGo->x;
   int y = toGo->y;
+
+  //Update mind
+  p->update_places_explored(world.getNode(x,y));
+
   //if togo is an obstacle update knowledge and requeue explore
   if(world.getNode(x,y)->type == OBSTACLE)
   {
@@ -886,7 +914,7 @@ void Population::HomeAction_proc(HomeAction *home_ptr, int tic)
   //Get person related to action and set it as their prev action
   PerPtr p;
   p = home_ptr->p;
-  p->prevAction = home_ptr;
+  p->prevAction = HOMEREST;
 
   return;
 }
@@ -897,7 +925,7 @@ void Population::WaitAction_proc(WaitAction *wait_ptr, int tic)
   //Get person related to action and set it as their prev action
   PerPtr p;
   p = wait_ptr->p;
-  p->prevAction = wait_ptr;
+  p->prevAction = WAIT;
   p->hasBeenEating = false;
 
   p->loc->resourceObject->numWaiters = p->loc->resourceObject->numWaiters + 1;
@@ -914,35 +942,33 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
   p = eat_ptr->p;
 
   // get all patches at x (i) not empty (ii) not occupied (ie. being_eaten is set true there)
-  bool have_patches_here = false;
-  vector<int> patches;
-  have_patches_here = p->loc->resourceObject->patches_at_location(patches);
+  int cropIndex = p->loc->resourceObject->get_available_patch();
 
   //not possible to eat, have person redecide
-  if(!have_patches_here) 
+  if(cropIndex == -1) 
   {
-    p->getNextAction(true);
+    list.insert(p->getNextAction(true));
     return;
   } 
   //Else eat :)
   else
   {
     //Set prev action
-    p->prevAction = eat_ptr;
+    p->prevAction = EAT;
     p->hasBeenEating = true;
 
-    // get a random one
-    int patch_index = p->loc->resourceObject->choose_rand_patch(patches);
-    CropPatch& c = p->loc->resourceObject->resources[patch_index];
+    // get a random available patch
+    CropPatch& c = p->loc->resourceObject->resources[cropIndex];
+
     // set the patch as being eaten
     c.being_eaten = true;
+
     // set the eater of the patch
     c.eater = p;
     // set person to state of having a patch
-    //p->at_a_patch = true;
-    p->eating_patch = &(p->loc->resourceObject->resources[patch_index]);
+    p->eating_patch = &(c);
 
-    // TEMP: for sake of later stats gathering
+    // for sake of later stats gathering
     p->update_places_eaten(p->loc->resourceObject);
 	
     //  make p eat max poss from patch, calculating handling time 'handled'
@@ -954,12 +980,12 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
     gain = p->eat_from_dry_run(c,handled,units_frm_patch); // calc but dont do update
 
     // update person's energy attributes from this
-    p->eaten_today += eat_ptr->gain;
-    p->current_energy += eat_ptr->gain;
+    p->eaten_today = p->eaten_today + gain;
+    p->current_energy = p->current_energy + gain;
     // also update person's AreaGain info
-    p->area_gains.increment_an_area_gain(p->loc->resourceObject, eat_ptr->gain);
+    p->area_gains.increment_an_area_gain(p->loc->resourceObject, gain);
     // update patch	
-    p->eating_patch->remove_units(eat_ptr->units_frm_patch);
+    p->eating_patch->remove_units(1);
 
     p->resEatenAt.push_back(p->loc->resourceObject);
   }
@@ -1036,10 +1062,10 @@ void Population::update_by_repro(int& num_births) { // add new population member
     else if ((p->age >= p->repro_age_start) && (p->age <= p->repro_age_end)
 	     && (plan.planned_offspring > 0) && (plan.next_birth_age == p->age)) {
 
-      p->num_offspring++;
+      p->num_offspring = p->num_offspring + 1;
       if(plan.planned_offspring > 1 && plan.planned_offspring > p->num_offspring ) {
         plan.next_birth_age += plan.wait_next[p->num_offspring - 1];
-	plan.next_birth_age++; // so if wait_next is 0, this is the next day
+	plan.next_birth_age = plan.next_birth_age + 1; // so if wait_next is 0, this is the next day
       }
 
       #if DEBUG

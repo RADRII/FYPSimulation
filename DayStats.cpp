@@ -12,11 +12,8 @@ void DayStats::clear() {
   BIRTHS = -1;
   POP = -1;
   TYPEA = -1;
-  TYPEB = -1;
   A_EN = -1.0;
-  B_EN = -1.0;
   A_EATEN = -1.0;
-  B_EATEN = -1.0;
   MAX_NUM_PLACES_EATEN = 0;
   MAX_NUM_PLACES_EXPLORED = 0;
 }
@@ -35,11 +32,9 @@ void DayStats::write(ostream& o) {
   o << BIRTHS << " ";
   o << POP << " ";
   o << TYPEA << " ";
-  o << TYPEB << " ";
   o << A_EN << " " ;
-  o << B_EN << " ";
   o << A_EATEN << " ";
-  o << B_EATEN << endl;
+  o << endl;
 
   clear();
 
@@ -47,6 +42,6 @@ void DayStats::write(ostream& o) {
 
 void DayStats::write_header(ostream& o) {
 
-  o << "DATE CROP_INCR CROP_TOTAL NUM_AREAS_IN_WIPEOUT MAX_NUM_PLACES_EATEN MAX_NUM_PLACES_EXPLORED DEATHS_AGE DEATHS_STARVE DEATH_STRAND BIRTHS POP TYPEA TYPEB A_EN B_EN A_EATEN B_EATEN\n";
+  o << "DATE CROP_INCR CROP_TOTAL NUM_AREAS_IN_WIPEOUT MAX_NUM_PLACES_EATEN MAX_NUM_PLACES_EXPLORED DEATHS_AGE DEATHS_STARVE DEATH_STRAND BIRTHS POP TYPEA A_EN A_EATEN \n";
 }
 

@@ -10,7 +10,7 @@ using namespace std;
 
 class Person; // forward decl
 
-enum ActionKind {ROUTE, EXPLORE, EAT, HOMEREST, WAIT};
+enum ActionKind {ROUTE, EXPLORE, EAT, HOMEREST, WAIT, START};
 
 class Action {
  public:

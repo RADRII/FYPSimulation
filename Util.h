@@ -48,6 +48,11 @@ void write_starvation_stats_line(ostream& o,PerPtr p);
 
 extern  ofstream setup_record;
 
+/*****************************************************/
+/* debug stream, for whatever i want :)     */
+/*****************************************************/
+extern  ofstream debug_record;
+
 string f_to_s(float f);
 
 string time_stamp(void);

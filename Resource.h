@@ -186,11 +186,8 @@ public:
   /* relating to EATING processes */
   /***************************************/
   
-  // get non-empty patches which are also not being_eaten at the given location
-  bool patches_at_location(vector<int>& patches);
-  
-  // pick a random one from given list of patches
-  int choose_rand_patch(vector<int> &patches);
+  // get random non-empty patch which are also not being_eaten
+  int get_available_patch();
   
   // helper vars used by above (which uses GSL shuffle function which uses an array)
   int *crop_ordering; // pointer to array containing random shuffle of 0 .. N-1 

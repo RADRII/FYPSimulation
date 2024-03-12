@@ -46,11 +46,12 @@ int main(int argc, char **argv) {
 
   open_an_output(pop_snapshots, "pop_snapshots");
   write_pop_snapshot_header(pop_snapshots);
-  pop_snapshots << endl; //needed to work
 
   open_an_output(starvation_stats,"starvation_stats");
   write_starvation_stats_header(starvation_stats);  
-  starvation_stats << endl; //needed to work
+
+  open_an_output(debug_record,"debug_record");
+  debug_record << "Welcome." << endl;
 
 #if DEBUG1
   init_db_file("/tmp/Toss/junk");
@@ -140,11 +141,8 @@ int main(int argc, char **argv) {
     r_line.BIRTHS = 0;
     r_line.POP = 0;
     r_line.TYPEA = 0;
-    r_line.TYPEB = 0;
     r_line.A_EN = 0;
-    r_line.B_EN = 0;
     r_line.A_EATEN = 0;
-    r_line.B_EATEN = 0;
     
     r_line.MAX_NUM_PLACES_EATEN = 0;
     r_line.MAX_NUM_PLACES_EXPLORED = 0;
@@ -265,6 +263,7 @@ int main(int argc, char **argv) {
 
     // this does all the updates
     pop.update(date);
+
     // side effect is lots updates to r_line
     // eg DEATHS(_AGE,_STARVE,_THREAT), BIRTHS, TYPEA, TYPEB, POP, A_EN, B_EN, A_EATEN, B_EATEN, HOMETIME_MAX  
 
