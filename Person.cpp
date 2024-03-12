@@ -344,10 +344,20 @@ float Person::eat_from(CropPatch& c, float& handling, int& units_frm_patch){
   #if DEBUG
   db(identifier); db(type); db(" frm "); db(c.pos.tostring()); db(c.sym); db("\n");
   #endif
-  
-  float gained = 0.0;
-  if(max_daily_eat > eaten_today && max_energy > current_energy && c.get_total() > 1)
+
+  if(max_daily_eat > eaten_today && max_energy > current_energy && c.get_total() > 0)
   {
+    //Get smaller of the two leftovers
+    float smallerMax;
+    if(max_daily_eat - eaten_today < max_energy - current_energy)
+      smallerMax = max_daily_eat - eaten_today;
+    else
+      smallerMax = max_energy - current_energy;
+
+    //return smaller gain if gain is bigger than the smaller leftover
+    //aka dont overfill
+    if(smallerMax < c.energy_conv)
+      return smallerMax;
     return c.energy_conv;
   }
 
@@ -625,7 +635,7 @@ bool Population::update(int date){
   //db_level = 0;
   for(int tic = 0; tic < hbt; tic++)
   {
-    cout << "Tic: " << tic << endl;
+    //cout << "Tic: " << tic << endl;
     debug_record << "TIC TIC TIC TIC TIC TIC" << endl;
     pop.currentTic = tic;
     updatePeopleTic(tic);
@@ -970,12 +980,12 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
     gain = p->eat_from_dry_run(c,handled,units_frm_patch); // calc but dont do update
 
     // update person's energy attributes from this
-    p->eaten_today += eat_ptr->gain;
-    p->current_energy += eat_ptr->gain;
+    p->eaten_today = p->eaten_today + gain;
+    p->current_energy = p->current_energy + gain;
     // also update person's AreaGain info
-    p->area_gains.increment_an_area_gain(p->loc->resourceObject, eat_ptr->gain);
+    p->area_gains.increment_an_area_gain(p->loc->resourceObject, gain);
     // update patch	
-    p->eating_patch->remove_units(eat_ptr->units_frm_patch);
+    p->eating_patch->remove_units(1);
 
     p->resEatenAt.push_back(p->loc->resourceObject);
   }
