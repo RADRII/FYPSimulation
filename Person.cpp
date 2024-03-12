@@ -169,7 +169,7 @@ ActionPtr Person::getNextAction(bool failedEat)
 {
   //Set prev equal to the last actions kind, if the last action was null (meaning start of day, its set to START)
   ActionKind prev = prevAction;
-  cout << home_loc->x << " " << home_loc->y << endl;
+
   if(prev == HOMEREST)
   {
     if(loc->type != HAB_ZONE)
@@ -197,12 +197,13 @@ ActionPtr Person::getNextAction(bool failedEat)
       return next;
     }
     //routed to resource, try to eat
-    else if(route.back()->type == HAB_ZONE)
+    else if(route.back()->type == RESOURCE)
     {
       EatAction *next = new EatAction;
       next->p = this;
       return next;
     }
+    cout << "Warning: Did not route to home or resource." << endl;
   }
   else if(prev == EAT && !failedEat)
   {
@@ -812,10 +813,10 @@ void Population::RouteAction_proc(RouteAction *route_ptr, int tic)
   p->loc = world.getNode(x,y);
 
   //Update persons route pointer
-  p->route_index = p->route_index++;
+  p->route_index = p->route_index + 1;
 
   //Update persons loc bools
-  if(p->loc->type == HAB_ZONE && route_ptr->route_index >= p->route.size())
+  if(p->loc->type == HAB_ZONE && p->route_index >= p->route.size())
   {
     p->isHome = true;
     if(p->num_places_eaten > max_places_eaten) 
@@ -826,7 +827,7 @@ void Population::RouteAction_proc(RouteAction *route_ptr, int tic)
 
   //Todo update energy
 
-  if(p->loc->type == RESOURCE && route_ptr->route_index >= p->route.size())
+  if(p->loc->type == RESOURCE && p->route_index >= p->route.size())
     p->atResource = true;
   else p->atResource = false;
 
@@ -1044,10 +1045,10 @@ void Population::update_by_repro(int& num_births) { // add new population member
     else if ((p->age >= p->repro_age_start) && (p->age <= p->repro_age_end)
 	     && (plan.planned_offspring > 0) && (plan.next_birth_age == p->age)) {
 
-      p->num_offspring++;
+      p->num_offspring = p->num_offspring + 1;
       if(plan.planned_offspring > 1 && plan.planned_offspring > p->num_offspring ) {
         plan.next_birth_age += plan.wait_next[p->num_offspring - 1];
-	plan.next_birth_age++; // so if wait_next is 0, this is the next day
+	plan.next_birth_age = plan.next_birth_age + 1; // so if wait_next is 0, this is the next day
       }
 
       #if DEBUG
