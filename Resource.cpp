@@ -192,6 +192,8 @@ Resources::Resources(int idd, int xx, int yy, int patch_yield, float energy_conv
   x = xx;
   y = yy;
 
+  numWaiters = 0;
+  
   in_wipeout = false;
   //p_wipeout = 0.01;
   //  p_wipeout = 0.10;
@@ -511,6 +513,13 @@ void test_Resources() {
     #endif
   }
   
+}
+
+bool Resources::equals(ResPtr r)
+{
+  if(x == r->x && y == r->y && id == r->id)
+    return true;
+  return false;
 }
 
 // all the Resources areas

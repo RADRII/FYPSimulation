@@ -5,7 +5,7 @@
 #include "Resource.h"
 using namespace std;
 
-enum NodeKind {HAB_ZONE, RESOURCE, OBSTACLE, EMPTY};
+enum NodeKind {HAB_ZONE, RESOURCE, OBSTACLE, EMPTY, UNKNOWN, START};
 
 class LocNode {
  public:
@@ -16,16 +16,20 @@ class LocNode {
   ResPtr resourceObject;
   LocNode(int x, int y, NodeKind type);
   string tostring();
+  bool equals(LocNode*);
 };
 
 class LocGrid {
  public:
   int size;
   std::vector<std::vector<LocNode>> nodes;
-  LocGrid(int s);
+  LocGrid(int s, bool isPerson);
   LocGrid();
   LocNode* getNode(int x, int y);
+  vector <LocNode*> getUnexploredNeighbors(LocNode* loc);
+  void resetParents();
   std::vector<LocNode*> findPath(LocNode* startNode, LocNode* endNode);
+  std::vector<LocNode*> findPathClosestUnexplored(LocNode* startNode);
 };
 
 

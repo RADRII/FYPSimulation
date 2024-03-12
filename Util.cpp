@@ -1,6 +1,6 @@
 #include "Util.h"
 #include "CmdLineVersions.h"
-#include "People.h"
+#include "Person.h"
 
 #include <iostream>
 #include <algorithm>
@@ -58,9 +58,8 @@ void write_gains_info_line(ostream& history) {
   /* (OneA TwoA ThreeA FourA FiveA)                              */
   /* output A sub-type gains, disregarding position in schedules */
   /***************************************************************/
-  string what_to_note = "all";
   agg.clear_area_gains();
-  pop.aggregate_area_gains('A',agg,what_to_note);
+  pop.aggregate_area_gains('A',agg);
   for(int i = 0; i < all_res.size(); i++) {
       float f;
       if(agg.get_gain(all_res[i],f)) {
@@ -78,7 +77,7 @@ void write_gains_info_line(ostream& history) {
   /***************************************************************/
 
   agg.clear_area_gains();
-  pop.aggregate_area_gains('B',agg,what_to_note);
+  pop.aggregate_area_gains('B',agg);
   for(int i = 0; i < all_res.size(); i++) {
       float f;
       if(agg.get_gain(all_res[i],f)) {
@@ -89,104 +88,15 @@ void write_gains_info_line(ostream& history) {
       }
       history << " ";
   }
-
-  /*********************************************************/
-  /* OBSOLETE: record  sched gains into gains_info_history */
-  /* A0 .. A4 B0 .. B4                                     */
-  /*********************************************************/
-  
-  // first 'A'
-  sched_agg.clear();
-  pop.aggregate_sched_gains('A',sched_agg);
-  for(size_t i = 0; i < sched_agg.size(); i++) {
-    history << sched_agg[i] << " "; 
-  }
-
-  sched_agg.clear();
-  // then 'B'
-  pop.aggregate_sched_gains('B',sched_agg);
-  for(size_t i = 0; i < sched_agg.size(); i++) {
-    history << sched_agg[i] << " "; 
-  }
-
-  /************************************************/
-  /* */
-  /* (sh_a)                                        */
-  /*************************************************/
-  
-
-
-  /***************************************************************/
-  /* (sh_a c0_a .. c4_a g0_a .. g4_a m0_a .. m4_a)                    */
-  /* the switches made in todo_sched for A (obsolete) */
-  /* counts, gains, means for A in areas first in todo_sched     */
-  /***************************************************************/
-  history << num_switches_A << " ";
-  write_sched_gains_for_subtype('A',history);
-
-  /***************************************************************/
-  /* (sh_b c0_b .. c4_b g0_b .. g4_b m0_b .. m4_b)                    */
-  /* the switches made in todo_sched for B (obsolete) */
-  /* counts, gains, means for B in areas first in todo_sched     */
-  /***************************************************************/
-  history << num_switches_B << " ";
-  write_sched_gains_for_subtype('B',history);
-
   history << endl;
 
 
   
 }
 
-void write_sched_gains_for_subtype(char sub_type,ostream& history) {
-  /***************************************************************/
-  /* (c0_a .. c4_a g0_a .. g4_a m0_a .. m4_a)                    */
-  /* counts, gains, means for A in areas first in todo_sched     */
-  /***************************************************************/
-  
-  agg.clear_area_gains();
-  pop.aggregate_area_gains(sub_type,agg,"first_sched_gains");
-  
-  for(int i = 0; i < all_res.size(); i++) {
-    int c;
-    if(agg.get_count(all_res[i],c)) {
-      history << c ; 
-    }
-    else {
-      history << 0;
-    }
-    history << " " ;
-  }
-
-  for(int i = 0; i < all_res.size(); i++) {
-    float f;
-    if(agg.get_gain(all_res[i],f)) {
-      history << f ; 
-    }
-    else {
-      history << 0;
-    }
-    history << " " ;
-  }
-
-  for(int i = 0; i < all_res.size(); i++) {
-    float m;
-    if(agg.get_gain_per_person(all_res[i],m)) {
-      history << m ; 
-    }
-    else {
-      history << 0;
-    }
-    history << " " ;
-  }
-
-
-}
-
-
 
 void write_pop_snapshot_header(ostream& o) {
-  o << "DATE TYPE AGE EN EATEN HOMETIME FIRST\n";
+  o << "DATE TYPE AGE EN EATEN FIRST\n";
 
 }
 
@@ -207,14 +117,6 @@ void write_pop_snapshot(ostream& o) {
     o << p->age << " ";
     o << p->current_energy << " ";
     o << p->eaten_today << " ";
-    if(p->age > 0) {
-    o << p->home_time << " ";
-    o << p->todo_sched[0] << " ";
-    }
-    else {
-    o << "NA ";
-    o << "NA ";
-    }
     o << "\n";
   }
 
@@ -225,7 +127,7 @@ void write_pop_snapshot(ostream& o) {
 
 
 void write_starvation_stats_header(ostream& o) {
-  o << "DATE ID TYPE AGE EN HOMETIME\n";
+  o << "DATE ID TYPE AGE EN\n";
 
 }
 
@@ -235,7 +137,6 @@ void write_starvation_stats_line(ostream& o,PerPtr p) {
   o << p->type << " ";
   o << p->age << " ";
   o << p->current_energy << " ";
-  o << p->home_time << "\n";
     
 }
 

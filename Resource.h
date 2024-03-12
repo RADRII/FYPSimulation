@@ -161,6 +161,8 @@ public:
   int x;
   int y;
 
+  int numWaiters;
+
   // these run functions of same name over its CropPatch's
   void show_bands(); 
   void show_bars();
@@ -197,6 +199,8 @@ public:
   bool being_eaten_patches_at_location();
   // checks whether any patches are being_eaten at given location
   // used to see the location should be added to someone's revisit list
+
+  bool equals(Resources* r);
   
 private:
   // defaults relating to the patches which are contained

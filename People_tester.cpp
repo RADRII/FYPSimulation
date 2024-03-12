@@ -1,6 +1,6 @@
 #include "Resource.h"
 #include "Grid.h"
-#include "People.h"
+#include "Person.h"
 #include "Util.h"
 #include "Debug.h"
 #include "CmdLineVersions.h"
@@ -131,8 +131,6 @@ int main(int argc, char **argv) {
       db("\n");
 #endif
     }
-    
-    pop.qt_show_crops();
 
     r_line.DATE = date;
     r_line.CROP_INCR = incr;
@@ -150,10 +148,6 @@ int main(int argc, char **argv) {
     r_line.A_EATEN = 0;
     r_line.B_EATEN = 0;
     
-    r_line.HOMETIME_MAX_LIVING = 0;
-    r_line.HOMETIME_MAX_DEAD = 0;
-    r_line.HOMETIME_MAX = 0;
-    r_line.TWOPLACETIME_MAX = 0;
     r_line.MAX_NUM_PLACES_EATEN = 0;
     r_line.MAX_NUM_PLACES_EXPLORED = 0;
     r_line.write(r_stats);
@@ -240,7 +234,7 @@ int main(int argc, char **argv) {
     WorldShow::res_level = -1;
 #endif
     
-    pop.qt_show_crops();
+    //pop.qt_show_crops();
     //   WorldShow::res_level = -1;
     // skip bars
     for(size_t i = 0; i < all_res.size(); i++) {
@@ -267,8 +261,6 @@ int main(int argc, char **argv) {
     for(size_t i = 0; i < pop.population.size(); i++) {
       pop.population[i]->clear_places_eaten();
       pop.population[i]->clear_places_explored();
-      pop.population[i]->home_time = 0;
-
     }
 
 #if DEBUG
@@ -285,7 +277,6 @@ int main(int argc, char **argv) {
 
     // this does all the updates
     pop.update(date);
-    cout << "IF YOURE READING THIS IT DIDNT BREAK" << endl;
     // side effect is lots updates to r_line
     // eg DEATHS(_AGE,_STARVE,_THREAT), BIRTHS, TYPEA, TYPEB, POP, A_EN, B_EN, A_EATEN, B_EATEN, HOMETIME_MAX  
 

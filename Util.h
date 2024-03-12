@@ -7,7 +7,7 @@
 #include <sstream>
 #include "DayStats.h"
 #include "AreaGain.h"
-#include "People.h"
+#include "Person.h"
 
 using namespace std;
 
@@ -30,15 +30,10 @@ extern  ofstream gains_info_history;
 //extern AreaGains b_agg;
 extern AreaGains agg;
 
-extern vector<float> sched_agg; // prob redundant
-
 
 extern string gains_info_header;
 void write_gains_info_header(ostream& o);
 void write_gains_info_line(ostream& o);
-void write_sched_gains_for_subtype(char sub_type,ostream& o);
-
-
 
 /******************/
 /* pop snap shots */
