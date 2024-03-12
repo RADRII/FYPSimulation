@@ -50,7 +50,7 @@ Person::Person() {
   hasBeenEating = false;
   isHeadingHome = false;
   
-  prevAction = NULL;
+  prevAction = START;
   energyExploreAbove = 2.5;
 
   eating_patch = NULL;
@@ -166,13 +166,7 @@ string Person::route_tostring() {
 ActionPtr Person::getNextAction(bool failedEat)
 {
   //Set prev equal to the last actions kind, if the last action was null (meaning start of day, its set to START)
-  ActionKind prev;
-  if(prevAction == nullptr)
-    prev = START;
-  else
-  {
-    prev = prevAction->kind;
-  }
+  ActionKind prev = prevAction;
 
   if(prev == HOMEREST)
   {
@@ -538,7 +532,7 @@ void Population::resetDayBools() {
     (*p)->isHeadingHome = false;
     (*p)->hasBeenEating = false;
     (*p)->isHome = false;
-    (*p)->prevAction = nullptr;
+    (*p)->prevAction = START;
 
     p++;
   }
@@ -749,7 +743,7 @@ void Population::update_by_action(int date, int tic) {
       continue;
     }
 
-    if(a->kind == EAT) 
+    else if(a->kind == EAT) 
     { 
       EatAction *arr_ptr;	
       arr_ptr = (EatAction *)a;
@@ -758,7 +752,7 @@ void Population::update_by_action(int date, int tic) {
       continue;
     }
 
-    if(a->kind == EXPLORE) 
+    else if(a->kind == EXPLORE) 
     { 
       ExploreAction *arr_ptr;	
       arr_ptr = (ExploreAction *)a;
@@ -767,7 +761,7 @@ void Population::update_by_action(int date, int tic) {
       continue;
     }
 
-    if(a->kind == HOMEREST) 
+    else if(a->kind == HOMEREST) 
     { 
       HomeAction *arr_ptr;	
       arr_ptr = (HomeAction *)a;
@@ -776,7 +770,7 @@ void Population::update_by_action(int date, int tic) {
       continue;
     }
 
-    if(a->kind == WAIT) 
+    else if(a->kind == WAIT) 
     { 
       WaitAction *arr_ptr;	
       arr_ptr = (WaitAction *)a;
@@ -784,6 +778,7 @@ void Population::update_by_action(int date, int tic) {
       delete a;
       continue;
     }
+    cout << "Warning: not a valid action" << endl;
   }
 
   r_line.MAX_NUM_PLACES_EATEN = max_places_eaten;
@@ -795,7 +790,7 @@ void Population::RouteAction_proc(RouteAction *route_ptr, int tic)
   //Get person related to action and set it as their prev action
   PerPtr p;
   p = route_ptr->p;
-  p->prevAction = route_ptr;
+  p->prevAction = ROUTE;
   p->hasBeenEating = false;
 
   //update persons prevloc and newlocs occupancy
@@ -836,7 +831,7 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
   //Get person related to action and set it as their prev action
   PerPtr p;
   p = expl_ptr->p;
-  p->prevAction = expl_ptr;
+  p->prevAction = EXPLORE;
   p->hasBeenEating = false;
 
   //Get list of unexplored neigbors
@@ -892,7 +887,7 @@ void Population::HomeAction_proc(HomeAction *home_ptr, int tic)
   //Get person related to action and set it as their prev action
   PerPtr p;
   p = home_ptr->p;
-  p->prevAction = home_ptr;
+  p->prevAction = HOMEREST;
 
   return;
 }
@@ -903,7 +898,7 @@ void Population::WaitAction_proc(WaitAction *wait_ptr, int tic)
   //Get person related to action and set it as their prev action
   PerPtr p;
   p = wait_ptr->p;
-  p->prevAction = wait_ptr;
+  p->prevAction = WAIT;
   p->hasBeenEating = false;
 
   p->loc->resourceObject->numWaiters = p->loc->resourceObject->numWaiters + 1;
@@ -934,7 +929,7 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
   else
   {
     //Set prev action
-    p->prevAction = eat_ptr;
+    p->prevAction = EAT;
     p->hasBeenEating = true;
 
     // get a random one

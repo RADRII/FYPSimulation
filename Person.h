@@ -133,7 +133,7 @@ class Person {
   /**********************************************************/
   /* following relating to planning actions */
   /**********************************************************/
-  ActionPtr prevAction;
+  ActionKind prevAction;
   bool atResource;
   bool isHome;
   int currentTic;
