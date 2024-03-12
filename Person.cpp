@@ -24,8 +24,9 @@ Person::Person() {
   type = 'A';
   expiry_age = 500;  // will not live beyod this age could die earlier
 
-  curiosity = 0.2;
+  curiosity = 50.0;
   homeByTime = 20;
+  energyExploreAbove = 1.0;
   
   init_energy = 5.0;
   current_energy = init_energy;
@@ -112,6 +113,18 @@ int Person::closestViableResource() {
   return index;
 }
 
+void Person::update_places_explored(LocNode* l) {
+  if(mind.internalWorld.getNode(l->x, l->y)->type == UNKNOWN)
+  {
+    mind.internalWorld.getNode(l->x, l->y)->type = l->type;
+    num_places_explored++;
+
+    if(l->type == RESOURCE)
+      knownResources.push_back(l);
+  }
+}
+
+
 bool Person::set_route(LocNode* fst, LocNode* lst) {
   route.clear();
   route_index = 0;
@@ -148,6 +161,161 @@ string Person::route_tostring() {
     if(i != (route.size()-1)) { s += " -- "; }
   }
  return s;
+}
+
+//Way to complicated to explain the entire decision tree here but
+//Person will decide on their next action depending mostly on:
+//Their previous action + the time before they have to be home
+ActionPtr Person::getNextAction(bool failedEat)
+{
+  ActionKind prev = prevAction->kind;
+
+  if(prev == HOMEREST)
+  {
+    if(loc->type != HAB_ZONE)
+      cout << "Warning: somehow resting not at home" << endl;
+
+    HomeAction *next = new HomeAction;
+    next->p = this;
+    return next;
+  }
+  if(prev == ROUTE && !failedEat)
+  {
+    //If in middle of a prev route, continue
+    if(route_index < route.size())
+    {
+      RouteAction *next = new RouteAction;
+      next->p = this;
+      next->route_index = route_index;
+      return next;
+    }
+    //routed home, time to rest
+    else if(route.back()->type == HAB_ZONE)
+    {
+      HomeAction *next = new HomeAction;
+      next->p = this;
+      return next;
+    }
+    //routed to resource, try to eat
+    else if(route.back()->type == HAB_ZONE)
+    {
+      EatAction *next = new EatAction;
+      next->p = this;
+      return next;
+    }
+  }
+  else if(prev == EAT && !failedEat)
+  {
+    //if no time left, go home
+    vector<LocNode*> pathHome = mind.internalWorld.findPath(loc, home_loc);
+    int timeHome = pathHome.size();
+    if((homeByTime - currentTic) <= timeHome)
+    {
+      isHeadingHome = true;
+      route = pathHome;
+      route_index = 0;
+      
+      RouteAction *next = new RouteAction;
+      next->p = this;
+      next->route_index = route_index;
+      return next;
+    }
+
+    //else if not full try to eat again
+    if(current_energy < max_energy && eaten_today < max_daily_eat)
+    {
+      EatAction *next = new EatAction;
+      next->p = this;
+      return next;
+    }
+    //explore if energy after going home right now is above a certain bounday
+    //plus random chance with curiosity
+    //plus is there anything to explore
+    else if((
+      !mind.internalWorld.findPathClosestUnexplored(loc).empty() &&
+      current_energy - (timeHome * moveCost) - sleepEnergyLoss) > energyExploreAbove &&
+      (1+ (rand() % 100)) > curiosity)
+    {
+      ExploreAction *next = new ExploreAction;
+      next->p = this;
+      return next;
+    }
+    //else head home
+    else
+    {
+      isHeadingHome = true;
+      route = pathHome;
+      route_index = 0;
+      
+      RouteAction *next = new RouteAction;
+      next->p = this;
+      next->route_index = route_index;
+      return next;
+    }
+  }
+
+  if(failedEat)
+  {
+    if(loc->type != RESOURCE)
+      cout << "Warning: tried to eat at non resource somehow" << endl;
+    
+    //if not too many people waiting, wait
+    if(loc->resourceObject->numWaiters < loc->resourceObject->resources.size())
+    {
+      WaitAction *next = new WaitAction;
+      next->p = this;
+      return next;
+    }
+  }
+
+  //if no time left, go home
+  vector<LocNode*> pathHome = mind.internalWorld.findPath(loc, home_loc);
+  int timeHome = pathHome.size();
+  if((homeByTime - currentTic) <= timeHome)
+  {
+    isHeadingHome = true;
+    route = pathHome;
+    route_index = 0;
+    
+    RouteAction *next = new RouteAction;
+    next->p = this;
+    next->route_index = route_index;
+    return next;
+  }
+
+  //Finally either route to a resource or explore
+  //Route to a random (viable) resource if not full
+  //Explore if not
+  if(!knownResources.empty() && eaten_today < max_daily_eat)
+  {
+    //remove non viable resources
+    vector<LocNode*> viable;
+    for(int i = 0; i < knownResources.size(); i++)
+    {
+      vector<LocNode*> potential = mind.internalWorld.findPath(loc, knownResources[i]);
+      vector<LocNode*> backHome = mind.internalWorld.findPath(knownResources[i], home_loc);
+
+      if(homeByTime - currentTic > potential.size() + backHome.size())
+        viable.push_back(knownResources[i]);
+    }
+
+    if(!viable.empty())
+    {
+      int randIndex = rand() % viable.size();
+      route = mind.internalWorld.findPath(loc, viable[randIndex]);;
+      route_index = 0;
+      
+      RouteAction *next = new RouteAction;
+      next->p = this;
+      next->route_index = route_index;
+      return next;
+    }
+  }
+
+  //Finally just explore
+  ExploreAction *next = new ExploreAction;
+  next->p = this;
+  return next;
 }
 
 // amout returned as 'gained' can assume
@@ -243,15 +411,6 @@ void Person::update_places_eaten(ResPtr r) {
 void Person::clear_places_eaten() {
   resEatenAt.clear();
   num_places_eaten = 0;
-}
-
-/* need just for stats */
-void Person::update_places_explored(LocNode* l) {
-  if(mind.internalWorld.getNode(l->x, l->y)->type == UNKNOWN)
-  {
-    mind.internalWorld.getNode(l->x, l->y)->type = l->type;
-    num_places_explored++;
-  }
 }
 
 /* need just for stats */
@@ -397,6 +556,9 @@ void Population::updatePeopleTic(int tic)
 
     p++;
   }
+
+  for(int i = 0; i < all_res.size(); i++)
+    all_res[i]->numWaiters = 0;
 }
 
 void sanity_check_area_gains(vector<PerPtr> &population);
@@ -648,7 +810,7 @@ void Population::RouteAction_proc(RouteAction *route_ptr, int tic)
   p->route_index = p->route_index++;
 
   //Update persons loc bools
-  if(p->loc->type == HAB_ZONE && route_ptr->route_index + 1 == p->route.size())
+  if(p->loc->type == HAB_ZONE && route_ptr->route_index >= p->route.size())
   {
     p->isHome = true;
     if(p->num_places_eaten > max_places_eaten) 
@@ -659,7 +821,7 @@ void Population::RouteAction_proc(RouteAction *route_ptr, int tic)
 
   //Todo update energy
 
-  if(p->loc->type == RESOURCE && route_ptr->route_index + 1 == p->route.size())
+  if(p->loc->type == RESOURCE && route_ptr->route_index >= p->route.size())
     p->atResource = true;
   else p->atResource = false;
 
@@ -674,6 +836,7 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
   p = expl_ptr->p;
   p->prevAction = expl_ptr;
   p->hasBeenEating = false;
+
 
   //Get list of unexplored neigbors
   vector<LocNode*> potentials = p->mind.internalWorld.getUnexploredNeighbors(p->loc);
@@ -691,12 +854,14 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
     toGo = pathToClosestUnknown[0];
   }
 
+  //Update mind
+  p->update_places_explored(toGo);
+
   int x = toGo->x;
   int y = toGo->y;
   //if togo is an obstacle update knowledge and requeue explore
   if(world.getNode(x,y)->type == OBSTACLE)
   {
-    p->mind.internalWorld.getNode(x, y)->type = OBSTACLE;
     ExploreAction *retry = new ExploreAction;
     retry->p = p;
     list.insert(retry);
@@ -711,9 +876,6 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
   p->loc = world.getNode(x,y);
 
   //Todo update energy
-
-  //Update mind
-  p->mind.internalWorld.getNode(x, y)->type = p->loc->type;
 
   //update loc bools
   if(p->loc->type == RESOURCE)
@@ -742,6 +904,8 @@ void Population::WaitAction_proc(WaitAction *wait_ptr, int tic)
   p = wait_ptr->p;
   p->prevAction = wait_ptr;
   p->hasBeenEating = false;
+
+  p->loc->resourceObject->numWaiters = p->loc->resourceObject->numWaiters + 1;
 
   return;
 }

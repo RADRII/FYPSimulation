@@ -139,6 +139,7 @@ class Person {
   int currentTic;
   vector<LocNode*> knownResources;
   int energyExploreAbove;
+  int exploreBoundary;
   ActionPtr getNextAction(bool failedEat);
 
   /**********************************************************/
