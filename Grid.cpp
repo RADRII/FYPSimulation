@@ -26,8 +26,6 @@ string LocNode::tostring() {
     else if(type == RESOURCE) { s = "r"; }
     else { s = "u"; }
     s += "[";
-    // s += id;
-    // s += " ";
     s += f_to_s(x);
     s += ",";
     s += f_to_s(y);
@@ -59,6 +57,27 @@ LocNode* LocGrid::getNode(int x, int y) {
         return &nodes[x][y];
     else
         return nullptr;
+}
+
+vector<LocNode*> LocGrid::getUnexploredNeighbors(LocNode* loc)
+{
+    vector<LocNode*> unexploredNeighbors;
+
+    // Traverse neighbors
+    static const int dx[] = { -1, 1, 0, 0 }; // Left, Right, Up, Down
+    static const int dy[] = { 0, 0, -1, 1 };
+
+    for (int i = 0; i < 4; ++i) 
+    {
+        int newX = loc->x + dx[i];
+        int newY = loc->y + dy[i];
+
+        LocNode* neighbor = getNode(newX, newY);
+        if (neighbor != nullptr && neighbor->type == UNKNOWN)
+            unexploredNeighbors.push_back(neighbor);
+    }
+
+    return unexploredNeighbors;
 }
 
 void LocGrid::resetParents() {
@@ -101,6 +120,50 @@ std::vector<LocNode*> LocGrid::findPath(LocNode* startNode, LocNode* endNode) {
 
             LocNode* neighbor = getNode(newX, newY);
             if (!neighbor || neighbor->type == OBSTACLE || neighbor->type == UNKNOWN || neighbor->parent != nullptr)
+                continue;
+
+            neighbor->parent = current;
+            frontier.push(neighbor);
+        }
+    }
+
+    resetParents(); //Needed for future routing
+    path.erase(path.begin());
+    return path;
+}
+
+vector<LocNode*> LocGrid::findPathClosestUnexplored(LocNode* startNode)
+{
+    std::vector<LocNode*> path;
+
+    queue<LocNode*> frontier;
+    frontier.push(startNode);
+
+    while (!frontier.empty()) {
+        LocNode* current = frontier.front();
+        frontier.pop();
+
+        if (current->type == UNKNOWN) {
+            // Reconstruct path
+            LocNode* temp = current;
+            while (temp != nullptr) {
+                path.push_back(temp);
+                temp = temp->parent;
+            }
+            std::reverse(path.begin(), path.end());
+            break;
+        }
+
+        // Traverse neighbors
+        static const int dx[] = { -1, 1, 0, 0 }; // Left, Right, Up, Down
+        static const int dy[] = { 0, 0, -1, 1 };
+
+        for (int i = 0; i < 4; ++i) {
+            int newX = current->x + dx[i];
+            int newY = current->y + dy[i];
+
+            LocNode* neighbor = getNode(newX, newY);
+            if (!neighbor || neighbor->type == OBSTACLE || neighbor->parent != nullptr)
                 continue;
 
             neighbor->parent = current;

@@ -88,7 +88,7 @@ bool setup_all_resources_and_locations() {
   }
 
   float energy_conv;
-  energy_conv = 0.25; 
+  energy_conv = 0.6; 
   
   for(size_t i = 0; i < numResources; i++) {
 

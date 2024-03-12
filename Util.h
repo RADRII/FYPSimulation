@@ -7,7 +7,7 @@
 #include <sstream>
 #include "DayStats.h"
 #include "AreaGain.h"
-#include "People.h"
+#include "Person.h"
 
 using namespace std;
 

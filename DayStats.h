@@ -13,6 +13,7 @@ class DayStats {
   int NUM_AREAS_IN_WIPEOUT;
   int DEATHS_AGE;
   int DEATHS_STARVE;
+  int DEATHS_STRANDED;
   int BIRTHS;
   int POP;
   int TYPEA;
@@ -21,10 +22,6 @@ class DayStats {
   float B_EN;
   float A_EATEN;
   float B_EATEN;
-  float HOMETIME_MAX;
-  float HOMETIME_MAX_LIVING;
-  float HOMETIME_MAX_DEAD;
-  float TWOPLACETIME_MAX;
   int MAX_NUM_PLACES_EATEN;
   int MAX_NUM_PLACES_EXPLORED;
   void clear();

@@ -1,5 +1,5 @@
 #include "Action.h"
-#include "People.h"
+#include "Person.h"
 #include "Util.h"
 #include "Debug.h"
 #include <iostream>
@@ -129,7 +129,7 @@ void ActionList::init_from_population(vector<Person *> persons) {
   {
     int i = people_ordering[o];
 
-    ActionPtr action = persons[i]->getNextAction();
+    ActionPtr action = persons[i]->getNextAction(false);
     if(action->kind == EAT && persons[i]->hasBeenEating)
     {
         lp.push_front(action);
