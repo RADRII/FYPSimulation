@@ -6,7 +6,6 @@
 #include <deque>
 #include <map>
 #include <utility>
-#include "Location.h"
 using namespace std;
 
 // part of a CropPatch
@@ -45,7 +44,6 @@ class CropPatch {
   int next_init_day;
   int period; 
   char sym; // how to display eg. '*' or 'o'
-  Location pos;
 
   
   // 'profile' represents a growing 'season'
@@ -155,22 +153,21 @@ public:
   //Resources(string name, LocPtr res_entry, int patch_yield);
   //Resources(string name, LocPtr res_entry, int patch_yield, int patch_rep);
   //Resources(string name, LocPtr res_entry, int patch_yield, int patch_rep, int loc_rep);
-  Resources(string name, LocPtr res_entry, int patch_yield, float energy_conv, int patch_rep, int loc_rep);
+  Resources(int idd, int xx, int yy, int patch_yield, float energy_conv, int patch_rep);
   string id;
   string tostring();
   
   vector<CropPatch> resources;
-  vector<Location> locs; // list the locations of all the CropPatch's in the resources vec
-                         // note its non-repeating, tho several patches can share a location
-  void set_locs(); // sets up the above
+  int x;
+  int y;
+
+  int numWaiters;
 
   // these run functions of same name over its CropPatch's
   void show_bands(); 
   void show_bars();
   
   int get_total(); // total via function of same name over all the units of the contained CropPatches
-
-  int get_total(Location l); // total from the patches at location
   void show_total();
   
   int update_at_date(int); // does update by function of same name over all the contained CropPatches
@@ -189,30 +186,18 @@ public:
   /* relating to EATING processes */
   /***************************************/
   
-  // get non-empty patches which are also not being_eaten at the given location
-  bool patches_at_location(vector<int>& patches, Location *pos);
-  
-  // pick a random one from given list of patches
-  int choose_rand_patch(vector<int> &patches);
+  // get random non-empty patch which are also not being_eaten
+  int get_available_patch();
   
   // helper vars used by above (which uses GSL shuffle function which uses an array)
   int *crop_ordering; // pointer to array containing random shuffle of 0 .. N-1 
   int crop_ordering_size; // size of array of shufffled numbers
   
-  bool being_eaten_patches_at_location(Location *pos);
+  bool being_eaten_patches_at_location();
   // checks whether any patches are being_eaten at given location
   // used to see the location should be added to someone's revisit list
 
-
-  // the Resources constructor is passed an 'entry' location
-  // this function gives that location 
-  bool get_res_entry(LocPtr& e);
-
-  // from a location to the indices of the CropPatchs in resources
-  // having that location
-  map<Location,vector<size_t> > loc_to_indices;
-  void set_loc_to_indices();
-  
+  bool equals(Resources* r);
   
 private:
   // defaults relating to the patches which are contained
@@ -229,25 +214,11 @@ private:
   
 };
 
-
 void test_Resources();
 
 typedef Resources * ResPtr;
 
 // all the Resources areas
 extern vector<ResPtr> all_res;
-
-// map from a Location to the Resources area it is part of
-// NB: not all Locations should map to a Resources area at all
-// NB: currently code in 'world_setup.cpp' sets this map only on
-// first of an area's Locations
-extern map<LocPtr, ResPtr> loc_to_res;
-
-
-
-bool res_frm_loc(LocPtr l, ResPtr& r);
-void show_all_loc_to_res();
-
-extern map<ResPtr,size_t> res_to_index;
 
 #endif

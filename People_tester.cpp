@@ -1,6 +1,6 @@
 #include "Resource.h"
-#include "Location.h"
-#include "People.h"
+#include "Grid.h"
+#include "Person.h"
 #include "Util.h"
 #include "Debug.h"
 #include "CmdLineVersions.h"
@@ -42,20 +42,16 @@ int main(int argc, char **argv) {
   open_an_output(r_stats,stats_name);
   r_line.write_header(r_stats);
 
-
   open_an_output(setup_record,"sim_setup");
 
-
-
-  open_an_output(gains_info_history, "gains_info");
-  write_gains_info_header(gains_info_history);
-
-  
   open_an_output(pop_snapshots, "pop_snapshots");
   write_pop_snapshot_header(pop_snapshots);
 
   open_an_output(starvation_stats,"starvation_stats");
   write_starvation_stats_header(starvation_stats);  
+
+  open_an_output(debug_record,"debug_record");
+  debug_record << "Welcome." << endl;
 
 #if DEBUG1
   init_db_file("/tmp/Toss/junk");
@@ -134,8 +130,6 @@ int main(int argc, char **argv) {
       db("\n");
 #endif
     }
-    
-    pop.qt_show_crops();
 
     r_line.DATE = date;
     r_line.CROP_INCR = incr;
@@ -147,28 +141,12 @@ int main(int argc, char **argv) {
     r_line.BIRTHS = 0;
     r_line.POP = 0;
     r_line.TYPEA = 0;
-    r_line.TYPEB = 0;
     r_line.A_EN = 0;
-    r_line.B_EN = 0;
     r_line.A_EATEN = 0;
-    r_line.B_EATEN = 0;
     
-    r_line.HOMETIME_MAX_LIVING = 0;
-    r_line.HOMETIME_MAX_DEAD = 0;
-    r_line.HOMETIME_MAX = 0;
-    r_line.TWOPLACETIME_MAX = 0;
     r_line.MAX_NUM_PLACES_EATEN = 0;
     r_line.MAX_NUM_PLACES_EXPLORED = 0;
     r_line.write(r_stats);
-
-    /* write dummy lines in gains_info_history for days without people */
-    /* date 0 .. 0                                                      */
-    gains_info_history << date;
-    for(int i = 0; i < count_spaces(gains_info_header); i++) { gains_info_history << " 0"; }
-    gains_info_history << "\n";
-
-
-	
   }
 
   /***************************************/
@@ -243,7 +221,7 @@ int main(int argc, char **argv) {
     WorldShow::res_level = -1;
 #endif
     
-    pop.qt_show_crops();
+    //pop.qt_show_crops();
     //   WorldShow::res_level = -1;
     // skip bars
     for(size_t i = 0; i < all_res.size(); i++) {
@@ -264,14 +242,11 @@ int main(int argc, char **argv) {
     /**************************************************************/
     
     pop.zero_eaten_today();
-    pop.clear_all_area_gains();
-    
+
     // TEMP: zero records of num places eaten, num places explored
     for(size_t i = 0; i < pop.population.size(); i++) {
       pop.population[i]->clear_places_eaten();
       pop.population[i]->clear_places_explored();
-      pop.population[i]->home_time = 0;
-
     }
 
 #if DEBUG
@@ -288,17 +263,15 @@ int main(int argc, char **argv) {
 
     // this does all the updates
     pop.update(date);
+
     // side effect is lots updates to r_line
     // eg DEATHS(_AGE,_STARVE,_THREAT), BIRTHS, TYPEA, TYPEB, POP, A_EN, B_EN, A_EATEN, B_EATEN, HOMETIME_MAX  
 
-    write_gains_info_line(gains_info_history);
-
 
      /* block to write pop snapshots */
-     // if((date >= 60) && (date <= 1000)) {
-     //   write_pop_snapshot(pop_snapshots);
-
-     // }
+     if((date >= 60) && (date <= 1000)) {
+      write_pop_snapshot(pop_snapshots);
+      }
 
     if(pop.get_total() == 0) {
       
@@ -310,20 +283,16 @@ int main(int argc, char **argv) {
     }
 
     
-    if(((r_line.TYPEA == 0) | (r_line.TYPEB == 0)) && extinction_date == 0) {
+    if((r_line.TYPEA == 0) && extinction_date == 0) {
 
       extinction_date = date;
       if((r_line.TYPEA) == 0) {  extinct_tribe = 'A';}
-      if((r_line.TYPEB) == 0) {  extinct_tribe = 'B';}
       
       // skip this to let run on
       // date_max = 1.1 * date; // let it continue for 10% of current run
       
       if(r_line.TYPEA == 0) {
     	cout << "A went extinct on day" << date << endl;
-      }
-      if(r_line.TYPEB == 0) {
-    	cout << "B went extinct on day" << date << endl;
       }
     }
     
@@ -334,9 +303,6 @@ int main(int argc, char **argv) {
   r_stats.close();
 
   setup_record.close();
-
-  gains_info_history.close();
-
   
   pop_snapshots.close();
 
