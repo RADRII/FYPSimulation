@@ -288,6 +288,14 @@ ActionPtr Person::getNextAction(bool failedEat)
   //Explore if not
   if(!knownResources.empty() && eaten_today < max_daily_eat)
   {
+    //Check if currently on a resource, try to eat if haven't failed already
+    if(loc->type == RESOURCE)
+    {
+      EatAction *next = new EatAction;
+      next->p = this;
+      return next;
+    }
+
     //remove non viable resources
     vector<LocNode*> viable;
     for(int i = 0; i < knownResources.size(); i++)
@@ -295,7 +303,7 @@ ActionPtr Person::getNextAction(bool failedEat)
       vector<LocNode*> potential = mind.internalWorld.findPath(loc, knownResources[i]);
       vector<LocNode*> backHome = mind.internalWorld.findPath(knownResources[i], home_loc);
 
-      if(homeByTime - currentTic > potential.size() + backHome.size())
+      if(homeByTime - currentTic > potential.size() + backHome.size() && !knownResources[i]->equals(loc)) //viable if not current location and if possible to get there in time
         viable.push_back(knownResources[i]);
     }
 
