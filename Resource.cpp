@@ -186,7 +186,7 @@ void CropPatch::show_bars() {
 Resources::Resources() {}
 
 Resources::Resources(int idd, int xx, int yy, int patch_yield, float energy_conv, int patch_rep) {
-  id = idd;
+  id = f_to_s(idd);
   setup_record << "Resource " << id << endl;
 
   x = xx;

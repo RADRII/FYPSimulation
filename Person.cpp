@@ -165,7 +165,12 @@ string Person::route_tostring() {
 //Their previous action + the time before they have to be home
 ActionPtr Person::getNextAction(bool failedEat)
 {
-  ActionKind prev = prevAction->kind;
+  //Set prev equal to the last actions kind, if the last action was null (meaning start of day, its set to START)
+  ActionKind prev;
+  if(prevAction == nullptr)
+    prev = START;
+  else
+    prev = prevAction->kind;
 
   if(prev == HOMEREST)
   {

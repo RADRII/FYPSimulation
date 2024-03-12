@@ -52,6 +52,9 @@ int main(int argc, char **argv) {
   write_starvation_stats_header(starvation_stats);  
   starvation_stats << endl; //needed to work
 
+  open_an_output(debug_record,"debug_record");
+  debug_record << "Welcome." << endl;
+
 #if DEBUG1
   init_db_file("/tmp/Toss/junk");
   //db_level = 1;
@@ -265,6 +268,7 @@ int main(int argc, char **argv) {
 
     // this does all the updates
     pop.update(date);
+
     // side effect is lots updates to r_line
     // eg DEATHS(_AGE,_STARVE,_THREAT), BIRTHS, TYPEA, TYPEB, POP, A_EN, B_EN, A_EATEN, B_EATEN, HOMETIME_MAX  
 

@@ -90,7 +90,7 @@ bool setup_all_resources_and_locations() {
   float energy_conv;
   energy_conv = 0.6; 
   
-  for(size_t i = 0; i < numResources; i++) {
+  for(int i = 0; i < numResources; i++) {
 
     ResPtr res_ptr = new Resources(i,all_resource_loc[i]->x,all_resource_loc[i]->y,yield,energy_conv,patch_reps[i]);
 
@@ -110,19 +110,6 @@ void set_up_population() {
   setup_record << "**********\n";
   setup_record << "POPULATION\n";
   setup_record << "**********\n";
-
-  /******************************************************************/
-  /* set here alternate to the default wait/rest  durations   */
-  /* these will apply to *both* tribes via Person constr           */
-  /* further tribe-specific customisations are done further below  */
-  /* by altering Person:wait/rest on tribe members *after*   */
-  /* construction (which perist via set_frm_parent)                */
-  /******************************************************************/
-  
-  //EndWaitEvent::wait_duration_def = 2.0;
-  //EndRestEvent::rest_duration_def = 2;
-
-
 
   string tribe_name;
   int tribe_size;

@@ -5,7 +5,7 @@
 #include "Resource.h"
 using namespace std;
 
-enum NodeKind {HAB_ZONE, RESOURCE, OBSTACLE, EMPTY, UNKNOWN, START};
+enum NodeKind {HAB_ZONE, RESOURCE, OBSTACLE, EMPTY, UNKNOWN};
 
 class LocNode {
  public:

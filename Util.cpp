@@ -23,6 +23,8 @@ ofstream pop_snapshots;
 
 ofstream starvation_stats;
 
+ofstream debug_record;
+
 void write_pop_snapshot_header(ostream& o) {
   o << "DATE TYPE AGE EN EATEN FIRST\n";
 }
