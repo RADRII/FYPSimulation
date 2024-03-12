@@ -198,7 +198,7 @@ class Population {
   string id;
 
   int currentTic;
-  int homeByTime;
+  int hbt;
 
   void updatePeopleTic(int tic);
   void resetDayBools();

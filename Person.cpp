@@ -170,7 +170,9 @@ ActionPtr Person::getNextAction(bool failedEat)
   if(prevAction == nullptr)
     prev = START;
   else
+  {
     prev = prevAction->kind;
+  }
 
   if(prev == HOMEREST)
   {
@@ -505,6 +507,7 @@ Population::Population() {}
 Population::Population(string name, int size){ 
 
   id = name;
+  hbt = 20;
   for(int i=0; i < size; i++) {
     
 
@@ -512,11 +515,10 @@ Population::Population(string name, int size){
 
     p->age = ((float)i/size) * 500; // unif distrib over ages ?
     if(p->age > 350) { p->num_offspring = 1; }
+    p->homeByTime = hbt;
     population.push_back(p);
 
   }
-
-  int homeByTime = 20;
   currentTic = 0;
 }
 
@@ -612,7 +614,7 @@ bool Population::update(int date){
   /* execute day's worth of moving about to find and consume food */
   /****************************************************************/
   //db_level = 0;
-  for(int tic = 0; tic < homeByTime; tic++)
+  for(int tic = 0; tic < hbt; tic++)
   {
     pop.currentTic = tic;
     updatePeopleTic(tic);
@@ -836,7 +838,6 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
   p = expl_ptr->p;
   p->prevAction = expl_ptr;
   p->hasBeenEating = false;
-
 
   //Get list of unexplored neigbors
   vector<LocNode*> potentials = p->mind.internalWorld.getUnexploredNeighbors(p->loc);

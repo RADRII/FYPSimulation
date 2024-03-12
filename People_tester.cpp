@@ -46,11 +46,9 @@ int main(int argc, char **argv) {
 
   open_an_output(pop_snapshots, "pop_snapshots");
   write_pop_snapshot_header(pop_snapshots);
-  pop_snapshots << endl; //needed to work
 
   open_an_output(starvation_stats,"starvation_stats");
   write_starvation_stats_header(starvation_stats);  
-  starvation_stats << endl; //needed to work
 
   open_an_output(debug_record,"debug_record");
   debug_record << "Welcome." << endl;
