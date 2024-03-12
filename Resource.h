@@ -200,7 +200,7 @@ public:
   // checks whether any patches are being_eaten at given location
   // used to see the location should be added to someone's revisit list
 
-  bool equals(ResPtr r);
+  bool equals(Resources* r);
   
 private:
   // defaults relating to the patches which are contained

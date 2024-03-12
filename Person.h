@@ -138,8 +138,8 @@ class Person {
   bool isHome;
   int currentTic;
   vector<LocNode*> knownResources;
-  int energyExploreAbove;
-  int exploreBoundary;
+  double energyExploreAbove;
+  double exploreBoundary;
   ActionPtr getNextAction(bool failedEat);
 
   /**********************************************************/

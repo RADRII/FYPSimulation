@@ -51,7 +51,6 @@ Person::Person() {
   isHeadingHome = false;
   
   prevAction = NULL;
-  knownResources;
   energyExploreAbove = 2.5;
 
   eating_patch = NULL;
@@ -68,8 +67,6 @@ Person::Person() {
   homeTime = 0;
   clear_places_eaten();
   clear_places_explored();
-
-  resEatenAt;
 }
 
 void Person::show_defaults(ostream& o) {
@@ -644,9 +641,7 @@ bool Population::update(int date){
   r_line.POP = get_total();
 
   r_line.A_EN = get_mean_energy('A'); // includes new births in denom
-  r_line.B_EN = get_mean_energy('B'); // ditto
   r_line.A_EATEN = get_mean_eaten('A'); // includes new births in denom
-  r_line.B_EATEN = get_mean_eaten('B'); // ditto
   
   /***************************************************************************************************/
   /* do knowledge update by having people talk to each other based on what they learned while eating */
@@ -965,7 +960,9 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
     p->area_gains.increment_an_area_gain(p->loc->resourceObject, eat_ptr->gain);
     // update patch	
     p->eating_patch->remove_units(eat_ptr->units_frm_patch);
-  } // end have_patches_here
+
+    p->resEatenAt.push_back(p->loc->resourceObject);
+  }
 }
 
 void Population::collect_subtype(char type, vector<PerPtr>& sub_pop) {
@@ -1050,6 +1047,23 @@ void Population::clear_all_area_gains() {
     p->area_gains.clear_area_gains();
   }
 
+}
+
+float Population::get_mean_energy(char type) {
+  vector<PerPtr> sub_pop;
+  collect_subtype(type, sub_pop);
+  float m_e = 0;
+  for(size_t i=0; i < sub_pop.size(); i++) {
+    m_e += sub_pop[i]->current_energy;
+  }
+
+  if(sub_pop.size() > 0) {
+    return m_e/sub_pop.size();
+  }
+  else {
+    return 0.0;
+  }
+  
 }
 
 void Population::update_by_repro(int& num_births) { // add new population members

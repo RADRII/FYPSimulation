@@ -128,8 +128,7 @@ void set_up_population() {
   int tribe_size;
 
   tribe_name = "tribe1";
-  tribe_size = 10;
-  //tribe_size = 9;
+  tribe_size = 20;
 
   Population people(tribe_name,tribe_size);
   
@@ -165,43 +164,8 @@ void set_up_population() {
 
     setup_record << endl;
   }
-  
-  tribe_name = "tribe2";
-  tribe_size = 10;
-
-  setup_record << "have " << tribe_name;
-  setup_record << " size " << tribe_size << " ";
-
-  
-  Population people_other(tribe_name,tribe_size);
-
-  people_other.tribes.push_back('B');
-  //people_other.egal_tribes.push_back('B');
-
-  // doing 'customisation' of these; makes these faster, calls them all of 'B' type
-  for(int i=0; i < people_other.population.size(); i++) {
-
-    people_other.population[i]->type = people_other.tribes[0];
-    people_other.population[i]->home_loc = all_home_loc[0];
-    people_other.population[i]->loc = people_other.population[i]->home_loc;
-    people_other.population[i]->speed = 2.0;
-    // all else left to default
-  }
-
-  if(tribe_size > 0) {
-    setup_record << "CUSTOM: ";
-    PerPtr p = people_other.population[0];
-
-    setup_record << "type: " << p->type;
-    setup_record << " speed" << p->speed;
-    setup_record << endl;
-
-  }
 
   pop = people;
-
-  pop.add(people_other);
-
 }
 
 
