@@ -87,8 +87,8 @@ bool setup_all_resources_and_locations() {
      patch_reps.push_back(this_patch_rep);
   }
 
-  float energy_conv;
-  energy_conv = 0.6; 
+  int energy_conv;
+  energy_conv = 6; 
   
   for(int i = 0; i < numResources; i++) {
 

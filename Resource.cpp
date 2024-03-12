@@ -128,14 +128,14 @@ void CropPatch::remove_units(int units) {
   while(bands.size() > 0 && rem_units > 0) {
     // try to consume m_int from current band
     if(f->amount > rem_units) { // eg. have ooooo, rem_units = ooo: eating will end here
-      f->amount -= rem_units;
+      f->amount = f->amount - rem_units;
       rem_units = 0;
     }
     else if (f->amount <= rem_units) { // eg. have have oo, rem_units = ooo: eating will continue
       units_frm_band = f->amount;
       f++; // move band iterator
       bands.pop_front(); 
-      rem_units -= units_frm_band;
+      rem_units = rem_units - units_frm_band;
     }
   
   }
@@ -184,7 +184,7 @@ void CropPatch::show_bars() {
 
 Resources::Resources() {}
 
-Resources::Resources(int idd, int xx, int yy, int patch_yield, float energy_conv, int patch_rep) {
+Resources::Resources(int idd, int xx, int yy, int patch_yield, int energy_conv, int patch_rep) {
   id = f_to_s(idd);
   setup_record << "Resource " << id << endl;
 

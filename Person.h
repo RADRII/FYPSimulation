@@ -55,19 +55,17 @@ class Person {
   int homeByTime;
 
   // ENERGY
-  float init_energy; // 'energy' at birth
+  int init_energy; // 'energy' at birth
 
-  float max_energy; // how much can energy can be stored up at most
+  int max_energy; // how much can energy can be stored up at most
 
-  float sleepEnergyLoss; // how much energy is lost between days
+  int sleepEnergyLoss; // how much energy is lost between days
 
-  float moveCost; //how much energy does moving cost;
+  int moveCost; //how much energy does moving cost;
   
-  float max_daily_eat; // cannot cram more food in (as energy) in a single day than this in
+  int max_daily_eat; // cannot cram more food in (as energy) in a single day than this in
   // NB: max_energy could be 15 and this could be 5 so *less*
   // --> would take >1 day to reach max
-
-  float hrate; // How much can be eaten from a crop patch in one EAT action
 
   // REPRO
   int repro_age_start;
@@ -84,16 +82,14 @@ class Person {
 
   // relating to ENERGY in and out 
   
-  float current_energy; // 'energy', based on food eaten; assume alive unless this 0
+  int current_energy; // 'energy', based on food eaten; assume alive unless this 0
   
-  float eaten_today; // amount (as energy) added so far during a day
+  int eaten_today; // amount (as energy) added so far during a day
 
-  float eat_from_dry_run(CropPatch& c, float& handling, int& units_frm_patch);
+  int eat_from_dry_run(CropPatch& c);
   // calc what energy would happen if eating up to relevant energy limits from patch c
   // -- will not cause current_energy to grow too large if added
   //  -- will not be more than max_daily_eat
-  // sets handling to time which would be taken for units consumed in generating this gain
-  // sets units_frm_patch to num of units which would be consumed in generating this gain
 
   bool hasMaxEnergy();
   // checks whether Person has reached relevant energy limits (max_energy or max_daily_eat)
@@ -179,7 +175,7 @@ class Person {
   void show_num_places();
 
 
-  float eat_from(CropPatch& c, float& handling, int& units_frm_patch);
+  int eat_from(CropPatch& c);
   // determine energy update via consuming food from c
   // note: does not update the Person 
   // note: though this updates c, it is only called by eat_from_dry_run(..)

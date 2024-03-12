@@ -26,18 +26,16 @@ Person::Person() {
 
   curiosity = 50.0;
   homeByTime = 20;
-  energyExploreAbove = 1.0;
   
-  init_energy = 5.0;
+  init_energy = 50;
   current_energy = init_energy;
   
-  max_energy = 7.0;
-  sleepEnergyLoss = 2.0;
-  moveCost = 0.1; //Todo fiddle with
-  max_daily_eat = 5.0;
-  hrate = 5; //Todo fiddle with
+  max_energy = 70;
+  sleepEnergyLoss = 20;
+  moveCost = 1; //Todo fiddle with
+  max_daily_eat = 45;
   
-  eaten_today = 0.0;
+  eaten_today = 0;
   repro_age_start = 200;
   repro_age_end = 450;
   num_offspring = 0;
@@ -51,7 +49,7 @@ Person::Person() {
   isHeadingHome = false;
   
   prevAction = START;
-  energyExploreAbove = 2.5;
+  energyExploreAbove = 15;
 
   eating_patch = NULL;
 
@@ -77,7 +75,6 @@ void Person::show_defaults(ostream& o) {
   o << " sleep loss:" << sleepEnergyLoss;
   o << " move cost:" << moveCost;
   o << " max_daily_eat:" << max_daily_eat;
-  o << " hrate:" << hrate;
   o << " repro_age_start:" << repro_age_start;
   o << " repro_age_end:" << repro_age_end;
   o << " speed:" << speed;
@@ -340,7 +337,7 @@ ActionPtr Person::getNextAction(bool failedEat)
 // NB: this is not called directly but via eat_from_dry_run(..) passing a copy
 // of a real crop patch
 //User eats one berry
-float Person::eat_from(CropPatch& c, float& handling, int& units_frm_patch){
+int Person::eat_from(CropPatch& c){
   #if DEBUG
   db(identifier); db(type); db(" frm "); db(c.pos.tostring()); db(c.sym); db("\n");
   #endif
@@ -348,7 +345,7 @@ float Person::eat_from(CropPatch& c, float& handling, int& units_frm_patch){
   if(max_daily_eat > eaten_today && max_energy > current_energy && c.get_total() > 0)
   {
     //Get smaller of the two leftovers
-    float smallerMax;
+    int smallerMax;
     if(max_daily_eat - eaten_today < max_energy - current_energy)
       smallerMax = max_daily_eat - eaten_today;
     else
@@ -357,7 +354,9 @@ float Person::eat_from(CropPatch& c, float& handling, int& units_frm_patch){
     //return smaller gain if gain is bigger than the smaller leftover
     //aka dont overfill
     if(smallerMax < c.energy_conv)
+    {
       return smallerMax;
+    }
     return c.energy_conv;
   }
 
@@ -365,10 +364,10 @@ float Person::eat_from(CropPatch& c, float& handling, int& units_frm_patch){
 }
 
 // calc what would happen in call to eat_frm(c,..) but make no updates to c
-float Person::eat_from_dry_run(CropPatch& c, float& handling, int& units_frm_patch) {
+int Person::eat_from_dry_run(CropPatch& c) {
   CropPatch c_cpy;
   c_cpy = c;
-  return eat_from(c_cpy, handling, units_frm_patch);
+  return eat_from(c_cpy);
 }
 
 bool Person::hasMaxEnergy() {
@@ -548,7 +547,7 @@ void Population::zero_eaten_today() {
   vector<Person *>::iterator p;
   p = population.begin();
   while(p != population.end()) {
-    (*p)->eaten_today = 0.0; 
+    (*p)->eaten_today = 0; 
     p++;
   }
 }
@@ -717,7 +716,7 @@ void Population::update_by_cull(int& deaths_age, int& deaths_starve, int& deaths
 
       deaths_age++; 
     }
-    else if((*p)->current_energy < 0.0) {
+    else if((*p)->current_energy < 0) {
       #if DEBUG
       db((*p)->type); db(" DEATH (starve)\n");
       #endif
@@ -971,13 +970,10 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
     // for sake of later stats gathering
     p->update_places_eaten(p->loc->resourceObject);
 	
-    //  make p eat max poss from patch, calculating handling time 'handled'
-    float gain;
-    float handled;
-    int units_frm_patch;
+    int gain;
       
     //
-    gain = p->eat_from_dry_run(c,handled,units_frm_patch); // calc but dont do update
+    gain = p->eat_from_dry_run(c); // calc but dont do update
 
     // update person's energy attributes from this
     p->eaten_today = p->eaten_today + gain;
@@ -1119,7 +1115,6 @@ void Person::set_frm_parent(Person *p) {
   curiosity = p->curiosity;
   
   current_energy = init_energy;
-  hrate = p->hrate;
   home_loc = p->home_loc;
   loc = home_loc;
 }

@@ -109,7 +109,7 @@ class CropPatch {
 
   /* above relate to biological growth, following relate to eating processes */
   
-  float energy_conv; // to convert from units of this crop to energy units
+  int energy_conv; // to convert from units of this crop to energy units
                      // so potentially diff crops can provide more energy
                      // (potentially later have graduated levels of ripening and so of energy yield)
  
@@ -153,7 +153,7 @@ public:
   //Resources(string name, LocPtr res_entry, int patch_yield);
   //Resources(string name, LocPtr res_entry, int patch_yield, int patch_rep);
   //Resources(string name, LocPtr res_entry, int patch_yield, int patch_rep, int loc_rep);
-  Resources(int idd, int xx, int yy, int patch_yield, float energy_conv, int patch_rep);
+  Resources(int idd, int xx, int yy, int patch_yield, int energy_conv, int patch_rep);
   string id;
   string tostring();
   
@@ -204,7 +204,7 @@ private:
   int def_period;
   vector<float> def_profile;
   char def_sym;
-  float def_energy_conv;
+  int def_energy_conv;
   int def_loc_rep;
   int def_patch_rep;
   
