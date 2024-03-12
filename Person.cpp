@@ -114,7 +114,7 @@ void Person::update_places_explored(LocNode* l) {
   if(mind.internalWorld.getNode(l->x, l->y)->type == UNKNOWN)
   {
     mind.internalWorld.getNode(l->x, l->y)->type = l->type;
-    num_places_explored++;
+    num_places_explored = num_places_explored + 1;
 
     //cout << "Explored: " << l->x << " " << l->y << " is " << l->type << endl;
 

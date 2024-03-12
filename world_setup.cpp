@@ -75,7 +75,7 @@ bool setup_all_resources_and_locations() {
   setup_record << "RESOURCE AREAS\n";
   setup_record << "**************\n";
 
-  int yield = 100;
+  int yield = 70;
 
   vector<int> patch_reps;
   int top_patch_rep = 2;

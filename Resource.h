@@ -189,10 +189,6 @@ public:
   // get random non-empty patch which are also not being_eaten
   int get_available_patch();
   
-  // helper vars used by above (which uses GSL shuffle function which uses an array)
-  int *crop_ordering; // pointer to array containing random shuffle of 0 .. N-1 
-  int crop_ordering_size; // size of array of shufffled numbers
-  
   bool being_eaten_patches_at_location();
   // checks whether any patches are being_eaten at given location
   // used to see the location should be added to someone's revisit list
