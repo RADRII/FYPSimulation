@@ -116,6 +116,8 @@ void Person::update_places_explored(LocNode* l) {
     mind.internalWorld.getNode(l->x, l->y)->type = l->type;
     num_places_explored++;
 
+    //cout << "Explored: " << l->x << " " << l->y << " is " << l->type << endl;
+
     if(l->type == RESOURCE)
       knownResources.push_back(l);
   }
@@ -167,7 +169,7 @@ ActionPtr Person::getNextAction(bool failedEat)
 {
   //Set prev equal to the last actions kind, if the last action was null (meaning start of day, its set to START)
   ActionKind prev = prevAction;
-
+  
   if(prev == HOMEREST)
   {
     if(loc->type != HAB_ZONE)
@@ -610,6 +612,8 @@ bool Population::update(int date){
   //db_level = 0;
   for(int tic = 0; tic < hbt; tic++)
   {
+    cout << "Tic: " << tic << endl;
+    debug_record << "TIC TIC TIC TIC TIC TIC" << endl;
     pop.currentTic = tic;
     updatePeopleTic(tic);
     update_by_action(date, tic);
@@ -850,11 +854,12 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
     toGo = pathToClosestUnknown[0];
   }
 
-  //Update mind
-  p->update_places_explored(toGo);
-
   int x = toGo->x;
   int y = toGo->y;
+
+  //Update mind
+  p->update_places_explored(world.getNode(x,y));
+
   //if togo is an obstacle update knowledge and requeue explore
   if(world.getNode(x,y)->type == OBSTACLE)
   {
