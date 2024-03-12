@@ -137,6 +137,7 @@ void ActionList::init_from_population(vector<Person *> persons) {
     {
         lp.push_back(action);
     }
+    
     string s = "";
     if(persons[i]->isHeadingHome) s = "(H)";
     debug_record << persons[i]->identifier << " decided to " << action->kind << s << endl;

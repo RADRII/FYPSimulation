@@ -255,20 +255,6 @@ ActionPtr Person::getNextAction(bool failedEat)
     }
   }
 
-  if(failedEat)
-  {
-    if(loc->type != RESOURCE)
-      cout << "Warning: tried to eat at non resource somehow" << endl;
-    
-    //if not too many people waiting, wait
-    if(loc->resourceObject->numWaiters < loc->resourceObject->resources.size())
-    {
-      WaitAction *next = new WaitAction;
-      next->p = this;
-      return next;
-    }
-  }
-
   //if no time left, go home
   vector<LocNode*> pathHome = mind.internalWorld.findPath(loc, home_loc);
   int timeHome = pathHome.size();
@@ -284,13 +270,28 @@ ActionPtr Person::getNextAction(bool failedEat)
     return next;
   }
 
+  if(failedEat)
+  {
+    if(loc->type != RESOURCE)
+      cout << "Warning: tried to eat at non resource somehow" << endl;
+    
+    //if not too many people waiting, wait
+    if(loc->resourceObject->numWaiters < loc->resourceObject->resources.size())
+    {
+      WaitAction *next = new WaitAction;
+      next->p = this;
+      debug_record << identifier << " decided to " << WAIT << endl; 
+      return next;
+    }
+  }
+
   //Finally either route to a resource or explore
   //Route to a random (viable) resource if not full
   //Explore if not
   if(!knownResources.empty() && eaten_today < max_daily_eat)
   {
     //Check if currently on a resource, try to eat if haven't failed already
-    if(loc->type == RESOURCE)
+    if(loc->type == RESOURCE && !failedEat)
     {
       EatAction *next = new EatAction;
       next->p = this;
@@ -317,6 +318,9 @@ ActionPtr Person::getNextAction(bool failedEat)
       RouteAction *next = new RouteAction;
       next->p = this;
       next->route_index = route_index;
+
+      if(failedEat)
+        debug_record << identifier << " decided to " << ROUTE << endl; 
       return next;
     }
   }
@@ -324,6 +328,9 @@ ActionPtr Person::getNextAction(bool failedEat)
   //Finally just explore
   ExploreAction *next = new ExploreAction;
   next->p = this;
+
+  if(failedEat)
+    debug_record << identifier << " decided to " << EXPLORE << endl; 
   return next;
 }
 
@@ -930,7 +937,7 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
   //not possible to eat, have person redecide
   if(cropIndex == -1) 
   {
-    p->getNextAction(true);
+    list.insert(p->getNextAction(true));
     return;
   } 
   //Else eat :)
