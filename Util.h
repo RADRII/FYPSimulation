@@ -22,19 +22,6 @@ extern void rand_setup();
 extern  ofstream r_stats;
 extern DayStats r_line;
 
-/*********************************/
-/* day-by-day area gains info    */
-/*********************************/
-extern  ofstream gains_info_history;
-//extern AreaGains a_agg;
-//extern AreaGains b_agg;
-extern AreaGains agg;
-
-
-extern string gains_info_header;
-void write_gains_info_header(ostream& o);
-void write_gains_info_line(ostream& o);
-
 /******************/
 /* pop snap shots */
 /******************/
