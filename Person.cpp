@@ -169,7 +169,7 @@ ActionPtr Person::getNextAction(bool failedEat)
 {
   //Set prev equal to the last actions kind, if the last action was null (meaning start of day, its set to START)
   ActionKind prev = prevAction;
-  
+  cout << home_loc->x << " " << home_loc->y << endl;
   if(prev == HOMEREST)
   {
     if(loc->type != HAB_ZONE)
@@ -601,11 +601,8 @@ bool Population::update(int date){
     r_line.BIRTHS = 0;
     r_line.POP = 0;
     r_line.TYPEA = 0;
-    r_line.TYPEB = 0;
     r_line.A_EN = 0;
-    r_line.B_EN = 0;
     r_line.A_EATEN = 0;
-    r_line.B_EATEN = 0;
     r_line.MAX_NUM_PLACES_EATEN = 0;
     r_line.MAX_NUM_PLACES_EXPLORED = 0;
     // no other person related updates are possible so return
@@ -626,7 +623,7 @@ bool Population::update(int date){
     updatePeopleTic(tic);
     update_by_action(date, tic);
   }
-
+  debug_record << "TOC TOC TOC TOC TOC TOC" << endl;
   #if DEBUG
   db("------------------------\n");
   db("> feeding\n ");
@@ -676,7 +673,6 @@ bool Population::update(int date){
   }
 
   r_line.TYPEA = numA;
-  r_line.TYPEB = numB;
 
   //reset peoples daily bools
   resetDayBools();
@@ -945,7 +941,6 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
 
     // get a random available patch
     CropPatch& c = p->loc->resourceObject->resources[cropIndex];
-    cout << c.name << endl;
 
     // set the patch as being eaten
     c.being_eaten = true;

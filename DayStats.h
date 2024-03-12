@@ -17,11 +17,8 @@ class DayStats {
   int BIRTHS;
   int POP;
   int TYPEA;
-  int TYPEB;
   float A_EN;
-  float B_EN;
   float A_EATEN;
-  float B_EATEN;
   int MAX_NUM_PLACES_EATEN;
   int MAX_NUM_PLACES_EXPLORED;
   void clear();
