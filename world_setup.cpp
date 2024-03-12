@@ -1,5 +1,5 @@
 #include "Resource.h"
-#include "People.h"
+#include "Person.h"
 #include "Util.h"
 #include "Debug.h"
 #include "Grid.h"
@@ -150,7 +150,6 @@ void set_up_population() {
     
 
     people.population[i]->home_loc = all_home_loc[0];
-    people.population[i]->at_home = true;
     people.population[i]->loc = people.population[i]->home_loc;
 
     
@@ -184,7 +183,6 @@ void set_up_population() {
 
     people_other.population[i]->type = people_other.tribes[0];
     people_other.population[i]->home_loc = all_home_loc[0];
-    people_other.population[i]->at_home = true;
     people_other.population[i]->loc = people_other.population[i]->home_loc;
     people_other.population[i]->speed = 2.0;
     // all else left to default
@@ -203,8 +201,6 @@ void set_up_population() {
   pop = people;
 
   pop.add(people_other);
-  
-  pop.order_type = RANDOM;
 
 }
 
