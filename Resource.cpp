@@ -15,7 +15,6 @@ CropPatch::CropPatch(int day) {
   next_init_day = abs_init_day;
   bands.clear();
   being_eaten = false;
-  
 }
 
 // max edible at i after first day of season, bearing in mind how long things last
@@ -221,7 +220,7 @@ Resources::Resources(int idd, int xx, int yy, int patch_yield, float energy_conv
   /***********************************/
   for(int pc=0; pc < def_patch_rep; pc++) {
     CropPatch c(def_abs_init_day);
-    c.name = def_name_start + to_string(pc);
+    c.name = id + def_name_start + to_string(pc);
     c.profile = def_profile; 
     c.patch_yield = def_patch_yield;
     c.lasts = def_lasts;
@@ -263,9 +262,7 @@ Resources::Resources(int idd, int xx, int yy, int patch_yield, float energy_conv
 
   for(int pc=0; pc < def_patch_rep; pc++) {
     CropPatch c(def_abs_init_day);
-    c.name = def_name_start + to_string(pc);
-    char suffix = 'a' + pc;  // add 'a' for first, then 'b' for second etc
-    c.name += suffix; 
+    c.name = id + def_name_start + to_string(pc);
     c.profile = def_profile; 
     c.patch_yield = def_patch_yield;
     c.lasts = def_lasts;
@@ -427,47 +424,27 @@ bool Resources::being_eaten_patches_at_location() {
   return false;
 }
 
-// get non-empty patches which are also not being_eaten at the given location
-// stores these in 'patches'
-// NB: the ints in 'patches' are indexes into 'resources'
-// so patches contains i the relevant CropPatch is resources[i]
-// returns true if there any such patches
-bool Resources::patches_at_location(vector<int>& patches) {
-  patches.clear();
+// get first patch index which are also not being_eaten at the given location
+int Resources::get_available_patch() 
+{
+  vector<int> patchIndexes;
   for(int i= 0; i < resources.size(); i++) {
     if((!resources[i].being_eaten) && (resources[i].get_total() > 0)) {
-      patches.push_back(i);
+      patchIndexes.push_back(i);
     }
   }
   #if DEBUG
   db("#patches "); db((int)(patches.size())); db(" at "); db(pos->tostring()); db("\n");
   #endif
-  if(patches.size() > 0) {
-    return true;
-  }
-  else {
-    return false;
-  }
-}
-
-int Resources::choose_rand_patch(vector<int> &patches) {
-
-  crop_ordering_size = patches.size();
-
-  crop_ordering = new int[crop_ordering_size];
   
-  for(int o=0; o < crop_ordering_size; o++) {
-    crop_ordering[o] = patches[o];
+  if(patchIndexes.size() > 0) 
+  {
+   return patchIndexes[0];
   }
-
-  gsl_ran_shuffle(r_global, crop_ordering, crop_ordering_size, sizeof(int));
-
-  int which = crop_ordering[0];
-  
-  delete [] crop_ordering;
-    
-  return which;
-
+  else 
+  {
+    return -1;
+  }
 }
 
 string Resources::tostring() {

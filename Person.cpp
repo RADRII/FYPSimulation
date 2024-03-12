@@ -928,12 +928,10 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
   p = eat_ptr->p;
 
   // get all patches at x (i) not empty (ii) not occupied (ie. being_eaten is set true there)
-  bool have_patches_here = false;
-  vector<int> patches;
-  have_patches_here = p->loc->resourceObject->patches_at_location(patches);
+  int cropIndex = p->loc->resourceObject->get_available_patch();
 
   //not possible to eat, have person redecide
-  if(!have_patches_here) 
+  if(cropIndex == -1) 
   {
     p->getNextAction(true);
     return;
@@ -945,18 +943,19 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
     p->prevAction = EAT;
     p->hasBeenEating = true;
 
-    // get a random one
-    int patch_index = p->loc->resourceObject->choose_rand_patch(patches);
-    CropPatch& c = p->loc->resourceObject->resources[patch_index];
+    // get a random available patch
+    CropPatch& c = p->loc->resourceObject->resources[cropIndex];
+    cout << c.name << endl;
+
     // set the patch as being eaten
     c.being_eaten = true;
+
     // set the eater of the patch
     c.eater = p;
     // set person to state of having a patch
-    //p->at_a_patch = true;
-    p->eating_patch = &(p->loc->resourceObject->resources[patch_index]);
+    p->eating_patch = &(c);
 
-    // TEMP: for sake of later stats gathering
+    // for sake of later stats gathering
     p->update_places_eaten(p->loc->resourceObject);
 	
     //  make p eat max poss from patch, calculating handling time 'handled'
