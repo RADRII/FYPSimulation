@@ -975,54 +975,6 @@ void Population::collect_subtype(char type, vector<PerPtr>& sub_pop) {
   }
 }
 
-void Population::aggregate_area_gains(char type,AreaGains &agg) {
-  vector<PerPtr> sub_pop;
-  collect_subtype(type, sub_pop);
-  
-  agg.clear_area_gains();
-  agg.collective = true;
-  
-    /*****************************************/
-    /* make running the sum over all in sub_pop */
-    /*****************************************/
-    map<ResPtr,AreaGain>::iterator agg_itr;
-
-    for(size_t i=0; i < sub_pop.size(); i++) {
-      PerPtr p = sub_pop[i];
-      map<ResPtr,AreaGain>::const_iterator pag_itr;
-      for(pag_itr = p->area_gains.area_gains.begin();pag_itr != p->area_gains.area_gains.end(); pag_itr++) {
-	agg_itr = agg.area_gains.find(pag_itr->first);
-	if(agg_itr == agg.area_gains.end()) {
-          agg.set(pag_itr->first,pag_itr->second);
-	  agg.area_gains[pag_itr->first].collective = true; 
-	}
-	else {
-	  agg_itr->second.gain += pag_itr->second.gain;
-	  agg_itr->second.time_in_area += pag_itr->second.time_in_area;
-	  agg_itr->second.count += 1;
-	}
-      
-      } // end loop over p's gains
-
-      
-    } // end loop over sub_pop
-
-  /*********************************/
-  /* calculate the gain_per_person */
-  /*********************************/  
-  for(agg_itr = agg.area_gains.begin(); agg_itr != agg.area_gains.end(); agg_itr++) {
-    AreaGain& ag = agg_itr->second;
-    if(ag.count != 0) {
-      ag.gain_per_person = ag.gain/ag.count;
-    }
-    else {
-      ag.gain_per_person = 0;
-    }
-    
-  }
-
-}
-
 float Population::get_mean_eaten(char type) {
   vector<PerPtr> sub_pop;
   collect_subtype(type, sub_pop);
@@ -1038,15 +990,6 @@ float Population::get_mean_eaten(char type) {
     return 0.0;
   }
   
-}
-
-void Population::clear_all_area_gains() {
- PerPtr p;
-  for(size_t i=0; i < population.size(); i++) {
-    p = population[i];
-    p->area_gains.clear_area_gains();
-  }
-
 }
 
 float Population::get_mean_energy(char type) {

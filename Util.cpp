@@ -18,86 +18,13 @@ ofstream r_stats;
 DayStats r_line;
 
 ofstream gains_info_history;
-//AreaGains a_agg;
-//AreaGains b_agg;
-AreaGains agg;
-vector<float> sched_agg; // prob redundant
-int num_switches = 0;
-int num_switches_A = 0;
-int num_switches_B = 0;
-
-
 
 ofstream pop_snapshots;
 
 ofstream starvation_stats;
 
-string gains_info_header;
-
-void write_gains_info_header(ostream& history) {
-  // has side effect of saving the header string in gains_info_header
-  // used to calc how many dummy entries to add for days with no people
-  gains_info_header = "";
-  gains_info_header += "DATE OneA TwoA ThreeA FourA FiveA OneB TwoB ThreeB FourB FiveB ";
-  gains_info_header += "A0 A1 A2 A3 A4 B0 B1 B2 B3 B4 "; // obsolete
-  gains_info_header += "sh_a ";
-  gains_info_header += "c0_a c1_a c2_a c3_a c4_a g0_a g1_a g2_a g3_a g4_a m0_a m1_a m2_a m3_a m4_a ";
-  gains_info_header += "sh_b ";
-  gains_info_header += "c0_b c1_b c2_b c3_b c4_b g0_b g1_b g2_b g3_b g4_b m0_b m1_b m2_b m3_b m4_b";
-
-  history << gains_info_header << "\n";
-
-}
-void write_gains_info_line(ostream& history) {
-  // was in update after feeding
-   // record  area gains into gains_info_history 
-  history << r_line.DATE << " ";
-
-
-  /***************************************************************/
-  /* (OneA TwoA ThreeA FourA FiveA)                              */
-  /* output A sub-type gains, disregarding position in schedules */
-  /***************************************************************/
-  agg.clear_area_gains();
-  pop.aggregate_area_gains('A',agg);
-  for(int i = 0; i < all_res.size(); i++) {
-      float f;
-      if(agg.get_gain(all_res[i],f)) {
-	history << f ; 
-      }
-      else {
-	history << 0;
-      }
-      history << " ";
-  }
-
-  /***************************************************************/
-  /* (OneB TwoB ThreeB FourB FiveB)                              */
-  /* output B sub-type gains, disregarding position in schedules */
-  /***************************************************************/
-
-  agg.clear_area_gains();
-  pop.aggregate_area_gains('B',agg);
-  for(int i = 0; i < all_res.size(); i++) {
-      float f;
-      if(agg.get_gain(all_res[i],f)) {
-	history << f ; 
-      }
-      else {
-	history << 0;
-      }
-      history << " ";
-  }
-  history << endl;
-
-
-  
-}
-
-
 void write_pop_snapshot_header(ostream& o) {
   o << "DATE TYPE AGE EN EATEN FIRST\n";
-
 }
 
 
@@ -127,7 +54,7 @@ void write_pop_snapshot(ostream& o) {
 
 
 void write_starvation_stats_header(ostream& o) {
-  o << "DATE ID TYPE AGE EN\n";
+  o << "DATE ID TYPE AGE EN \n";
 
 }
 
@@ -136,8 +63,7 @@ void write_starvation_stats_line(ostream& o,PerPtr p) {
   o << p->toid() << " ";
   o << p->type << " ";
   o << p->age << " ";
-  o << p->current_energy << " ";
-    
+  o << p->current_energy << " ";   
 }
 
 string f_to_s(float f) {

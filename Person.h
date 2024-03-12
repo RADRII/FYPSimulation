@@ -228,9 +228,6 @@ class Population {
   void show();
   void zero_eaten_today();
   int get_total();
-  
-  // jun8 2020: clears objective gains, not knowledge  
-  void clear_all_area_gains();
 
   vector<Tribe> tribes;
   
@@ -240,7 +237,6 @@ class Population {
 
   void collect_subtype(char type, vector<PerPtr>& sub_pop);
 
-  void aggregate_area_gains(char type,AreaGains &agg);
   float get_mean_energy(char type);
   float get_mean_eaten(char type);
 
