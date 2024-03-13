@@ -595,7 +595,7 @@ bool Population::update(int date){
   update_by_cull(deaths_age, deaths_starve, deaths_strand);
   r_line.DEATHS_AGE = deaths_age;
   r_line.DEATHS_STARVE = deaths_starve;
-  r_line.DEATHS_STARVE = deaths_strand;
+  r_line.DEATHS_STRANDED = deaths_strand;
   
   #if DEBUG
   db("> age cull, expend nrg "); show(); db("\n");

@@ -9,6 +9,7 @@ void DayStats::clear() {
   NUM_AREAS_IN_WIPEOUT = -1;
   DEATHS_AGE = -1;
   DEATHS_STARVE = -1;
+  DEATHS_STRANDED = -1;
   BIRTHS = -1;
   POP = -1;
   TYPEA = -1;
