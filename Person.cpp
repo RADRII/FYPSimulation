@@ -120,28 +120,6 @@ void Person::update_places_explored(LocNode* l) {
   }
 }
 
-
-bool Person::set_route(LocNode* fst, LocNode* lst) {
-  route.clear();
-  route_index = 0;
-  
-  vector<LocNode*> temp = mind.internalWorld.findPath(fst, lst);
-  if(temp.empty())
-  {
-    route_index = -1;
-    return false;
-  }
-  else
-  {
-    route = mind.internalWorld.findPath(fst, lst);
-  }
-
-  if(route.back()->type == HAB_ZONE)
-    isHeadingHome = true;
-
-  return true;
-}
-
 void Person::show_route() {
   for(size_t i = 0; i < route.size(); i++) {
     cout << route[i]->tostring();
@@ -344,8 +322,9 @@ ActionPtr Person::getNextAction(bool failedEat)
     }
   }
 
-  //If have been exploring, then either keep exploring or go home
-  if(prev == EXPLORE)
+  //If have been exploring, while knowing of a resource
+  //then either keep exploring or go home
+  if(prev == EXPLORE && !knownResources.empty())
   {
     //Should keep exploring?
     vector<LocNode*> pathHome = mind.internalWorld.findPath(loc, home_loc);
@@ -903,24 +882,30 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
   p->prevAction = EXPLORE;
   p->hasBeenEating = false;
 
-  //Get list of unexplored neigbors
-  vector<LocNode*> unexploredNeighbors = p->mind.internalWorld.getUnexploredNeighbors(p->loc);
-
-  //Remove potentials that don't leave enough time to return home from
+  //Check if should go home
+  //Aka if moving in a direction away from home would kill the person
+  //While also creating a list of neighbors that are unknown
   vector<LocNode*> potentials;
-  for(int i = 0; i < unexploredNeighbors.size(); i++)
+  vector<LocNode*> neighbors = p->mind.internalWorld.getNeighbors(p->loc);
+
+  bool canGetHome = false;
+  for(int i = 0; i < neighbors.size(); i++)
   {
-    vector<LocNode*> pathHome = p->mind.internalWorld.findPath(unexploredNeighbors[i], p->home_loc);
+    vector<LocNode*> pathHome = p->mind.internalWorld.findPath(neighbors[i], p->home_loc);
     int timeHome = pathHome.size();
+    if(timeHome == 0 && !(neighbors[i]->equals(p->home_loc)))
+      cout << "ERROR" << endl;
     
     if((p->homeByTime - currentTic - 1) > timeHome) //-1 because it will be from the next tic
     {
-      potentials.push_back(unexploredNeighbors[i]);
+      canGetHome = true;
+      if(neighbors[i]->type == UNKNOWN)
+        potentials.push_back(neighbors[i]);
     }
   }
 
-  //If that removed all of our options, then we need to go home immedietly, or rest if at home
-  if(unexploredNeighbors.size() > 0 && potentials.empty())
+  //if we can't get home from any neighbor we need to go home now.
+  if(canGetHome == false)
   {
     if(p->loc->type == HAB_ZONE)
     {
@@ -946,6 +931,7 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
     return;
   }
 
+  //We can get home for sure now
   //choose where to go, either immediete unexplored neighbor or moving towards closest unexplored
   LocNode* toGo;
   if(!potentials.empty())

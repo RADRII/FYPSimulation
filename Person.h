@@ -118,7 +118,6 @@ class Person {
   /**********************************************************/
   bool isHeadingHome;
   vector<LocNode*> route;
-  bool set_route(LocNode* fst, LocNode* lst);
   int closestViableResource();
   bool clear_route();
   size_t route_index;

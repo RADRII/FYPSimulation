@@ -59,9 +59,9 @@ LocNode* LocGrid::getNode(int x, int y) {
         return nullptr;
 }
 
-vector<LocNode*> LocGrid::getUnexploredNeighbors(LocNode* loc)
+vector<LocNode*> LocGrid::getNeighbors(LocNode* loc)
 {
-    vector<LocNode*> unexploredNeighbors;
+    vector<LocNode*> neighbors;
 
     // Traverse neighbors
     static const int dx[] = { -1, 1, 0, 0 }; // Left, Right, Up, Down
@@ -73,11 +73,11 @@ vector<LocNode*> LocGrid::getUnexploredNeighbors(LocNode* loc)
         int newY = loc->y + dy[i];
 
         LocNode* neighbor = getNode(newX, newY);
-        if (neighbor != nullptr && neighbor->type == UNKNOWN)
-            unexploredNeighbors.push_back(neighbor);
+        if(neighbor != nullptr)
+            neighbors.push_back(neighbor);
     }
 
-    return unexploredNeighbors;
+    return neighbors;
 }
 
 void LocGrid::resetParents() {

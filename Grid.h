@@ -25,9 +25,9 @@ class LocGrid {
   std::vector<std::vector<LocNode>> nodes;
   LocGrid(int s, bool isPerson);
   LocGrid();
-  LocNode* getNode(int x, int y);
-  vector <LocNode*> getUnexploredNeighbors(LocNode* loc);
   void resetParents();
+  LocNode* getNode(int x, int y);
+  vector <LocNode*> getNeighbors(LocNode* loc);
   std::vector<LocNode*> findPath(LocNode* startNode, LocNode* endNode);
   std::vector<LocNode*> findPathClosestUnexplored(LocNode* startNode);
 };
