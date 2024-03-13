@@ -207,6 +207,11 @@ ActionPtr Person::getNextAction(bool failedEat)
     //if no time left, go home
     vector<LocNode*> pathHome = mind.internalWorld.findPath(loc, home_loc);
     int timeHome = pathHome.size();
+    if(timeHome == 0) 
+    {
+      timeHome = timeHome + 1; //needed so people don't leave home at last tic
+    }
+    
     if((homeByTime - currentTic) <= timeHome)
     {
       //if already somehow home, then rest
@@ -276,6 +281,11 @@ ActionPtr Person::getNextAction(bool failedEat)
   //if no time left, go home
   vector<LocNode*> pathHome = mind.internalWorld.findPath(loc, home_loc);
   int timeHome = pathHome.size();
+  if(timeHome == 0) 
+  {
+    timeHome = timeHome + 1; //needed so people don't leave home at last tic
+  }
+
   if((homeByTime - currentTic) <= timeHome)
   {
     //if already somehow home, then rest
@@ -808,6 +818,11 @@ void Population::update_by_action(int date, int tic) {
   {
     ActionPtr a = actList.get_first(); // = (t, p, x) [time, person, loc]
     actList.pop_first();
+
+    if(a->p->identifier == 23)
+    {
+      cout << a->p->identifier << " choose to " << a->kind << " with energy of " << a->p->current_energy << endl;
+    }
 
     if(a->kind == ROUTE) 
     { 
