@@ -42,7 +42,7 @@ void write_pop_snapshot(ostream& o) {
   for(size_t i=0; i < pop_cpy.size(); i++) {
     o << r_line.DATE << " ";
     p = pop_cpy[i]; 
-    o << p->type << " ";
+    o << to_string(p->identifier) << " ";
     o << p->age << " ";
     o << p->current_energy << " ";
     o << p->eaten_today << " ";

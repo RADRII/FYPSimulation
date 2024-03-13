@@ -1129,7 +1129,7 @@ bool compare_person(Person *p1, Person *p2) {
 }
 
 string Person::info_type_to_string() {
-  string s = "";
+  string s = to_string(identifier);
   return s;
 }
 
