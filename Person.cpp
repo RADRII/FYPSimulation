@@ -24,7 +24,7 @@ Person::Person() {
   type = 'A';
   expiry_age = 500;  // will not live beyod this age could die earlier
 
-  curiosity = 50.0;
+  curiosity = 80.0;
   homeByTime = 20;
   
   init_energy = 50;
@@ -49,7 +49,7 @@ Person::Person() {
   isHeadingHome = false;
   
   prevAction = START;
-  energyExploreAbove = 10;
+  energyExploreAbove = 5;
 
   eating_patch = NULL;
 
@@ -209,6 +209,17 @@ ActionPtr Person::getNextAction(bool failedEat)
     int timeHome = pathHome.size();
     if((homeByTime - currentTic) <= timeHome)
     {
+      //if already somehow home, then rest
+      if(isHome)
+      {
+        if(loc->type != HAB_ZONE)
+          cout << "Warning: somehow resting not at home" << endl;
+
+        HomeAction *next = new HomeAction;
+        next->p = this;
+        return next;
+      }
+
       isHeadingHome = true;
       route = pathHome;
       route_index = 0;
@@ -218,9 +229,8 @@ ActionPtr Person::getNextAction(bool failedEat)
       next->route_index = route_index;
       return next;
     }
-
     //else if not full try to eat again
-    if(current_energy < max_energy && eaten_today < max_daily_eat)
+    else if(current_energy < max_energy && eaten_today < max_daily_eat)
     {
       EatAction *next = new EatAction;
       next->p = this;
@@ -229,10 +239,10 @@ ActionPtr Person::getNextAction(bool failedEat)
     //explore if energy after going home right now is above a certain bounday
     //plus random chance with curiosity
     //plus is there anything to explore
-    else if((
+    else if(
       !mind.internalWorld.findPathClosestUnexplored(loc).empty() &&
-      current_energy - (timeHome * moveCost) - sleepEnergyLoss) > energyExploreAbove &&
-      (1+ (rand() % 100)) > curiosity)
+      current_energy - (timeHome * moveCost) - sleepEnergyLoss > energyExploreAbove &&
+      (1+ (rand() % 100)) < curiosity)
     {
       ExploreAction *next = new ExploreAction;
       next->p = this;
@@ -241,6 +251,17 @@ ActionPtr Person::getNextAction(bool failedEat)
     //else head home
     else
     {
+      //if already somehow home, then rest
+      if(isHome)
+      {
+        if(loc->type != HAB_ZONE)
+          cout << "Warning: somehow resting not at home" << endl;
+
+        HomeAction *next = new HomeAction;
+        next->p = this;
+        return next;
+      }
+
       isHeadingHome = true;
       route = pathHome;
       route_index = 0;
@@ -257,6 +278,17 @@ ActionPtr Person::getNextAction(bool failedEat)
   int timeHome = pathHome.size();
   if((homeByTime - currentTic) <= timeHome)
   {
+    //if already somehow home, then rest
+    if(isHome)
+    {
+      if(loc->type != HAB_ZONE)
+        cout << "Warning: somehow resting not at home" << endl;
+
+      HomeAction *next = new HomeAction;
+      next->p = this;
+      return next;
+    }
+
     isHeadingHome = true;
     route = pathHome;
     route_index = 0;
@@ -320,6 +352,44 @@ ActionPtr Person::getNextAction(bool failedEat)
         debug_record << identifier << " decided to " << ROUTE << endl; 
       return next;
     }
+  }
+
+  //If have been exploring, then either keep exploring or go home
+  if(prev == EXPLORE)
+  {
+    //Should keep exploring?
+    vector<LocNode*> pathHome = mind.internalWorld.findPath(loc, home_loc);
+    int tHome = pathHome.size();
+    if(
+      !mind.internalWorld.findPathClosestUnexplored(loc).empty() &&
+      current_energy - (tHome * moveCost) - sleepEnergyLoss > energyExploreAbove &&
+      (1+ (rand() % 100)) < curiosity)
+    {
+      ExploreAction *next = new ExploreAction;
+      next->p = this;
+      return next;
+    }
+
+    //if already somehow home, then rest
+    if(isHome)
+    {
+      if(loc->type != HAB_ZONE)
+        cout << "Warning: somehow resting not at home" << endl;
+
+      HomeAction *next = new HomeAction;
+      next->p = this;
+      return next;
+    }
+
+    //Head home if not
+    isHeadingHome = true;
+    route = pathHome;
+    route_index = 0;
+    
+    RouteAction *next = new RouteAction;
+    next->p = this;
+    next->route_index = route_index;
+    return next;
   }
 
   //Finally just explore
@@ -687,13 +757,13 @@ void Population::update_by_cull(int& deaths_age, int& deaths_starve, int& deaths
     //    cout << "considering "; p->show(); db("\n");
     (*p)->age = ((*p)->age + 1);
     (*p)->current_energy -= (*p)->sleepEnergyLoss;
+
     if((*p)->age >= (*p)->expiry_age) {
       #if DEBUG
       db((*p)->type); db(" DEATH (age)\n");
       #endif
       delete *p;
       p = population.erase(p);
-
       deaths_age++; 
     }
     else if((*p)->current_energy < 0) {
@@ -711,7 +781,7 @@ void Population::update_by_cull(int& deaths_age, int& deaths_starve, int& deaths
       #endif
       delete *p;
       p = population.erase(p);
-      deaths_strand++; 
+      deaths_strand++;
     }
     else {    
       p++; // update the iterator
@@ -883,8 +953,21 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
 
   //update loc bools
   if(p->loc->type == RESOURCE)
+  {
     p->atResource = true;
-  else p->atResource = false;
+    p->isHome = false;
+  }
+  else if (p->loc->type == RESOURCE)
+  {
+    p->atResource = false;
+    p->isHome = true;
+  }
+  else
+  {
+    p->atResource = false;
+    p->isHome = false;
+  }
+
 
   return;
 }

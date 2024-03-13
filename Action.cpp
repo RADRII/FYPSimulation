@@ -7,7 +7,9 @@
 Action::Action() {
 }
 
-Action::~Action() {}
+Action::~Action() {
+  p = NULL;
+}
 
 string Action::tostring() {
   string s = "junk";

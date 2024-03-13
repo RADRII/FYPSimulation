@@ -137,6 +137,7 @@ int main(int argc, char **argv) {
     r_line.NUM_AREAS_IN_WIPEOUT = num_areas_in_wipeout;
     r_line.DEATHS_AGE = 0;
     r_line.DEATHS_STARVE = 0;
+    r_line.DEATHS_STRANDED = 0;
 
     r_line.BIRTHS = 0;
     r_line.POP = 0;
@@ -170,7 +171,7 @@ int main(int argc, char **argv) {
   char extinct_tribe;
 
   int date_max = 0;
-  date_max = 2500;
+  date_max = 500;
 
   for(int date=60; date < date_max; date++) {
 
@@ -276,24 +277,11 @@ int main(int argc, char **argv) {
     if(pop.get_total() == 0) {
       
       r_line.write(r_stats);
+      cout << "A went extinct on day " << date << endl;
 #if DEBUG
       db("extinction\n");
 #endif
       break;
-    }
-
-    
-    if((r_line.TYPEA == 0) && extinction_date == 0) {
-
-      extinction_date = date;
-      if((r_line.TYPEA) == 0) {  extinct_tribe = 'A';}
-      
-      // skip this to let run on
-      // date_max = 1.1 * date; // let it continue for 10% of current run
-      
-      if(r_line.TYPEA == 0) {
-    	cout << "A went extinct on day" << date << endl;
-      }
     }
     
     r_line.write(r_stats);

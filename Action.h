@@ -19,6 +19,7 @@ class Action {
   ActionKind kind;
   virtual string tostring();
   void show();
+  Person *p;  // concerning who
 };
 
 typedef Action * ActionPtr;
@@ -27,7 +28,6 @@ class RouteAction : public Action {
  public:
   RouteAction();
   ~RouteAction(); // prob overkill at moment
-  Person *p;  // concerning who
   size_t route_index; // where to reach in route when executed
   string tostring();
 };
@@ -36,7 +36,6 @@ class ExploreAction : public Action {
  public:
   ExploreAction();
   ~ExploreAction(); // prob overkill at moment
-  Person *p;  // concerning who
   string tostring();
 };
 
@@ -44,7 +43,6 @@ class EatAction : public Action {
  public:
   EatAction();
   ~EatAction(); // prob overkill at moment
-  Person *p;  // concerning who (which patch accessible via this)
   int units_frm_patch; // the units p is supposed now to have eaten (incl half-eaten)
   float gain; // energy gained 
   string tostring();
@@ -54,7 +52,6 @@ class HomeAction: public Action {
  public:
   HomeAction();
   ~HomeAction(); 
-  Person *p;  // concerning who
   // relevant location is p->home_loc
   string tostring();
 };
@@ -63,7 +60,6 @@ class WaitAction: public Action {
  public:
   WaitAction();
   ~WaitAction(); 
-  Person *p;  // concerning who
   int waitTime;
   string tostring();
 };
