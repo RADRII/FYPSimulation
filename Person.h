@@ -12,17 +12,16 @@ using namespace std;
 class FamilyPlan {
  public:
   FamilyPlan();
-  FamilyPlan(int age, int whose, int pl, int first, vector<int> nxt);
   int whose_plan;
   int planned_offspring;
   void choose_planned_offspring();
-  int wait_first;
-  void choose_wait_first();
-  vector<int> wait_next;
-  void choose_wait_next();
+
+  int birth_age_index;
+  vector<int> birth_ages;
+  void choose_birth_ages(int age, int maxReproAge);
   
   int next_birth_age;
-  void set_plan(int age, int who);
+  void set_plan(int age, int who, int maxReproAge);
   void show();
 };
 

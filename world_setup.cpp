@@ -137,8 +137,7 @@ void set_up_population() {
 
     people.population[i]->home_loc = all_home_loc[0];
     people.population[i]->loc = people.population[i]->home_loc;
-
-    
+    all_home_loc[0]->occupancy = all_home_loc[0]->occupancy + 1;
   }
 
   if(tribe_size > 0) {

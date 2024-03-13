@@ -444,35 +444,33 @@ void Person::clear_places_explored() {
   num_places_explored = 0;
 }
 
-void FamilyPlan::set_plan(int age, int who) {
+void FamilyPlan::set_plan(int age, int who, int maxReproAge) {
   whose_plan = who;
   choose_planned_offspring();
+  birth_age_index = 0;
 
-  if(planned_offspring > 0) {
-    choose_wait_first();
-    if(planned_offspring > 1) {
-      wait_next.resize(planned_offspring - 1);
-      choose_wait_next();
-    }
-    next_birth_age = age + wait_first;
-
+  if(planned_offspring > 0) 
+  {
+    choose_birth_ages(age, maxReproAge);
+    next_birth_age = birth_ages[birth_age_index];
   }
 }
 
-void FamilyPlan::choose_wait_first() {
-  // wait_first = gsl_rng_uniform_int(r_global, 10);
-  wait_first = gsl_rng_uniform_int(r_global, 123);
-  //    wait_first = gsl_rng_uniform_int(r_global, 50);
+//Decide the ages a person will have a child
+//The years they have left are split into planned offspring number of equal sized bands 
+//randomly decide a number 
+void FamilyPlan::choose_birth_ages(int age, int maxReproAge)
+{
+  int bandSize = (maxReproAge - age) / planned_offspring;
 
-}
+  for(int i = 0; i < planned_offspring; i++)
+  {
+    int randInt = gsl_rng_uniform_int(r_global, bandSize);
+    //cout << "Rand: " << randInt << endl;
+    int birthAge = randInt + (age + (bandSize * i));
 
-void FamilyPlan::choose_wait_next() {
-  for(int i=0; i < planned_offspring-1; i++) {
-    // wait_next[i] = gsl_rng_uniform_int(r_global, 10);
-    wait_next[i] = gsl_rng_uniform_int(r_global, 123);
-    // wait_next[i] = gsl_rng_uniform_int(r_global, 50);
+    birth_ages.push_back(birthAge);
   }
-
 }
 
 void FamilyPlan::choose_planned_offspring() {
@@ -492,27 +490,16 @@ void FamilyPlan::choose_planned_offspring() {
 
 FamilyPlan::FamilyPlan(){}
 
-FamilyPlan::FamilyPlan(int age, int whose, int pl, int first, vector<int> nxt) {
-  whose_plan = whose;
-  planned_offspring = pl;
-
-  wait_first = first;
-  wait_next = nxt; 
-    
-  next_birth_age = age + wait_first;
-
-}
-
 void FamilyPlan::show() {
   db("person "); db(whose_plan); db(" ");
   db("pl:"); db(planned_offspring);
   if(planned_offspring > 0) {
-    db(" fst:"); db(wait_first);
+    db(" fst:"); db(next_birth_age);
   }
   if(planned_offspring > 1) {
     db(" nxt(");
-    for(size_t i = 0; i < wait_next.size(); i++) {
-      db(wait_next[i]); db(" ");
+    for(size_t i = 1; i < birth_ages.size(); i++) {
+      db(birth_ages[i]); db(" ");
     }
     db(")");
   }
@@ -1046,9 +1033,9 @@ int Population::update_by_repro()
     {
       continue;
     }
-    else if (p->age == p->repro_age_start - 1 || p->fam_plan.planned_offspring == -1) 
+    else if (p->age == p->repro_age_start - 1 || (p->fam_plan.planned_offspring == -1 && p->age < p->repro_age_end)) 
     {
-      plan.set_plan(p->age + 1,p->identifier);
+      plan.set_plan(p->age + 1,p->identifier, p->repro_age_end);
       #if DEBUG
       db("plan "); db(p->type); db(": "); plan.show();
       #endif
@@ -1057,10 +1044,11 @@ int Population::update_by_repro()
 	     && (plan.planned_offspring > 0) && (plan.next_birth_age == p->age)) 
     {
       p->num_offspring = p->num_offspring + 1;
-      if(plan.planned_offspring > 1 && plan.planned_offspring > p->num_offspring ) {
-        plan.next_birth_age += plan.wait_next[p->num_offspring - 1];
-	plan.next_birth_age = plan.next_birth_age + 1; // so if wait_next is 0, this is the next day
-      }
+      p->fam_plan.birth_age_index = plan.birth_age_index + 1;
+
+      //check if that was the last child or not before setting next birth age
+      if(plan.birth_age_index < plan.birth_ages.size())
+        plan.next_birth_age = plan.birth_ages[plan.birth_age_index];
 
       #if DEBUG
       db(p->identifier); db(p->type); db(" repro(1)\n");
@@ -1071,11 +1059,12 @@ int Population::update_by_repro()
       // share characteristics with parent
       child->set_frm_parent(p);
 
-      
       population.push_back(child);
       num_births++;
     }
   }
+
+  all_home_loc[0]->occupancy = all_home_loc[0]->occupancy + num_births;
   return num_births;
 }
 
