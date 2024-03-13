@@ -186,15 +186,20 @@ ActionPtr Person::getNextAction(bool failedEat)
       next->route_index = route_index;
       return next;
     }
+
+    //reset route and routeindex
+    route.clear();
+    route_index = -1;
+
     //routed home, time to rest
-    else if(route.back()->type == HAB_ZONE)
+    if(loc->type == HAB_ZONE)
     {
       HomeAction *next = new HomeAction;
       next->p = this;
       return next;
     }
     //routed to resource, try to eat
-    else if(route.back()->type == RESOURCE)
+    else if(loc->type == RESOURCE)
     {
       EatAction *next = new EatAction;
       next->p = this;
@@ -204,27 +209,13 @@ ActionPtr Person::getNextAction(bool failedEat)
   }
   else if(prev == EAT && !failedEat)
   {
+    //future adri, dont need to check if their at home already, if they were eating they can't be
     //if no time left, go home
     vector<LocNode*> pathHome = mind.internalWorld.findPath(loc, home_loc);
     int timeHome = pathHome.size();
-    if(timeHome == 0) 
-    {
-      timeHome = timeHome + 1; //needed so people don't leave home at last tic
-    }
     
     if((homeByTime - currentTic) <= timeHome)
     {
-      //if already somehow home, then rest
-      if(isHome)
-      {
-        if(loc->type != HAB_ZONE)
-          cout << "Warning: somehow resting not at home" << endl;
-
-        HomeAction *next = new HomeAction;
-        next->p = this;
-        return next;
-      }
-
       isHeadingHome = true;
       route = pathHome;
       route_index = 0;
@@ -256,17 +247,6 @@ ActionPtr Person::getNextAction(bool failedEat)
     //else head home
     else
     {
-      //if already somehow home, then rest
-      if(isHome)
-      {
-        if(loc->type != HAB_ZONE)
-          cout << "Warning: somehow resting not at home" << endl;
-
-        HomeAction *next = new HomeAction;
-        next->p = this;
-        return next;
-      }
-
       isHeadingHome = true;
       route = pathHome;
       route_index = 0;
@@ -298,7 +278,7 @@ ActionPtr Person::getNextAction(bool failedEat)
       next->p = this;
       return next;
     }
-
+    
     isHeadingHome = true;
     route = pathHome;
     route_index = 0;
@@ -319,7 +299,7 @@ ActionPtr Person::getNextAction(bool failedEat)
     {
       WaitAction *next = new WaitAction;
       next->p = this;
-      debug_record << identifier << " decided to " << WAIT << endl; 
+      debug_record << identifier << " (retry) decided to " << WAIT << endl; 
       return next;
     }
   }
@@ -676,6 +656,9 @@ bool Population::update(int date){
   r_line.DEATHS_AGE = deaths_age;
   r_line.DEATHS_STARVE = deaths_starve;
   r_line.DEATHS_STRANDED = deaths_strand;
+
+  //reset peoples daily bools
+  resetDayBools();
   
   #if DEBUG
   db("> age cull, expend nrg "); show(); db("\n");
@@ -745,14 +728,17 @@ bool Population::update(int date){
   //db_level = 1;
   
   int numA = 0;
-  for(size_t i=0; i < population.size(); i++)  {
+  for(size_t i=0; i < population.size(); i++)  
+  {
+    if(population[i]->num_places_eaten > max_places_eaten) 
+      max_places_eaten = population[i]->num_places_eaten;
+    if(population[i]->num_places_explored > max_places_explored)
+	    max_places_explored = population[i]->num_places_explored;
     numA++;
   }
 
   r_line.TYPEA = numA;
 
-  //reset peoples daily bools
-  resetDayBools();
   return updated;
 }
 
@@ -819,11 +805,6 @@ void Population::update_by_action(int date, int tic) {
   {
     ActionPtr a = actList.get_first(); // = (t, p, x) [time, person, loc]
     actList.pop_first();
-
-    if(a->p->identifier == 23)
-    {
-      cout << a->p->identifier << " choose to " << a->kind << " with energy of " << a->p->current_energy << endl;
-    }
 
     if(a->kind == ROUTE) 
     { 
@@ -897,18 +878,14 @@ void Population::RouteAction_proc(RouteAction *route_ptr, int tic)
   //Update persons route pointer
   p->route_index = p->route_index + 1;
 
-  //Update persons loc bools
-  if(p->loc->type == HAB_ZONE && p->route_index >= p->route.size())
-  {
-    p->isHome = true;
-    if(p->num_places_eaten > max_places_eaten) 
-      max_places_eaten = p->num_places_eaten;
-    if(p->num_places_explored > max_places_explored)
-	    max_places_explored = p->num_places_explored;
-  }
-
   //Remove energy for moving
   p->current_energy = p->current_energy - 1;
+
+  //Update persons loc bools
+  if(p->loc->type == HAB_ZONE && p->route_index >= p->route.size())
+    p->isHome = true;
+  else
+    p->isHome = false;
 
   if(p->loc->type == RESOURCE && p->route_index >= p->route.size())
     p->atResource = true;
@@ -927,7 +904,47 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
   p->hasBeenEating = false;
 
   //Get list of unexplored neigbors
-  vector<LocNode*> potentials = p->mind.internalWorld.getUnexploredNeighbors(p->loc);
+  vector<LocNode*> unexploredNeighbors = p->mind.internalWorld.getUnexploredNeighbors(p->loc);
+
+  //Remove potentials that don't leave enough time to return home from
+  vector<LocNode*> potentials;
+  for(int i = 0; i < unexploredNeighbors.size(); i++)
+  {
+    vector<LocNode*> pathHome = p->mind.internalWorld.findPath(unexploredNeighbors[i], p->home_loc);
+    int timeHome = pathHome.size();
+    
+    if((p->homeByTime - currentTic - 1) > timeHome) //-1 because it will be from the next tic
+    {
+      potentials.push_back(unexploredNeighbors[i]);
+    }
+  }
+
+  //If that removed all of our options, then we need to go home immedietly, or rest if at home
+  if(unexploredNeighbors.size() > 0 && potentials.empty())
+  {
+    if(p->loc->type == HAB_ZONE)
+    {
+      debug_record << p->identifier << " (retry) decided to " << HOMEREST << endl;
+
+      HomeAction *retry = new HomeAction;
+      retry->p = p;
+      list.insert(retry);
+      return;
+    }
+
+    debug_record << p->identifier << " (retry) decided to " << ROUTE << endl;
+
+    p->isHeadingHome = true;
+    p->route = p->mind.internalWorld.findPath(p->loc, p->home_loc);
+    p->route_index = 0;
+    
+    RouteAction *retry = new RouteAction;
+    retry->p = p;
+    retry->route_index = p->route_index;
+
+    list.insert(retry);
+    return;
+  }
 
   //choose where to go, either immediete unexplored neighbor or moving towards closest unexplored
   LocNode* toGo;
@@ -973,7 +990,7 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
     p->atResource = true;
     p->isHome = false;
   }
-  else if (p->loc->type == RESOURCE)
+  else if (p->loc->type == HAB_ZONE)
   {
     p->atResource = false;
     p->isHome = true;

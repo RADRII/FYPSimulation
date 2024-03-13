@@ -92,6 +92,9 @@ void LocGrid::resetParents() {
 std::vector<LocNode*> LocGrid::findPath(LocNode* startNode, LocNode* endNode) {
     std::vector<LocNode*> path;
 
+    if(startNode->equals(endNode))
+        return path;
+
     queue<LocNode*> frontier;
     frontier.push(startNode);
 
