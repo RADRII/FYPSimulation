@@ -209,7 +209,7 @@ class Population {
   void update_by_cull(int& deaths_age, int& deaths_starve, int& deaths_strand); // age, expend energy, then cull,
   //TODO add update by wipeouts back in (after add communication)
   
-  void update_by_repro(int& num); // add new population members, set num to number born
+  int update_by_repro(); // add new population members, set num to number born
   
   void update_by_action(int date, int tic);
 

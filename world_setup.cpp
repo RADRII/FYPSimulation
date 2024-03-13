@@ -115,7 +115,7 @@ void set_up_population() {
   int tribe_size;
 
   tribe_name = "tribe1";
-  tribe_size = 20;
+  tribe_size = 40;
 
   Population people(tribe_name,tribe_size);
   

@@ -39,7 +39,7 @@ Person::Person() {
   repro_age_start = 200;
   repro_age_end = 450;
   num_offspring = 0;
-  fam_plan.planned_offspring = 0;
+  fam_plan.planned_offspring = -1;
   speed = 1.0;
 
   homeByTime = 20;
@@ -487,7 +487,7 @@ void FamilyPlan::choose_planned_offspring() {
   
   planned_offspring = gsl_ran_discrete(r_global, init);
 
-  //cout << poss_offspring << endl;
+  //cout << planned_offspring << endl;
 }
 
 FamilyPlan::FamilyPlan(){}
@@ -661,8 +661,7 @@ bool Population::update(int date){
   /************************************************/
   /* do updates of population due to reproduction */
   /************************************************/
-  int num_births = 0;
-  update_by_repro(num_births); 
+  int num_births = update_by_repro(); 
   r_line.BIRTHS = num_births;
 
   r_line.POP = get_total();
@@ -679,14 +678,8 @@ bool Population::update(int date){
   //db_level = 1;
   
   int numA = 0;
-  int numB = 0;
   for(size_t i=0; i < population.size(); i++)  {
-    if(population[i]->type == 'A') {
-      numA++;
-    }
-    else {
-      numB++;
-    }
+    numA++;
   }
 
   r_line.TYPEA = numA;
@@ -1033,33 +1026,36 @@ float Population::get_mean_energy(char type) {
   
 }
 
-void Population::update_by_repro(int& num_births) { // add new population members
-
-
+// add new population members
+int Population::update_by_repro() 
+{
   // NOTE: according to docs, when a vector internally does a reallocation
   // (which you see when val frm capacity() changes) *all* iterators can become
   // invalid ie. the iterators do not transparently update to reflect the hidden
   // storage changes
   // --> cant use iterators on resizing vectors 
-
   // code uses index not iterator
 
+  int num_births = 0;
 
   for(size_t i=0; i < population.size(); i++) {
-
     Person* p = population[i];
     FamilyPlan& plan = population[i]->fam_plan;
-    if(p->age < p->repro_age_start-1) {
+
+    if(p->age < p->repro_age_start-1) 
+    {
+      continue;
     }
-    else if (p->age == p->repro_age_start - 1) {
+    else if (p->age == p->repro_age_start - 1 || p->fam_plan.planned_offspring == -1) 
+    {
       plan.set_plan(p->age + 1,p->identifier);
       #if DEBUG
       db("plan "); db(p->type); db(": "); plan.show();
       #endif
     }
     else if ((p->age >= p->repro_age_start) && (p->age <= p->repro_age_end)
-	     && (plan.planned_offspring > 0) && (plan.next_birth_age == p->age)) {
-
+	     && (plan.planned_offspring > 0) && (plan.next_birth_age == p->age)) 
+    {
       p->num_offspring = p->num_offspring + 1;
       if(plan.planned_offspring > 1 && plan.planned_offspring > p->num_offspring ) {
         plan.next_birth_age += plan.wait_next[p->num_offspring - 1];
@@ -1078,29 +1074,9 @@ void Population::update_by_repro(int& num_births) { // add new population member
       
       population.push_back(child);
       num_births++;
-
-      
-
     }
-    
   }
-
-
-  // // below is the code for doing it with an iterator
-  // // throws seg error due to iterator invalidation when vector grows
-  // vector<Person>::iterator p;
-  // p = population.begin(); // go to start again
-  // while(p != population.end()) {
-  //   if(!(p->have_reproduced) && (p->age >= p->repro_age_start) && (p->age <= p->repro_age_end)) {
-  //     Person child;
-  //     population.push_back(child);
-  //       cout << "capacity after push back: " << population.capacity() << endl;
-  //     p->have_reproduced = true;
-  //   }
-  //   p++;
-  // }
-  
-
+  return num_births;
 }
 
 void Person::set_frm_parent(Person *p) {
