@@ -50,6 +50,9 @@ int main(int argc, char **argv) {
   open_an_output(starvation_stats,"starvation_stats");
   write_starvation_stats_header(starvation_stats);  
 
+  open_an_output(stranding_stats,"stranding_stats");
+  write_stranding_stats_header(stranding_stats);  
+
   open_an_output(debug_record,"debug_record");
   debug_record << "Welcome." << endl;
 

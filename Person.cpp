@@ -789,6 +789,7 @@ void Population::update_by_cull(int& deaths_age, int& deaths_starve, int& deaths
       #if DEBUG
       db((*p)->type); db(" DEATH (strand)\n");
       #endif
+      write_stranding_stats_line(stranding_stats,*p);
       delete *p;
       p = population.erase(p);
       deaths_strand++;

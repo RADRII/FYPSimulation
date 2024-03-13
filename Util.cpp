@@ -23,6 +23,8 @@ ofstream pop_snapshots;
 
 ofstream starvation_stats;
 
+ofstream stranding_stats;
+
 ofstream debug_record;
 
 void write_pop_snapshot_header(ostream& o) {
@@ -66,6 +68,20 @@ void write_starvation_stats_line(ostream& o,PerPtr p) {
   o << p->type << " ";
   o << p->age << " ";
   o << p->current_energy << " ";   
+  o << endl;
+}
+
+void write_stranding_stats_header(ostream& o) {
+  o << "DATE ID TYPE PREVACTION LOCX LOCY" << endl;
+}
+
+void write_stranding_stats_line(ostream& o,PerPtr p) {
+  o << r_line.DATE << " ";
+  o << p->toid() << " ";
+  o << p->type << " ";
+  o << p->prevAction << " ";
+  o << p->loc->x << " ";   
+  o << p->loc->y << " ";   
   o << endl;
 }
 

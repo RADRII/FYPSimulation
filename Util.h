@@ -40,6 +40,15 @@ extern  ofstream starvation_stats;
 void write_starvation_stats_header(ostream& o);
 void write_starvation_stats_line(ostream& o,PerPtr p);
 
+/********************/
+/* stranding stats */
+/********************/
+
+extern  ofstream stranding_stats;
+
+void write_stranding_stats_header(ostream& o);
+void write_stranding_stats_line(ostream& o,PerPtr p);
+
 
 /*****************************************************/
 /* record of how 'world' was set-up for a simulation */
