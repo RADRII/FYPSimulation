@@ -32,7 +32,7 @@ Person::Person() {
   
   max_energy = 70;
   sleepEnergyLoss = 20;
-  moveCost = 1; //Todo fiddle with
+  moveCost = 2; //Todo fiddle with
   max_daily_eat = 45;
   
   eaten_today = 0;
@@ -49,7 +49,7 @@ Person::Person() {
   isHeadingHome = false;
   
   prevAction = START;
-  energyExploreAbove = 15;
+  energyExploreAbove = 10;
 
   eating_patch = NULL;
 
@@ -95,8 +95,8 @@ int Person::closestViableResource() {
         int timeLeft = homeByTime - currentTic;
         vector<LocNode*> resToHome = mind.internalWorld.findPath(knownResources[i], home_loc);
         int timeToEat = timeLeft - (resToHome.size() + temp.size());
-        //if((timeToEat * 0.5) > ((resToHome.size() + temp.size()) * moveCost)) ToDo edit 0.5 to be berry/bean ish cost
-        if(timeToEat > 1)
+
+        if((timeToEat * knownResources[i]->resourceObject->resources[0].energy_conv) > ((resToHome.size() + temp.size()) * moveCost)) //AKA does going there waste energy or no
         {
           shortestRoute = temp.size();
           index = i;
@@ -841,7 +841,8 @@ void Population::RouteAction_proc(RouteAction *route_ptr, int tic)
 	    max_places_explored = p->num_places_explored;
   }
 
-  //Todo update energy
+  //Remove energy for moving
+  p->current_energy = p->current_energy - 1;
 
   if(p->loc->type == RESOURCE && p->route_index >= p->route.size())
     p->atResource = true;
@@ -897,7 +898,8 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
   //Update persons location
   p->loc = world.getNode(x,y);
 
-  //Todo update energy
+  //Remove energy for moving
+  p->current_energy = p->current_energy - p->moveCost;
 
   //update loc bools
   if(p->loc->type == RESOURCE)
