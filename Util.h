@@ -7,7 +7,7 @@
 #include <sstream>
 #include "DayStats.h"
 #include "AreaGain.h"
-#include "People.h"
+#include "Person.h"
 
 using namespace std;
 
@@ -21,24 +21,6 @@ extern void rand_setup();
 /********************************************/
 extern  ofstream r_stats;
 extern DayStats r_line;
-
-/*********************************/
-/* day-by-day area gains info    */
-/*********************************/
-extern  ofstream gains_info_history;
-//extern AreaGains a_agg;
-//extern AreaGains b_agg;
-extern AreaGains agg;
-
-extern vector<float> sched_agg; // prob redundant
-
-
-extern string gains_info_header;
-void write_gains_info_header(ostream& o);
-void write_gains_info_line(ostream& o);
-void write_sched_gains_for_subtype(char sub_type,ostream& o);
-
-
 
 /******************/
 /* pop snap shots */
@@ -58,6 +40,15 @@ extern  ofstream starvation_stats;
 void write_starvation_stats_header(ostream& o);
 void write_starvation_stats_line(ostream& o,PerPtr p);
 
+/********************/
+/* stranding stats */
+/********************/
+
+extern  ofstream stranding_stats;
+
+void write_stranding_stats_header(ostream& o);
+void write_stranding_stats_line(ostream& o,PerPtr p);
+
 
 /*****************************************************/
 /* record of how 'world' was set-up for a simulation */
@@ -65,6 +56,11 @@ void write_starvation_stats_line(ostream& o,PerPtr p);
 /*****************************************************/
 
 extern  ofstream setup_record;
+
+/*****************************************************/
+/* debug stream, for whatever i want :)     */
+/*****************************************************/
+extern  ofstream debug_record;
 
 string f_to_s(float f);
 

@@ -5,17 +5,16 @@
 
 using namespace std;
 
-CropPatch::CropPatch() : pos(PATCH) {
+CropPatch::CropPatch() {
   next_init_day = abs_init_day;
   bands.clear();
 }
 
-CropPatch::CropPatch(int day) : pos(PATCH) {
+CropPatch::CropPatch(int day) {
   abs_init_day = day;
   next_init_day = abs_init_day;
   bands.clear();
   being_eaten = false;
-  
 }
 
 // max edible at i after first day of season, bearing in mind how long things last
@@ -129,14 +128,14 @@ void CropPatch::remove_units(int units) {
   while(bands.size() > 0 && rem_units > 0) {
     // try to consume m_int from current band
     if(f->amount > rem_units) { // eg. have ooooo, rem_units = ooo: eating will end here
-      f->amount -= rem_units;
+      f->amount = f->amount - rem_units;
       rem_units = 0;
     }
     else if (f->amount <= rem_units) { // eg. have have oo, rem_units = ooo: eating will continue
       units_frm_band = f->amount;
       f++; // move band iterator
       bands.pop_front(); 
-      rem_units -= units_frm_band;
+      rem_units = rem_units - units_frm_band;
     }
   
   }
@@ -185,9 +184,14 @@ void CropPatch::show_bars() {
 
 Resources::Resources() {}
 
-Resources::Resources(string name, LocPtr res_entry, int patch_yield, float energy_conv, int patch_rep, int loc_rep) {
-  id = name;
-  setup_record << "area " << name << endl;
+Resources::Resources(int idd, int xx, int yy, int patch_yield, int energy_conv, int patch_rep) {
+  id = f_to_s(idd);
+  setup_record << "Resource " << id << endl;
+
+  x = xx;
+  y = yy;
+
+  numWaiters = 0;
   
   in_wipeout = false;
   //p_wipeout = 0.01;
@@ -209,34 +213,25 @@ Resources::Resources(string name, LocPtr res_entry, int patch_yield, float energ
 
   def_energy_conv = energy_conv;
 
-  def_loc_rep = loc_rep; 
-
   def_patch_rep = patch_rep;
 
   /***********************************/
   /* this makes the berries patches */
   /***********************************/
-  for(int i = 0; i < def_loc_rep; i++) {
-    for(int pc=0; pc < def_patch_rep; pc++) {
-      CropPatch c(def_abs_init_day);
-      c.name = def_name_start + to_string(i);
-      char suffix = 'a' + pc;  // add 'a' for first, then 'b' for second etc
-      c.name += suffix; 
-      c.profile = def_profile; 
-      c.patch_yield = def_patch_yield;
-      c.lasts = def_lasts;
-      c.energy_conv = def_energy_conv;
-      c.period = def_period;
-      c.season_progress = -1; // ? part of constructor ?
-      c.sym = def_sym;
-      c.pos.x = (res_entry->x + 2) + (i * 2);
-      c.pos.y = res_entry->y;
-      resources.push_back(c);
-    }
+  for(int pc=0; pc < def_patch_rep; pc++) {
+    CropPatch c(def_abs_init_day);
+    c.name = id + def_name_start + to_string(pc);
+    c.profile = def_profile; 
+    c.patch_yield = def_patch_yield;
+    c.lasts = def_lasts;
+    c.energy_conv = def_energy_conv;
+    c.period = def_period;
+    c.season_progress = -1; // ? part of constructor ?
+    c.sym = def_sym;
+    resources.push_back(c);
   }
   
   setup_record << "has " << def_name_start;
-  setup_record << " def_loc_rep:" << def_loc_rep << " of";
   setup_record << " def_abs_init_day:" << def_abs_init_day;
   setup_record << " def_profile:";
   for(size_t i = 0; i < def_profile.size(); i++) {
@@ -265,27 +260,20 @@ Resources::Resources(string name, LocPtr res_entry, int patch_yield, float energ
   /* the makes the beans patches */
   /*******************************/
 
-  for(int i = 0; i < def_loc_rep; i++) {
-    for(int pc=0; pc < def_patch_rep; pc++) {
-      CropPatch c(def_abs_init_day);
-      c.name = def_name_start + to_string(i);
-      char suffix = 'a' + pc;  // add 'a' for first, then 'b' for second etc
-      c.name += suffix; 
-      c.profile = def_profile; 
-      c.patch_yield = def_patch_yield;
-      c.lasts = def_lasts;
-      c.energy_conv = def_energy_conv;
-      c.period = def_period;
-      c.season_progress = -1; // ? part of constructor ?
-      c.sym = def_sym;
-      c.pos.x = (res_entry->x + 2) + (i * 2);
-      c.pos.y = res_entry->y;
-      resources.push_back(c);
-    }
+  for(int pc=0; pc < def_patch_rep; pc++) {
+    CropPatch c(def_abs_init_day);
+    c.name = id + def_name_start + to_string(pc);
+    c.profile = def_profile; 
+    c.patch_yield = def_patch_yield;
+    c.lasts = def_lasts;
+    c.energy_conv = def_energy_conv;
+    c.period = def_period;
+    c.season_progress = -1; // ? part of constructor ?
+    c.sym = def_sym;
+    resources.push_back(c);
   }
 
   setup_record << "has " << def_name_start;
-  setup_record << " def_loc_rep:" << def_loc_rep << " of";
   setup_record << " def_abs_init_day:" << def_abs_init_day;
   setup_record << " def_profile:";
   for(size_t i = 0; i < def_profile.size(); i++) {
@@ -301,40 +289,13 @@ Resources::Resources(string name, LocPtr res_entry, int patch_yield, float energ
   setup_record << " y sep:" << 0;
   setup_record << " has " <<  def_patch_rep << " copies at each point";
   setup_record << endl;
-
-  // the resources vector now contains lots of CropPatch's each with a location
-  // this puts these locations into 'locs' avoiding duplicates as several patches
-  // can have same location
-  set_locs();
-  
-  set_loc_to_indices(); // set the map from locs to resources indices containing them
-}
-
-int Resources::get_total() { // max edible from all CropPatches in this Resource area
-  int tot = 0;
-  for(int i = 0; i < resources.size(); i++) {
-    tot += resources[i].get_total();
-  }
-  return tot;
-} 
-
-
-int Resources::get_total(Location l) {
-  int tot = 0;
-  vector<size_t> patches = loc_to_indices[l];
-  for(size_t pi : patches) {
-    tot += resources[pi].get_total();
-  }
-
-  return tot;
-
 }
 
 void Resources::show_bands() {
 
   // shows by crop type, by location
   for(int i = 0; i < resources.size(); i++) {
-    db(resources[i].sym); db(resources[i].pos.tostring()); db(":");
+    db(resources[i].sym); db(":");
     resources[i].show_bands();
   }
   // eg. 
@@ -377,9 +338,16 @@ void Resources::show_bars() {
 
 }
 
+int Resources::get_total() { // max edible from all CropPatches in this Resource area
+  int tot = 0;
+  for(int i = 0; i < resources.size(); i++) {
+    tot += resources[i].get_total();
+  }
+  return tot;
+}
+
 void Resources::show_total() {
   db(get_total()); db("["); db(get_total()); db("]"); 
-
 }
 
 // update all CropPatches at given date (which inserting new if any, deleting inedible due to age if any
@@ -447,121 +415,35 @@ void Resources::wipeout_at_date(int date) {
 
 // check for any patches are being_eaten at given location
 // if so the location should be added to someone's revisit list
-bool Resources::being_eaten_patches_at_location(Location *pos) {
-  // rewrite to use loc_to_indices
-  vector<size_t> patches;
-  patches = loc_to_indices[*pos];
-  for(size_t i=0; i < patches.size(); i++) {
-      CropPatch c;
-      c = resources[patches[i]];
+bool Resources::being_eaten_patches_at_location() {
+  for(int i=0; i < resources.size(); i++) {
+      CropPatch c = resources[i];
       if(c.being_eaten) { return true; }
   }
 
   return false;
-  
-  // for(int i= 0; i < resources.size(); i++) {
-  //   if((resources[i].pos.x == pos->x) && (resources[i].being_eaten) ) {
-  //     #if DEBUG
-  //     db("being eaten patch:  "); db(pos->tostring()); db("\n");
-  //     #endif
-  //     return true;
-  //   }
-  // }
-
-  // return false;
-
 }
 
-// get non-empty patches which are also not being_eaten at the given location
-// stores these in 'patches'
-// NB: the ints in 'patches' are indexes into 'resources'
-// so patches contains i the relevant CropPatch is resources[i]
-// returns true if there any such patches
-bool Resources::patches_at_location(vector<int>& patches, Location *pos) {
-  patches.clear();
+// get first patch index which are also not being_eaten at the given location
+int Resources::get_available_patch() 
+{
+  vector<int> patchIndexes;
   for(int i= 0; i < resources.size(); i++) {
-    if((resources[i].pos.x == pos->x) && (!resources[i].being_eaten) && (resources[i].get_total() > 0)) {
-      patches.push_back(i);
+    if((!resources[i].being_eaten) && (resources[i].get_total() > 0)) {
+      patchIndexes.push_back(i);
     }
   }
   #if DEBUG
   db("#patches "); db((int)(patches.size())); db(" at "); db(pos->tostring()); db("\n");
   #endif
-  if(patches.size() > 0) {
-    return true;
-  }
-  else {
-    return false;
-  }
-}
-
-int Resources::choose_rand_patch(vector<int> &patches) {
-
-  crop_ordering_size = patches.size();
-
-  crop_ordering = new int[crop_ordering_size];
   
-  for(int o=0; o < crop_ordering_size; o++) {
-    crop_ordering[o] = patches[o];
+  if(patchIndexes.size() > 0) 
+  {
+   return patchIndexes[0];
   }
-
-  gsl_ran_shuffle(r_global, crop_ordering, crop_ordering_size, sizeof(int));
-
-  int which = crop_ordering[0];
-  
-  delete [] crop_ordering;
-    
-  return which;
-
-}
-
-
-void Resources::set_loc_to_indices() {
-  map<Location, vector<size_t>>::iterator locs_itr;
-  Location l;
-  for(size_t i=0; i < resources.size(); i++) {
-    l = resources[i].pos;
-    locs_itr = loc_to_indices.find(l);
-    if(locs_itr == loc_to_indices.end()) {
-      vector<size_t> v = {i};
-      loc_to_indices[l] = v;
-    }
-    else {
-      loc_to_indices[l].push_back(i);
-    }
-  }
-
-#if DEBUG
-  for(locs_itr = loc_to_indices.begin(); locs_itr != loc_to_indices.end(); locs_itr++) {
-    Location l;
-    l = locs_itr->first;
-    db(l.tostring()); db("->{");
-    for(int i=0; i < locs_itr->second.size(); i++) {
-      db((int)(locs_itr->second[i])); db(" ");
-    }
-    db("}");
-
-  }
-#endif
-
-}
-
-void Resources::set_locs() {
-  for(int i=0; i < resources.size(); i++) {
-    float x = resources[i].pos.x;
-    float y = resources[i].pos.y;
-    bool there = false;
-    for(int j = 0; j < locs.size(); j++) {
-      if((locs[j].x == x) && (locs[j].y == y)) {
-	there = true;
-	break;
-      }
-    }
-    if(!there) {
-      Location l(PATCH);
-      l.x = x; l.y = y; l.id = "generic";
-      locs.push_back(l);
-    }
+  else 
+  {
+    return -1;
   }
 }
 
@@ -569,23 +451,12 @@ string Resources::tostring() {
   string s;
   s += id;
   s += "(";
-  s += f_to_s(locs[0].x);
+  s += f_to_s(x);
   s += ",";
-  s += f_to_s(locs[0].y);
+  s += f_to_s(y);
   s += ")";
   return s;
 }
-
-bool Resources::get_res_entry(LocPtr& e) {
-    LocPtr l;
-    l = &(locs[0]); 
-    if(l->trace_fst(RES_ENTRY_L,e)) {
-      return true; 
-    }
-    else { return false; }
-
-}
-
 
 void test_Resources() {
 
@@ -621,39 +492,12 @@ void test_Resources() {
   
 }
 
-// sets r to relevant Resources pointer if l is in the loc_to_res map
-// and returns true/false accordingly 
-bool res_frm_loc(LocPtr l, ResPtr& r) {
-  map<LocPtr, ResPtr>::const_iterator m_itr;
-  m_itr =   loc_to_res.find(l);
-  if(m_itr != loc_to_res.end()) {
-    r = m_itr->second;
+bool Resources::equals(ResPtr r)
+{
+  if(x == r->x && y == r->y && id == r->id)
     return true;
-  }
-  else {
-    return false;
-  }
-
+  return false;
 }
 
 // all the Resources areas
 vector<ResPtr> all_res;
-
-// // map from a Location to the Resources area it is part of
-// NB: not all Locations should map to a Resources area at all
-// NB: currently code in 'world_setup.cpp' sets this map only on
-// first of an area's Locations
-map<LocPtr, ResPtr> loc_to_res;
-
-
-
-void show_all_loc_to_res() {
-  map<LocPtr, ResPtr>::const_iterator m_itr;
-  for(m_itr = loc_to_res.begin(); m_itr != loc_to_res.end(); m_itr++) {
-
-    cout << "loc: " << m_itr->first->tostring() << " is in res: " << m_itr->second->tostring() << endl;
-  }
-}
-
-
-map<ResPtr,size_t> res_to_index;
