@@ -273,7 +273,7 @@ int main(int argc, char **argv) {
 
      /* block to write pop snapshots */
      if((date >= 60) && (date <= 1000)) {
-      write_pop_snapshot(pop_snapshots);
+      //write_pop_snapshot(pop_snapshots);
       }
 
     if(pop.get_total() == 0) {
