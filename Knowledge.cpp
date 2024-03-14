@@ -5,6 +5,7 @@
 Knowledge::Knowledge() {
   internalWorld = LocGrid(gridSize, true);
   internalWorld.getNode(gridSize/2, gridSize/2)->type = HAB_ZONE;
+  numUnknown = 48;
 }
 
 //todo

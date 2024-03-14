@@ -22,6 +22,8 @@ class Knowledge {
   LocGrid internalWorld;
   std::vector<LocNode*> knownResources;
 
+  int numUnknown;
+
   string tostring();
 
 };

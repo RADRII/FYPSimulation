@@ -141,7 +141,6 @@ class Person {
   /**********************************************************/
   Knowledge mind;
   LocNode* home_loc;
-  bool updateMind(int x, int y, NodeKind Type);
   bool getRoute(vector<LocNode*> internalRoute);
   
 
@@ -235,7 +234,7 @@ class Population {
   float get_mean_eaten(char type);
 
   int max_places_eaten = 0;
-  int max_places_explored = 0;
+  int max_places_explored;
 };
 
 extern Population pop;

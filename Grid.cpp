@@ -73,7 +73,7 @@ vector<LocNode*> LocGrid::getNeighbors(LocNode* loc)
         int newY = loc->y + dy[i];
 
         LocNode* neighbor = getNode(newX, newY);
-        if(neighbor != nullptr)
+        if(neighbor != nullptr && !(neighbor->type == OBSTACLE))
             neighbors.push_back(neighbor);
     }
 
@@ -192,6 +192,8 @@ vector<LocNode*> LocGrid::findPathClosestUnexplored(LocNode* startNode)
     }
 
     resetParents(); //Needed for future routing
-    path.erase(path.begin());
+    
+    if(path.size() != 0)
+        path.erase(path.begin());
     return path;
 }

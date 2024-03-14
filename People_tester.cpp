@@ -247,10 +247,9 @@ int main(int argc, char **argv) {
     
     pop.zero_eaten_today();
 
-    // TEMP: zero records of num places eaten, num places explored
+    // TEMP: zero records of num places eaten
     for(size_t i = 0; i < pop.population.size(); i++) {
       pop.population[i]->clear_places_eaten();
-      pop.population[i]->clear_places_explored();
     }
 
 #if DEBUG

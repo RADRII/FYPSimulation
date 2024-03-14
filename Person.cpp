@@ -24,8 +24,10 @@ Person::Person() {
   type = 'A';
   expiry_age = 500;  // will not live beyod this age could die earlier
 
-  curiosity = 80.0;
+  curiosity = 60.0;
   homeByTime = 20;
+  prevAction = START;
+  energyExploreAbove = 10;
   
   init_energy = 50;
   current_energy = init_energy;
@@ -33,7 +35,7 @@ Person::Person() {
   max_energy = 70;
   sleepEnergyLoss = 20;
   moveCost = 2; //Todo fiddle with
-  max_daily_eat = 45;
+  max_daily_eat = 35;
   
   eaten_today = 0;
   repro_age_start = 200;
@@ -47,9 +49,6 @@ Person::Person() {
   isHome = false;
   hasBeenEating = false;
   isHeadingHome = false;
-  
-  prevAction = START;
-  energyExploreAbove = 5;
 
   eating_patch = NULL;
 
@@ -111,6 +110,7 @@ void Person::update_places_explored(LocNode* l) {
   if(mind.internalWorld.getNode(l->x, l->y)->type == UNKNOWN)
   {
     mind.internalWorld.getNode(l->x, l->y)->type = l->type;
+    mind.numUnknown = mind.numUnknown - 1;
     num_places_explored = num_places_explored + 1;
 
     //cout << "Explored: " << l->x << " " << l->y << " is " << l->type << endl;
@@ -191,7 +191,7 @@ ActionPtr Person::getNextAction(bool failedEat)
     //if no time left, go home
     vector<LocNode*> pathHome = mind.internalWorld.findPath(loc, home_loc);
     int timeHome = pathHome.size();
-    
+
     if((homeByTime - currentTic) <= timeHome)
     {
       isHeadingHome = true;
@@ -554,6 +554,7 @@ Population::Population(string name, int size){
 
   id = name;
   hbt = 20;
+  max_places_explored = 0;
   for(int i=0; i < size; i++) {
     
 
@@ -649,7 +650,6 @@ bool Population::update(int date){
     r_line.A_EN = 0;
     r_line.A_EATEN = 0;
     r_line.MAX_NUM_PLACES_EATEN = 0;
-    r_line.MAX_NUM_PLACES_EXPLORED = 0;
     // no other person related updates are possible so return
     return true;
   }
