@@ -90,7 +90,7 @@ void Person::update_places_explored(LocNode* l) {
     //cout << "Explored: " << l->x << " " << l->y << " is " << l->type << endl;
 
     if(l->type == RESOURCE)
-      knownResources.push_back(l);
+      mind.addNewResToMind(l);
   }
 }
 
@@ -261,7 +261,7 @@ ActionPtr Person::getNextAction(bool failedEat)
   //Finally either route to a resource or explore
   //Route to a random (viable) resource if not full
   //Explore if not
-  if(!knownResources.empty() && eaten_today < max_daily_eat)
+  if(!mind.knownResources.empty() && eaten_today < max_daily_eat)
   {
     //Check if currently on a resource, try to eat if haven't failed already
     if(loc->type == RESOURCE && !failedEat)
@@ -286,7 +286,7 @@ ActionPtr Person::getNextAction(bool failedEat)
   }
 
   //If have been exploring, while knowing of a resource then either keep exploring or go home
-  if(prev == EXPLORE && !knownResources.empty())
+  if(prev == EXPLORE && !mind.knownResources.empty())
   {
     //Should keep exploring?
     vector<LocNode*> pathHome = mind.internalWorld.findPath(loc, home_loc);
@@ -339,24 +339,24 @@ bool Person::setResourceRoute()
 {
   //remove non viable resources
   vector<LocNode*> viable;
-  for(int i = 0; i < knownResources.size(); i++)
+  for(int i = 0; i < mind.knownResources.size(); i++)
   {
-    vector<LocNode*> potential = mind.internalWorld.findPath(loc, knownResources[i]);
-    vector<LocNode*> backHome = mind.internalWorld.findPath(knownResources[i], home_loc);
+    vector<LocNode*> potential = mind.internalWorld.findPath(loc, mind.knownResources[i]);
+    vector<LocNode*> backHome = mind.internalWorld.findPath(mind.knownResources[i], home_loc);
 
     //viable if not current location and if possible to get there in time
     //and if there aren't too many people there/going there already
     //only on tic 0 (when their all at home) as it doesnt make sense for people to know it afterwards
-    if(homeByTime - currentTic > potential.size() + backHome.size() && !knownResources[i]->equals(loc))
+    if(homeByTime - currentTic > potential.size() + backHome.size() && !mind.knownResources[i]->equals(loc))
     {
       if(currentTic == 0)
       {
-        if(knownResources[i]->resourceObject->getNumPersonsInterestedInResource() < knownResources[i]->resourceObject->getNumViablePatches())
-          viable.push_back(knownResources[i]);
+        if(mind.knownResources[i]->resourceObject->getNumPersonsInterestedInResource() < mind.knownResources[i]->resourceObject->resources.size())
+          viable.push_back(mind.knownResources[i]);
       }
       else
       {
-        viable.push_back(knownResources[i]);
+        viable.push_back(mind.knownResources[i]);
       }
     }
   }

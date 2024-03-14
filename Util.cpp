@@ -68,7 +68,7 @@ void write_starvation_stats_line(ostream& o,PerPtr p) {
   o << p->type << " ";
   o << p->age << " ";
   o << p->current_energy << " ";
-  o << p->knownResources.size() << " ";
+  o << p->mind.knownResources.size() << " ";
   o << endl;
 }
 

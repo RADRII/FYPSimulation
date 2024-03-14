@@ -18,8 +18,8 @@ CropPatch::CropPatch(int day) {
 }
 
 // max edible at i after first day of season, bearing in mind how long things last
-int CropPatch::get_total() {
-
+int CropPatch::get_total() 
+{
   std::deque<AgeBand>::const_iterator it = bands.begin();
 
   int total = 0;
@@ -35,8 +35,8 @@ int CropPatch::get_total() {
 }
 
 // update the bands at given day, inserting new if any, deleting inedible due to age if any
-int CropPatch::update_at_date(int date) { 
-
+int CropPatch::update_at_date(int date)
+{ 
   float incr = 0.0;
   AgeBand b;
   if(date < next_init_day) {
@@ -89,8 +89,8 @@ int CropPatch::update_at_date(int date) {
 }
 
 // to flat-line its output from d to end of its season
-bool CropPatch::wipeout_at_date(int date, int& normal_after_wipeout, int& non_zero_after_wipeout) {
-
+bool CropPatch::wipeout_at_date(int date, int& normal_after_wipeout, int& non_zero_after_wipeout)
+{
   if(date < next_init_day) { // 'dormant' and so cannot be wiped out
     // leave normal_after_wipeout, non_zero_after_wipeout unchanged
     non_zero_after_wipeout = next_init_day;
@@ -195,9 +195,7 @@ Resources::Resources(int idd, int xx, int yy, int patch_yield, int energy_conv, 
   numHeading = 0;
   
   in_wipeout = false;
-  //p_wipeout = 0.01;
-  //  p_wipeout = 0.10;
-  p_wipeout = 0.00;
+  p_wipeout = 0.0025; //fiddle
   setup_record << "p_wipeout:" << p_wipeout << endl;
   normal_after_wipeout = 0; 
   non_zero_after_wipeout = 0;
@@ -304,47 +302,19 @@ void Resources::show_bands() {
     db(resources[i].sym); db(":");
     resources[i].show_bands();
   }
-  // eg. 
-  // *c[2,y]:4(1) 1
-  // *c[4,y]:4(1) 1
-  // *c[6,y]:4(1) 1
-  // oc[2,y]:4(3) 3(4) 2(6) 1(7) 20
-  // oc[4,y]:4(3) 3(4) 2(6) 1(7) 20
-  // oc[6,y]:4(3) 3(4) 2(6) 1(7) 20
-
-  
-  // for(size_t i=0; i < locs.size(); i++) {
-  //   vector<size_t> patches;
-  //   patches = loc_to_indices[locs[i]];
-  //   for(size_t p=0; p < patches.size(); p++) {
-  //     CropPatch c;
-  //     c = resources[patches[p]];
-  //     db(c.sym); db(c.pos.tostring()); db(":");
-  //     c.show_bands();
-  //   }
-  // }
-
-  // shows by location, by crop type
-  // eg.
-  // *c[2,y]:4(1) 1
-  // oc[2,y]:4(3) 3(4) 2(6) 1(7) 20
-  // *c[4,y]:4(1) 1
-  // oc[4,y]:4(3) 3(4) 2(6) 1(7) 20
-  // *c[6,y]:4(1) 1
-  // oc[6,y]:4(3) 3(4) 2(6) 1(7) 20
 }
 
-void Resources::show_bars() {
+void Resources::show_bars() 
+{
  for(int i = 0; i < resources.size(); i++) {
     resources[i].show_bars();
     db(" | ");
   }
  // cout << endl;
-
-
 }
 
-int Resources::get_total() { // max edible from all CropPatches in this Resource area
+int Resources::get_total()
+{ // max edible from all CropPatches in this Resource area
   int tot = 0;
   for(int i = 0; i < resources.size(); i++) {
     tot += resources[i].get_total();
@@ -352,25 +322,31 @@ int Resources::get_total() { // max edible from all CropPatches in this Resource
   return tot;
 }
 
-void Resources::show_total() {
+void Resources::show_total()
+{
   db(get_total()); db("["); db(get_total()); db("]"); 
 }
 
 // update all CropPatches at given date (which inserting new if any, deleting inedible due to age if any
 // one 'update' possibility is wipe out
-int Resources::update_at_date(int date) {
+int Resources::update_at_date(int date)
+{
 
-  if(in_wipeout && date == non_zero_after_wipeout) {
+  if(in_wipeout && date == non_zero_after_wipeout)
+  {
     in_wipeout = false;
   }
 
-  if(gsl_ran_bernoulli(r_global, p_wipeout)) {
+  if(gsl_ran_bernoulli(r_global, p_wipeout))
+  {
+    cout << "WIPED " << endl;
     wipeout_at_date(date);
     in_wipeout = true;
   }
   
   double incr = 0.0;
-   for(size_t i = 0; i < resources.size(); i++) {
+  for(size_t i = 0; i < resources.size(); i++)
+  {
      incr += resources[i].update_at_date(date);
   }
    return incr;
@@ -379,37 +355,46 @@ int Resources::update_at_date(int date) {
 // flat-line all contained CropPatches
 // represents something like fire spreading throughout a Resources area
 // 'wiping' everything out. It will return at start of its next 'season'
-void Resources::wipeout_at_date(int date) {
+void Resources::wipeout_at_date(int date) 
+{
   int new_normal_after_wipeout = 0;
-  
 
   bool area_wipeout = false;
-  for(size_t i = 0; i < resources.size(); i++) {
+  for(size_t i = 0; i < resources.size(); i++) 
+  {
     int poss_normal, poss_non_zero;
     bool patch_wipeout = false;
     patch_wipeout = resources[i].wipeout_at_date(date,poss_normal, poss_non_zero);
-    if(patch_wipeout) {
+    if(patch_wipeout)
+    {
       area_wipeout = true;
     }
-    if(i == 0) {
-      if(patch_wipeout) {
-	new_normal_after_wipeout = poss_normal;
+    if(i == 0) 
+    {
+      if(patch_wipeout) 
+      {
+	      new_normal_after_wipeout = poss_normal;
       }
       non_zero_after_wipeout = poss_non_zero; 
     }
-    else {
-      if(patch_wipeout) {
-	if(poss_normal > new_normal_after_wipeout) {
-	  new_normal_after_wipeout = poss_normal; // needs to be latest
-	}
+    else 
+    {
+      if(patch_wipeout) 
+      {
+        if(poss_normal > new_normal_after_wipeout) 
+        {
+          new_normal_after_wipeout = poss_normal; // needs to be latest
+        }
       }
-      if(poss_non_zero < non_zero_after_wipeout) {
-      non_zero_after_wipeout = poss_non_zero; // needs to be earliest
+      if(poss_non_zero < non_zero_after_wipeout)
+      {
+        non_zero_after_wipeout = poss_non_zero; // needs to be earliest
       }
     }
   }
 
-  if(area_wipeout) {
+  if(area_wipeout)
+  {
     normal_after_wipeout = new_normal_after_wipeout;
   }
   #if DEBUG

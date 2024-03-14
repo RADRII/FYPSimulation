@@ -127,7 +127,6 @@ class Person {
   bool atResource;
   bool isHome;
   int currentTic;
-  vector<LocNode*> knownResources;
   double energyExploreAbove;
   double exploreBoundary;
 
