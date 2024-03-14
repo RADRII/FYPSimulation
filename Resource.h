@@ -162,6 +162,9 @@ public:
   int y;
 
   int numWaiters;
+  int numHeading;
+
+  int getNumPersonsInterestedInResource();
 
   // these run functions of same name over its CropPatch's
   void show_bands(); 
@@ -188,10 +191,9 @@ public:
   
   // get random non-empty patch which are also not being_eaten
   int get_available_patch();
-  
-  bool being_eaten_patches_at_location();
-  // checks whether any patches are being_eaten at given location
-  // used to see the location should be added to someone's revisit list
+
+  // get num of patches with food
+  int getNumViablePatches();
 
   bool equals(Resources* r);
   

@@ -143,7 +143,7 @@ void ActionList::init_from_population(vector<Person *> persons) {
     string s = "";
     if(persons[i]->isHome) s = "-H";
     else if(persons[i]->isHeadingHome) s = "(H)";
-    debug_record << persons[i]->identifier << " was at " << persons[i]->loc->x << " " << persons[i]->loc->y << " decided to " << action->kind << s << endl;
+    debug_record << persons[i]->identifier << " was at " << persons[i]->loc->x << " " << persons[i]->loc->y << " with " << persons[i]->current_energy << " decided to " << action->kind << s << endl;
   }
 }
 

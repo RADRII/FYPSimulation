@@ -100,9 +100,6 @@ class Person {
                            // NB: this should be consistent with the patch's being_eaten
   
 
-  // if eating at a location find if there are others also there
-  bool others_at_loc(vector<PerPtr>& others);
-
   // relating to REPRO 
 
   int num_offspring;

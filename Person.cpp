@@ -33,7 +33,7 @@ Person::Person() {
   current_energy = init_energy;
   
   max_energy = 70;
-  sleepEnergyLoss = 20;
+  sleepEnergyLoss = 15;
   moveCost = 2; //Todo fiddle with
   max_daily_eat = 35;
   
@@ -179,6 +179,8 @@ ActionPtr Person::getNextAction(bool failedEat)
     //routed to resource, try to eat
     else if(loc->type == RESOURCE)
     {
+      loc->resourceObject->numHeading = loc->resourceObject->numHeading - 1;
+
       EatAction *next = new EatAction;
       next->p = this;
       return next;
@@ -302,7 +304,8 @@ ActionPtr Person::getNextAction(bool failedEat)
       vector<LocNode*> potential = mind.internalWorld.findPath(loc, knownResources[i]);
       vector<LocNode*> backHome = mind.internalWorld.findPath(knownResources[i], home_loc);
 
-      if(homeByTime - currentTic > potential.size() + backHome.size() && !knownResources[i]->equals(loc)) //viable if not current location and if possible to get there in time
+      if(homeByTime - currentTic > potential.size() + backHome.size() && !knownResources[i]->equals(loc) && //viable if not current location and if possible to get there in time
+          knownResources[i]->resourceObject->getNumPersonsInterestedInResource() < knownResources[i]->resourceObject->getNumViablePatches()) //and if there aren't too many people there/going there already
         viable.push_back(knownResources[i]);
     }
 
@@ -311,13 +314,15 @@ ActionPtr Person::getNextAction(bool failedEat)
       int randIndex = rand() % viable.size();
       route = mind.internalWorld.findPath(loc, viable[randIndex]);;
       route_index = 0;
+
+      viable[randIndex]->resourceObject->numHeading = viable[randIndex]->resourceObject->numHeading + 1;
       
       RouteAction *next = new RouteAction;
       next->p = this;
       next->route_index = route_index;
 
       if(failedEat)
-        debug_record << identifier << " decided to " << ROUTE << endl; 
+        debug_record << identifier << " (retry) decided to " << ROUTE << endl; 
       return next;
     }
   }
@@ -415,11 +420,6 @@ bool Person::hasMaxEnergy() {
   else {
     return false;
   }
-}
-
-// check if others are eating at the same location
-bool Person::others_at_loc(vector<PerPtr>& others) {
-  return loc->resourceObject->being_eaten_patches_at_location();
 }
 
 string Person::toid() {
@@ -609,7 +609,9 @@ void Population::updatePeopleTic(int tic)
   }
 
   for(int i = 0; i < all_res.size(); i++)
+  {
     all_res[i]->numWaiters = 0;
+  }
 }
 
 void sanity_check_area_gains(vector<PerPtr> &population);
@@ -668,7 +670,7 @@ bool Population::update(int date){
     updatePeopleTic(tic);
     update_by_action(date, tic);
   }
-  debug_record << "TOC TOC TOC TOC TOC TOC" << endl;
+  debug_record << date << " TOC TOC TOC TOC TOC TOC" << endl;
   #if DEBUG
   db("------------------------\n");
   db("> feeding\n ");

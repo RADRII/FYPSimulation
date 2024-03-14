@@ -192,6 +192,7 @@ Resources::Resources(int idd, int xx, int yy, int patch_yield, int energy_conv, 
   y = yy;
 
   numWaiters = 0;
+  numHeading = 0;
   
   in_wipeout = false;
   //p_wipeout = 0.01;
@@ -289,6 +290,11 @@ Resources::Resources(int idd, int xx, int yy, int patch_yield, int energy_conv, 
   setup_record << " y sep:" << 0;
   setup_record << " has " <<  def_patch_rep << " copies at each point";
   setup_record << endl;
+}
+
+int Resources::getNumPersonsInterestedInResource()
+{
+  return numHeading + numWaiters;
 }
 
 void Resources::show_bands() {
@@ -413,15 +419,16 @@ void Resources::wipeout_at_date(int date) {
   #endif
 }
 
-// check for any patches are being_eaten at given location
-// if so the location should be added to someone's revisit list
-bool Resources::being_eaten_patches_at_location() {
-  for(int i=0; i < resources.size(); i++) {
-      CropPatch c = resources[i];
-      if(c.being_eaten) { return true; }
+//get number of viable patches (patches with total > 0)
+int Resources::getNumViablePatches()
+{
+  int total = 0;
+  for(int i = 0; i < resources.size(); i++)
+  {
+    if(resources[i].get_total() > 0)
+      total++;
   }
-
-  return false;
+  return total;
 }
 
 // get first patch index which are also not being_eaten at the given location
