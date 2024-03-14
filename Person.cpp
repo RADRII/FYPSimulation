@@ -1026,6 +1026,9 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
   PerPtr p;
   p = eat_ptr->p;
 
+  //Update knowledge on that resource
+  p->mind.updateInfoRes(p->loc);
+
   // get all patches at x (i) not empty (ii) not occupied (ie. being_eaten is set true there)
   int cropIndex = p->loc->resourceObject->get_available_patch();
 

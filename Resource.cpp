@@ -339,7 +339,6 @@ int Resources::update_at_date(int date)
 
   if(gsl_ran_bernoulli(r_global, p_wipeout))
   {
-    cout << "WIPED " << endl;
     wipeout_at_date(date);
     in_wipeout = true;
   }

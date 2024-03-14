@@ -5,7 +5,6 @@
 #include "Grid.h"
 #include "InfoRes.h"
 #include <set>
-//#include "Resource.h"
 
 class Person;
 extern int gridSize;
@@ -29,6 +28,7 @@ class Knowledge {
   std::vector<InfoRes*> resInfo; //shares index with knownresources, so info at index 0 will be for the resource at index 0 of knownresources
   void addNewResToMind(LocNode* res);
   void updateInfoRes(LocNode* res);
+  int getInfoIndex(LocNode* res);
 
   string tostring();
 

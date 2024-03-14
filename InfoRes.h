@@ -1,8 +1,8 @@
 #if !defined(INFORES_h)
 #define INFORES_h
+#include <vector>
 
-#include "Resource.h"
-#include "AreaGain.h"
+using namespace std;
 
 enum KnowledgeOrig {SENSES, TALKING};
 
