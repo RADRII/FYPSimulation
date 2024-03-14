@@ -30,6 +30,11 @@ class Knowledge {
   void updateInfoRes(LocNode* res);
   int getInfoIndex(LocNode* res);
 
+  /**********************/
+  /* Wipeout and Plentys */
+  /**********************/
+  void dailyBoolUpdate(int date);
+
   string tostring();
 
 };

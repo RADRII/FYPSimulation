@@ -63,6 +63,14 @@ int Knowledge::getInfoIndex(LocNode* res)
   return -1;
 }
 
+void Knowledge::dailyBoolUpdate(int date)
+{
+  for(int i = 0; i < resInfo.size(); i++)
+  {
+    resInfo[i]->dailyDateCheck(date);
+  }
+}
+
 string Knowledge::tostring() 
 {
   string s = "";

@@ -249,7 +249,8 @@ ActionPtr Person::getNextAction(bool failedEat)
       cout << "Warning: tried to eat at non resource somehow" << endl;
     
     //if not too many people waiting, wait
-    if(loc->resourceObject->numWaiters < loc->resourceObject->resources.size())
+    //can use resource number not mind numbers as person is physically there
+    if(loc->resourceObject->numWaiters < loc->resourceObject->getNumViablePatches())
     {
       WaitAction *next = new WaitAction;
       next->p = this;
@@ -343,12 +344,22 @@ bool Person::setResourceRoute()
   {
     vector<LocNode*> potential = mind.internalWorld.findPath(loc, mind.knownResources[i]);
     vector<LocNode*> backHome = mind.internalWorld.findPath(mind.knownResources[i], home_loc);
-
-    //viable if not current location and if possible to get there in time
-    //and if there aren't too many people there/going there already
-    //only on tic 0 (when their all at home) as it doesnt make sense for people to know it afterwards
-    if(homeByTime - currentTic > potential.size() + backHome.size() && !mind.knownResources[i]->equals(loc))
+    
+    //viable  if possible to get there in time and
+    // if not current location and
+    // if not still zero from wipeout and
+    // 50% if still not normal from wipeout
+    //on tic 0 (when their all at home) it also checks if there aren't too many people there/going there already 
+    //it doesnt make sense for people to know that information afterwards afterwards
+    if(homeByTime - currentTic > potential.size() + backHome.size() && 
+      !mind.knownResources[i]->equals(loc) &&
+      !mind.resInfo[i]->isWipeout)
     {
+      if(mind.resInfo[i]->isNotNormal)
+      {
+        if(rand() % 100 > 50)
+          continue;
+      }
       if(currentTic == 0)
       {
         if(mind.knownResources[i]->resourceObject->getNumPersonsInterestedInResource() < mind.knownResources[i]->resourceObject->resources.size())
@@ -576,7 +587,7 @@ void Population::zero_eaten_today() {
   }
 }
 
-void Population::resetDayBools() {
+void Population::resetDayBools(int date) {
   vector<Person *>::iterator p;
   p = population.begin();
   while(p != population.end()) {
@@ -584,7 +595,7 @@ void Population::resetDayBools() {
     (*p)->hasBeenEating = false;
     (*p)->isHome = false;
     (*p)->prevAction = START;
-
+    (*p)->mind.dailyBoolUpdate(date);
     p++;
   }
 }
@@ -637,7 +648,7 @@ bool Population::update(int date){
   r_line.DEATHS_STRANDED = deaths_strand;
 
   //reset peoples daily bools
-  resetDayBools();
+  resetDayBools(date);
   
   #if DEBUG
   db("> age cull, expend nrg "); show(); db("\n");
