@@ -344,11 +344,21 @@ bool Person::setResourceRoute()
     vector<LocNode*> potential = mind.internalWorld.findPath(loc, knownResources[i]);
     vector<LocNode*> backHome = mind.internalWorld.findPath(knownResources[i], home_loc);
 
-    if(homeByTime - currentTic > potential.size() + backHome.size() && !knownResources[i]->equals(loc)) //viable if not current location and if possible to get there in time
-        //&& knownResources[i]->resourceObject->getNumPersonsInterestedInResource() < knownResources[i]->resourceObject->getNumViablePatches()) 
-        //and if there aren't too many people there/going there already
-        //this line is commented out because while it does make people smarter and less likely to starve, it doesnt make sense for people to know this info
-      viable.push_back(knownResources[i]);
+    //viable if not current location and if possible to get there in time
+    //and if there aren't too many people there/going there already
+    //only on tic 0 (when their all at home) as it doesnt make sense for people to know it afterwards
+    if(homeByTime - currentTic > potential.size() + backHome.size() && !knownResources[i]->equals(loc))
+    {
+      if(currentTic == 0)
+      {
+        if(knownResources[i]->resourceObject->getNumPersonsInterestedInResource() < knownResources[i]->resourceObject->getNumViablePatches())
+          viable.push_back(knownResources[i]);
+      }
+      else
+      {
+        viable.push_back(knownResources[i]);
+      }
+    }
   }
 
   if(viable.empty())
