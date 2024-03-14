@@ -80,32 +80,6 @@ void Person::show_defaults(ostream& o) {
   o << endl;
 }
 
-//Closest resource to current location, which also lets the player get back home after.
-int Person::closestViableResource() {
-  int index = -1;
-  int shortestRoute = 1000;
-  for(int i = 0; i < knownResources.size(); i++)
-  {
-    vector<LocNode*> temp = mind.internalWorld.findPath(loc, knownResources[i]);
-    if(!temp.empty())
-    {
-      if(temp.size() < shortestRoute)
-      {
-        int timeLeft = homeByTime - currentTic;
-        vector<LocNode*> resToHome = mind.internalWorld.findPath(knownResources[i], home_loc);
-        int timeToEat = timeLeft - (resToHome.size() + temp.size());
-
-        if((timeToEat * knownResources[i]->resourceObject->resources[0].energy_conv) > ((resToHome.size() + temp.size()) * moveCost)) //AKA does going there waste energy or no
-        {
-          shortestRoute = temp.size();
-          index = i;
-        }
-      }
-    }
-  }
-  return index;
-}
-
 void Person::update_places_explored(LocNode* l) {
   if(mind.internalWorld.getNode(l->x, l->y)->type == UNKNOWN)
   {
@@ -206,7 +180,7 @@ ActionPtr Person::getNextAction(bool failedEat)
       return next;
     }
     //else if not full try to eat again
-    else if(current_energy < max_energy && eaten_today < max_daily_eat)
+    else if(!hasMaxEnergy())
     {
       EatAction *next = new EatAction;
       next->p = this;
@@ -297,26 +271,10 @@ ActionPtr Person::getNextAction(bool failedEat)
       return next;
     }
 
-    //remove non viable resources
-    vector<LocNode*> viable;
-    for(int i = 0; i < knownResources.size(); i++)
+    bool wasSet = setResourceRoute();
+
+    if(wasSet)
     {
-      vector<LocNode*> potential = mind.internalWorld.findPath(loc, knownResources[i]);
-      vector<LocNode*> backHome = mind.internalWorld.findPath(knownResources[i], home_loc);
-
-      if(homeByTime - currentTic > potential.size() + backHome.size() && !knownResources[i]->equals(loc) && //viable if not current location and if possible to get there in time
-          knownResources[i]->resourceObject->getNumPersonsInterestedInResource() < knownResources[i]->resourceObject->getNumViablePatches()) //and if there aren't too many people there/going there already
-        viable.push_back(knownResources[i]);
-    }
-
-    if(!viable.empty())
-    {
-      int randIndex = rand() % viable.size();
-      route = mind.internalWorld.findPath(loc, viable[randIndex]);;
-      route_index = 0;
-
-      viable[randIndex]->resourceObject->numHeading = viable[randIndex]->resourceObject->numHeading + 1;
-      
       RouteAction *next = new RouteAction;
       next->p = this;
       next->route_index = route_index;
@@ -374,6 +332,34 @@ ActionPtr Person::getNextAction(bool failedEat)
   return next;
 }
 
+//Tries to find a viable known resource to start a route too
+//returns true if one is found and route is set
+//false otherwise
+bool Person::setResourceRoute()
+{
+  //remove non viable resources
+  vector<LocNode*> viable;
+  for(int i = 0; i < knownResources.size(); i++)
+  {
+    vector<LocNode*> potential = mind.internalWorld.findPath(loc, knownResources[i]);
+    vector<LocNode*> backHome = mind.internalWorld.findPath(knownResources[i], home_loc);
+
+    if(homeByTime - currentTic > potential.size() + backHome.size() && !knownResources[i]->equals(loc) && //viable if not current location and if possible to get there in time
+        knownResources[i]->resourceObject->getNumPersonsInterestedInResource() < knownResources[i]->resourceObject->getNumViablePatches()) //and if there aren't too many people there/going there already
+      viable.push_back(knownResources[i]);
+  }
+
+  if(viable.empty())
+    return false;
+  
+  int randIndex = rand() % viable.size();
+  route = mind.internalWorld.findPath(loc, viable[randIndex]);;
+  route_index = 0;
+
+  viable[randIndex]->resourceObject->numHeading = viable[randIndex]->resourceObject->numHeading + 1;
+  return true;
+}
+
 // amout returned as 'gained' can assume
 //  -- will not cause current_energy to grow too large if added
 //  -- will not be more than max_daily_eat
@@ -414,7 +400,7 @@ int Person::eat_from_dry_run(CropPatch& c) {
 }
 
 bool Person::hasMaxEnergy() {
-  if((eaten_today == max_daily_eat) ||  (current_energy == max_energy)) {
+  if((eaten_today >= max_daily_eat) ||  (current_energy >= max_energy)) {
     return true;
   }
   else {

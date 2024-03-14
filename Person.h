@@ -115,7 +115,6 @@ class Person {
   /**********************************************************/
   bool isHeadingHome;
   vector<LocNode*> route;
-  int closestViableResource();
   bool clear_route();
   size_t route_index;
   void show_route();
@@ -131,7 +130,9 @@ class Person {
   vector<LocNode*> knownResources;
   double energyExploreAbove;
   double exploreBoundary;
+
   ActionPtr getNextAction(bool failedEat);
+  bool setResourceRoute();
 
   /**********************************************************/
   /* following relating to updating knowledge */
