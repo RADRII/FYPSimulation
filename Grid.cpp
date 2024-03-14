@@ -80,6 +80,16 @@ vector<LocNode*> LocGrid::getNeighbors(LocNode* loc)
     return neighbors;
 }
 
+void LocGrid::printGrid()
+{
+    for (int x = 0; x < gridSize; x++) {
+        for (int y = 0; y < gridSize; y++) {
+            cout << " [" << getNode(x,y)->type << "] ";
+        }
+        cout << endl;
+    }
+}
+
 void LocGrid::resetParents() {
     for (int x = 0; x < gridSize; x++) {
         for (int y = 0; y < gridSize; y++) {
@@ -98,6 +108,10 @@ std::vector<LocNode*> LocGrid::findPath(LocNode* startNode, LocNode* endNode) {
     queue<LocNode*> frontier;
     frontier.push(startNode);
 
+    //Set start nodes parent to obstacle to prevent circular links.
+    //No parent can ever be an obstacle so this works.
+    startNode->parent = new LocNode(-1, -1, OBSTACLE);
+
     while (!frontier.empty()) {
         LocNode* current = frontier.front();
         frontier.pop();
@@ -105,7 +119,7 @@ std::vector<LocNode*> LocGrid::findPath(LocNode* startNode, LocNode* endNode) {
         if (current->equals(endNode)) {
             // Reconstruct path
             LocNode* temp = current;
-            while (temp != nullptr) {
+            while (temp->type != OBSTACLE) {
                 path.push_back(temp);
                 temp = temp->parent;
             }
@@ -129,6 +143,9 @@ std::vector<LocNode*> LocGrid::findPath(LocNode* startNode, LocNode* endNode) {
             frontier.push(neighbor);
         }
     }
+
+    if(path.empty())
+        cout << "Warning: No path found.";
 
     resetParents(); //Needed for future routing
     path.erase(path.begin());

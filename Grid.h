@@ -22,9 +22,10 @@ class LocNode {
 class LocGrid {
  public:
   int size;
-  std::vector<std::vector<LocNode>> nodes;
+  std::vector<std::vector<LocNode> > nodes;
   LocGrid(int s, bool isPerson);
   LocGrid();
+  void printGrid();
   void resetParents();
   LocNode* getNode(int x, int y);
   vector <LocNode*> getNeighbors(LocNode* loc);

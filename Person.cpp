@@ -322,8 +322,7 @@ ActionPtr Person::getNextAction(bool failedEat)
     }
   }
 
-  //If have been exploring, while knowing of a resource
-  //then either keep exploring or go home
+  //If have been exploring, while knowing of a resource then either keep exploring or go home
   if(prev == EXPLORE && !knownResources.empty())
   {
     //Should keep exploring?
@@ -893,14 +892,17 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
   {
     vector<LocNode*> pathHome = p->mind.internalWorld.findPath(neighbors[i], p->home_loc);
     int timeHome = pathHome.size();
+
     if(timeHome == 0 && !(neighbors[i]->equals(p->home_loc)))
-      cout << "ERROR" << endl;
-    
+      cout << "Warning: No route found." << endl;
+
     if((p->homeByTime - currentTic - 1) > timeHome) //-1 because it will be from the next tic
     {
       canGetHome = true;
       if(neighbors[i]->type == UNKNOWN)
+      {
         potentials.push_back(neighbors[i]);
+      }
     }
   }
 
