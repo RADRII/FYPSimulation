@@ -3,7 +3,7 @@
 
 // things a Person may come to know which can be used to influence choices
 #include "Grid.h"
-#include "InfoTypes.h"
+#include "InfoRes.h"
 #include <set>
 //#include "Resource.h"
 
@@ -21,8 +21,12 @@ class Knowledge {
   /**********************/
   LocGrid internalWorld;
   std::vector<LocNode*> knownResources;
-
   int numUnknown;
+
+  /**********************/
+  /* Knowledge on each Resource */
+  /**********************/
+  
 
   string tostring();
 
