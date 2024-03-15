@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include "Resource.h"
-#include "AreaGain.h"
 #include "Action.h"
 #include "Knowledge.h"
 using namespace std;
@@ -150,9 +149,6 @@ class Person {
 
   string info_type_to_string();
   void info_type_show();
-
-  // used for stats and knowledge
-  AreaGains area_gains;
   
   // used only for compiling stats
   vector<ResPtr> resEatenAt;

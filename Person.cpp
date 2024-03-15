@@ -58,8 +58,6 @@ Person::Person() {
   home_loc = NULL;
 
   mind.who = this;
-
-  area_gains.clear_area_gains();
   
   homeTime = 0;
   clear_places_eaten();
@@ -456,7 +454,6 @@ void Person::show(){
   show_var_energy();
   show_home_time();
   show_num_places();
-  area_gains.show_area_gains();
   //  cout << " Rep: " << have_reproduced;
 }
 
@@ -1081,8 +1078,6 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
     // update person's energy attributes from this
     p->eaten_today = p->eaten_today + gain;
     p->current_energy = p->current_energy + gain;
-    // also update person's AreaGain info
-    p->area_gains.increment_an_area_gain(p->loc->resourceObject, gain);
     // update patch	
     p->eating_patch->remove_units(1);
 

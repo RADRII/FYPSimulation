@@ -6,7 +6,6 @@
 #include <fstream>
 #include <sstream>
 #include "DayStats.h"
-#include "AreaGain.h"
 #include "Person.h"
 
 using namespace std;
