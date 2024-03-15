@@ -12,7 +12,7 @@ InfoRes::InfoRes()
     wipeOutOrig = SENSES;
     till_non_zero = -1;
     till_normal = -1; 
-    numAdded = -1;
+    originalSize = -1;
     plentyOrig = SENSES;
     till_non_plenty = -1;
 }
@@ -30,6 +30,12 @@ void InfoRes::dailyDateCheck(int date)
     till_non_zero = -1;
     till_normal = -1;
   }
+  else if(isPlenty && date >= till_non_plenty)
+  {
+    isPlenty = false;
+    till_non_plenty = -1;
+    known_total_of_patches.resize(originalSize);
+  }
 }
 
 string InfoRes::tostring() {
@@ -45,7 +51,6 @@ string InfoRes::tostring() {
   else if(isPlenty == true)
   {
     s = "PLENTY: ";
-    s += " numadded:"; s += to_string(numAdded);
     s += " til normal:";  s += to_string(till_non_plenty);
     if(plentyOrig == SENSES) { s += " orig:senses"; }
     else { s += " orig:talking"; }

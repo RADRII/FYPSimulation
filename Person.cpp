@@ -788,7 +788,7 @@ void Population::update_by_action(int date, int tic) {
   //Initialize action list
   ActionList actList;
   actList.init_from_population(pop.population);
-
+  
   //Complete each action in list
   while(!actList.is_empty())
   {
@@ -879,7 +879,6 @@ void Population::RouteAction_proc(RouteAction *route_ptr, int tic)
   if(p->loc->type == RESOURCE && p->route_index >= p->route.size())
     p->atResource = true;
   else p->atResource = false;
-
   return;
 }
 
@@ -916,7 +915,6 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
       }
     }
   }
-
   //if we can't get home from any neighbor we need to go home now.
   if(canGetHome == false)
   {
@@ -943,7 +941,6 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
     list.insert(retry);
     return;
   }
-
   //We can get home for sure now
   //choose where to go, either immediete unexplored neighbor or moving towards closest unexplored
   LocNode* toGo;
@@ -1000,7 +997,6 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
     p->isHome = false;
   }
 
-
   return;
 }
 
@@ -1025,7 +1021,6 @@ void Population::WaitAction_proc(WaitAction *wait_ptr, int tic)
   p->hasBeenEating = false;
 
   p->loc->resourceObject->numWaiters = p->loc->resourceObject->numWaiters + 1;
-
   return;
 }
 

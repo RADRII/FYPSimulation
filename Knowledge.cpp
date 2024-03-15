@@ -37,6 +37,22 @@ void Knowledge::updateInfoRes(LocNode* res)
 {
   InfoRes* info = resInfo[getInfoIndex(res)];
 
+  if(res->resourceObject->in_plenty && !info->isPlenty)
+  {
+    info->isPlenty = true;
+    info->till_non_plenty = res->resourceObject->normal_after_plenty;
+
+    info->originalSize = info->known_total_of_patches.size();
+    
+    //have to reset patch totals becuase theres new amount of resources
+    info->known_total_of_patches.clear();
+    for(int i = 0; i < res->resourceObject->resources.size(); i++)
+    {
+      info->known_total_of_patches.push_back(res->resourceObject->resources[i].get_total());
+    }
+    return;
+  }
+
   //add current totals for patches
   for(int i = 0; i < res->resourceObject->resources.size(); i++)
   {

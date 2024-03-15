@@ -199,6 +199,14 @@ Resources::Resources(int idd, int xx, int yy, int patch_yield, int energy_conv, 
   setup_record << "p_wipeout:" << p_wipeout << endl;
   normal_after_wipeout = 0; 
   non_zero_after_wipeout = 0;
+
+  p_plenty = 0.0025; //fiddle
+  setup_record << "p_plenty:" << p_plenty << endl;
+  normal_after_plenty = 0;
+  in_plenty = false;
+  numDaysPlenty = 7; //fiddle
+  originalSize = -1;
+
   // BEGIN block to automate
   // for berries
   def_name_start = "berries";
@@ -336,11 +344,24 @@ int Resources::update_at_date(int date)
   {
     in_wipeout = false;
   }
+  else if(in_plenty && date == normal_after_plenty)
+  {
+    in_plenty = false;
+    resources.resize(originalSize);
+    originalSize = -1;
+    normal_after_plenty = -1;
+  }
 
-  if(gsl_ran_bernoulli(r_global, p_wipeout))
+  if(!in_plenty && !in_wipeout && gsl_ran_bernoulli(r_global, p_wipeout))
   {
     wipeout_at_date(date);
     in_wipeout = true;
+  }
+
+  if(!in_wipeout && !in_plenty && gsl_ran_bernoulli(r_global, p_plenty))
+  {
+    plenty_at_date(date);
+    in_plenty = true;
   }
   
   double incr = 0.0;
@@ -364,6 +385,7 @@ void Resources::wipeout_at_date(int date)
     int poss_normal, poss_non_zero;
     bool patch_wipeout = false;
     patch_wipeout = resources[i].wipeout_at_date(date,poss_normal, poss_non_zero);
+
     if(patch_wipeout)
     {
       area_wipeout = true;
@@ -400,6 +422,28 @@ void Resources::wipeout_at_date(int date)
   db(tostring()); db(" wipeout at "); db(date);
   if(!area_wipeout) { db("redundant, as before "); }
   db(" norm again:"); db(normal_after_wipeout); db(" non-zero again:"); db(non_zero_after_wipeout); db("\n");
+  #endif
+}
+
+// double all contained CropPatches
+// represents something like a good hunt in a Resources area
+// It will return to normal after a certain amount of days
+void Resources::plenty_at_date(int date) 
+{
+  normal_after_plenty = date + numDaysPlenty;
+
+  //make a copy of each resource and push it to the back resources vector
+  originalSize = resources.size();
+  for(int i = 0; i < originalSize; i++)
+  {
+    CropPatch c = resources[i];
+    resources.push_back(c);
+  }
+
+  #if DEBUG
+  db(tostring()); db(" plenty at "); db(date);
+  if(!area_wipeout) { db("redundant, as before "); }
+  db(" norm again:"); db(normal_after_plenty); db("\n");
   #endif
 }
 

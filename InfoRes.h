@@ -20,7 +20,7 @@ class InfoRes { // info about a resource area
     int till_normal; // num days till become normal after wipeout
 
     bool isPlenty;
-    int numAdded;
+    int originalSize;
     KnowledgeOrig plentyOrig;
     int till_non_plenty; // num days till go back to normal amounts of patches after a plenty
 

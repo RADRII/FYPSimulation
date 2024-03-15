@@ -136,8 +136,6 @@ class CropPatch {
   // eg. if already been wiped-out at some non-dormant day, that will have prematurely switched it to
   // a dormant date, and again nothing really happens
   // NB: currently calling of this is via a Resources area which contains the CropPatchs
- 
-  
 };
 
 /****************************************************************/
@@ -184,6 +182,13 @@ public:
 
   bool in_wipeout; // true if after a wipeout and not reached day of 'normal_after_wipeout'
   double p_wipeout; // 'daily' prob of the area having a wipeout ie. running wipeout_at_date(..)
+
+  void  plenty_at_date(int d);   // does 'plenty' on all contained CropPatches
+  int normal_after_plenty; // after a plenty the first day normal food amount again
+  bool in_plenty; // true if after a plenty event and not reached day of 'normal_after_plenty'
+  double p_plenty; // 'daily' prob of the area having a plenty event ie. running plenty_at_date(..)
+  int numDaysPlenty; //how many days a plenty should last
+  int originalSize;
 
   /***************************************/
   /* relating to EATING processes */
