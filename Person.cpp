@@ -90,7 +90,7 @@ void Person::update_places_explored(LocNode* l) {
     //cout << "Explored: " << l->x << " " << l->y << " is " << l->type << endl;
 
     if(l->type == RESOURCE)
-      knownResources.push_back(l);
+      mind.addNewResToMind(l);
   }
 }
 
@@ -249,7 +249,8 @@ ActionPtr Person::getNextAction(bool failedEat)
       cout << "Warning: tried to eat at non resource somehow" << endl;
     
     //if not too many people waiting, wait
-    if(loc->resourceObject->numWaiters < loc->resourceObject->resources.size())
+    //can use resource number not mind numbers as person is physically there
+    if(loc->resourceObject->numWaiters < loc->resourceObject->getNumViablePatches())
     {
       WaitAction *next = new WaitAction;
       next->p = this;
@@ -261,7 +262,7 @@ ActionPtr Person::getNextAction(bool failedEat)
   //Finally either route to a resource or explore
   //Route to a random (viable) resource if not full
   //Explore if not
-  if(!knownResources.empty() && eaten_today < max_daily_eat)
+  if(!mind.knownResources.empty() && eaten_today < max_daily_eat)
   {
     //Check if currently on a resource, try to eat if haven't failed already
     if(loc->type == RESOURCE && !failedEat)
@@ -286,7 +287,7 @@ ActionPtr Person::getNextAction(bool failedEat)
   }
 
   //If have been exploring, while knowing of a resource then either keep exploring or go home
-  if(prev == EXPLORE && !knownResources.empty())
+  if(prev == EXPLORE && !mind.knownResources.empty())
   {
     //Should keep exploring?
     vector<LocNode*> pathHome = mind.internalWorld.findPath(loc, home_loc);
@@ -339,19 +340,49 @@ bool Person::setResourceRoute()
 {
   //remove non viable resources
   vector<LocNode*> viable;
-  for(int i = 0; i < knownResources.size(); i++)
+  for(int i = 0; i < mind.knownResources.size(); i++)
   {
-    vector<LocNode*> potential = mind.internalWorld.findPath(loc, knownResources[i]);
-    vector<LocNode*> backHome = mind.internalWorld.findPath(knownResources[i], home_loc);
-
-    if(homeByTime - currentTic > potential.size() + backHome.size() && !knownResources[i]->equals(loc) && //viable if not current location and if possible to get there in time
-        knownResources[i]->resourceObject->getNumPersonsInterestedInResource() < knownResources[i]->resourceObject->getNumViablePatches()) //and if there aren't too many people there/going there already
-      viable.push_back(knownResources[i]);
+    vector<LocNode*> potential = mind.internalWorld.findPath(loc, mind.knownResources[i]);
+    vector<LocNode*> backHome = mind.internalWorld.findPath(mind.knownResources[i], home_loc);
+    
+    //viable  if possible to get there in time and
+    // if not current location and
+    // if not still zero from wipeout and
+    // 50% if still not normal from wipeout
+    //on tic 0 (when their all at home) it also checks if there aren't too many people there/going there already 
+    //it doesnt make sense for people to know that information afterwards afterwards
+    if(homeByTime - currentTic > potential.size() + backHome.size() && 
+      !mind.knownResources[i]->equals(loc) &&
+      !mind.resInfo[i]->isWipeout)
+    {
+      if(mind.resInfo[i]->isNotNormal)
+      {
+        if(rand() % 100 > 50)
+          continue;
+      }
+      if(currentTic == 0)
+      {
+        if(mind.knownResources[i]->resourceObject->getNumPersonsInterestedInResource() < mind.knownResources[i]->resourceObject->resources.size())
+          viable.push_back(mind.knownResources[i]);
+      }
+      else if(mind.resInfo[i]->isPlenty)
+      {
+        //add in twice if the resource is in plenty mode
+        //to make it more likely to be picked
+        viable.push_back(mind.knownResources[i]);
+        viable.push_back(mind.knownResources[i]);
+      }
+      else
+      {
+        viable.push_back(mind.knownResources[i]);
+      }
+    }
   }
 
   if(viable.empty())
     return false;
   
+  //Pick randomly
   int randIndex = rand() % viable.size();
   route = mind.internalWorld.findPath(loc, viable[randIndex]);;
   route_index = 0;
@@ -564,7 +595,7 @@ void Population::zero_eaten_today() {
   }
 }
 
-void Population::resetDayBools() {
+void Population::resetDayBools(int date) {
   vector<Person *>::iterator p;
   p = population.begin();
   while(p != population.end()) {
@@ -572,7 +603,7 @@ void Population::resetDayBools() {
     (*p)->hasBeenEating = false;
     (*p)->isHome = false;
     (*p)->prevAction = START;
-
+    (*p)->mind.dailyBoolUpdate(date);
     p++;
   }
 }
@@ -625,7 +656,7 @@ bool Population::update(int date){
   r_line.DEATHS_STRANDED = deaths_strand;
 
   //reset peoples daily bools
-  resetDayBools();
+  resetDayBools(date);
   
   #if DEBUG
   db("> age cull, expend nrg "); show(); db("\n");
@@ -765,7 +796,7 @@ void Population::update_by_action(int date, int tic) {
   //Initialize action list
   ActionList actList;
   actList.init_from_population(pop.population);
-
+  
   //Complete each action in list
   while(!actList.is_empty())
   {
@@ -856,7 +887,6 @@ void Population::RouteAction_proc(RouteAction *route_ptr, int tic)
   if(p->loc->type == RESOURCE && p->route_index >= p->route.size())
     p->atResource = true;
   else p->atResource = false;
-
   return;
 }
 
@@ -893,7 +923,6 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
       }
     }
   }
-
   //if we can't get home from any neighbor we need to go home now.
   if(canGetHome == false)
   {
@@ -920,7 +949,6 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
     list.insert(retry);
     return;
   }
-
   //We can get home for sure now
   //choose where to go, either immediete unexplored neighbor or moving towards closest unexplored
   LocNode* toGo;
@@ -977,7 +1005,6 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
     p->isHome = false;
   }
 
-
   return;
 }
 
@@ -1002,7 +1029,6 @@ void Population::WaitAction_proc(WaitAction *wait_ptr, int tic)
   p->hasBeenEating = false;
 
   p->loc->resourceObject->numWaiters = p->loc->resourceObject->numWaiters + 1;
-
   return;
 }
 
@@ -1013,6 +1039,9 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
   //Get person related to action and set it as their prev action
   PerPtr p;
   p = eat_ptr->p;
+
+  //Update knowledge on that resource
+  p->mind.updateInfoRes(p->loc);
 
   // get all patches at x (i) not empty (ii) not occupied (ie. being_eaten is set true there)
   int cropIndex = p->loc->resourceObject->get_available_patch();

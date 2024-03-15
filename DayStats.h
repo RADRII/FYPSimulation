@@ -11,6 +11,7 @@ class DayStats {
   int CROP_INCR;
   int CROP_TOTAL;
   int NUM_AREAS_IN_WIPEOUT;
+  int NUM_AREAS_IN_PLENTY;
   int DEATHS_AGE;
   int DEATHS_STARVE;
   int DEATHS_STRANDED;

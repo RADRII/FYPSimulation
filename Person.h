@@ -127,7 +127,6 @@ class Person {
   bool atResource;
   bool isHome;
   int currentTic;
-  vector<LocNode*> knownResources;
   double energyExploreAbove;
   double exploreBoundary;
 
@@ -192,7 +191,7 @@ class Population {
   int hbt;
 
   void updatePeopleTic(int tic);
-  void resetDayBools();
+  void resetDayBools(int date);
 
   vector<Person *> population;
   bool update(int date); // top-level 'update' function which calls series of further update_... functions
