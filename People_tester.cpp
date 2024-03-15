@@ -115,10 +115,12 @@ int main(int argc, char **argv) {
     double incr = 0.0;
     double total = 0.0;
     int num_areas_in_wipeout = 0;
+    int num_areas_in_plenty = 0;
     for(size_t i = 0; i < all_res.size(); i++) {
       incr += all_res[i]->update_at_date(date);
       total += all_res[i]->get_total();
       if(all_res[i]->in_wipeout) { num_areas_in_wipeout++; }
+      if(all_res[i]->in_plenty) { num_areas_in_plenty++; }
     }
 
     for(size_t i = 0; i < all_res.size(); i++) {
@@ -138,6 +140,7 @@ int main(int argc, char **argv) {
     r_line.CROP_INCR = incr;
     r_line.CROP_TOTAL = total;
     r_line.NUM_AREAS_IN_WIPEOUT = num_areas_in_wipeout;
+    r_line.NUM_AREAS_IN_PLENTY = num_areas_in_plenty;
     r_line.DEATHS_AGE = 0;
     r_line.DEATHS_STARVE = 0;
     r_line.DEATHS_STRANDED = 0;
@@ -196,10 +199,12 @@ int main(int argc, char **argv) {
     double incr = 0.0;
     double total = 0.0;
     int num_areas_in_wipeout = 0;
+    int num_areas_in_plenty = 0;
     for(size_t i = 0; i < all_res.size(); i++) {
       incr += all_res[i]->update_at_date(date);
       total += all_res[i]->get_total();
       if(all_res[i]->in_wipeout) { num_areas_in_wipeout++; }
+      if(all_res[i]->in_plenty) { num_areas_in_plenty++; }
     }
 
     
@@ -240,6 +245,7 @@ int main(int argc, char **argv) {
     r_line.CROP_INCR = incr;
     r_line.CROP_TOTAL = total;
     r_line.NUM_AREAS_IN_WIPEOUT = num_areas_in_wipeout;
+    r_line.NUM_AREAS_IN_PLENTY = num_areas_in_plenty;
 
     /**************************************************************/
     /* UPDATE RESOURCES AND PEOPLE BY EATING, DEATH, REPRODUCTION */
