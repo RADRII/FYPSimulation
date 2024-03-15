@@ -365,6 +365,13 @@ bool Person::setResourceRoute()
         if(mind.knownResources[i]->resourceObject->getNumPersonsInterestedInResource() < mind.knownResources[i]->resourceObject->resources.size())
           viable.push_back(mind.knownResources[i]);
       }
+      else if(mind.resInfo[i]->isPlenty)
+      {
+        //add in twice if the resource is in plenty mode
+        //to make it more likely to be picked
+        viable.push_back(mind.knownResources[i]);
+        viable.push_back(mind.knownResources[i]);
+      }
       else
       {
         viable.push_back(mind.knownResources[i]);
@@ -375,6 +382,7 @@ bool Person::setResourceRoute()
   if(viable.empty())
     return false;
   
+  //Pick randomly
   int randIndex = rand() % viable.size();
   route = mind.internalWorld.findPath(loc, viable[randIndex]);;
   route_index = 0;
