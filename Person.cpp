@@ -737,7 +737,7 @@ void Population::update_by_communication(int date)
   {
     if(population[i]->isHome)
     {
-
+      
     }
   }
 

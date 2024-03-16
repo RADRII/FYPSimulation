@@ -27,6 +27,8 @@ ofstream stranding_stats;
 
 ofstream debug_record;
 
+ofstream comm_record;
+
 void write_pop_snapshot_header(ostream& o) {
   o << "DATE TYPE AGE EN EATEN" << endl;
 }

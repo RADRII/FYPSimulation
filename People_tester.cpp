@@ -56,6 +56,9 @@ int main(int argc, char **argv) {
   open_an_output(debug_record,"debug_record");
   debug_record << "Welcome." << endl;
 
+  open_an_output(comm_record,"comm_record");
+  comm_record << "DATE FROM TO COMMTYPE LOCX LOCY." << endl;
+
 #if DEBUG1
   init_db_file("/tmp/Toss/junk");
   //db_level = 1;
