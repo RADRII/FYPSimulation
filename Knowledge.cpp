@@ -46,6 +46,7 @@ void Knowledge::updateInfoRes(LocNode* res)
   {
     info->isPlenty = true;
     info->till_non_plenty = res->resourceObject->normal_after_plenty;
+    info->plentyOrig = SENSES;
   }
 
   //wipeout check
@@ -54,6 +55,7 @@ void Knowledge::updateInfoRes(LocNode* res)
     info->isWipeout = true;
     info->till_non_zero = res->resourceObject->non_zero_after_wipeout;
     info->till_normal = res->resourceObject->normal_after_wipeout;
+    info->wipeOutOrig = SENSES;
   }
 }
 
