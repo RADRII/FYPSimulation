@@ -31,6 +31,11 @@ class Knowledge {
   int getInfoIndex(LocNode* res);
 
   /**********************/
+  /* Communication */
+  /**********************/
+  int needsKnowledgeOn(LocNode* res, bool wipeout, bool plenty);
+
+  /**********************/
   /* Wipeout and Plentys */
   /**********************/
   void dailyBoolUpdate(int date);

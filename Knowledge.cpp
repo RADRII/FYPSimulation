@@ -59,6 +59,24 @@ void Knowledge::updateInfoRes(LocNode* res)
   }
 }
 
+//return index of knowledge that it wants info on
+//-1 if there is nothing to be shared
+int Knowledge::needsKnowledgeOn(LocNode* res, bool wipeout, bool plenty)
+{
+  for(int i = 0; i < knownResources.size(); i++)
+  {
+    if(knownResources[i]->equals(res))
+    {
+      if((wipeout && !resInfo[i]->isWipeout) || (plenty && !resInfo[i]->isPlenty))
+      {
+        return i;
+      }
+    }
+  }
+
+  return -1;
+}
+
 int Knowledge::getInfoIndex(LocNode* res)
 {
   for(int i = 0; i < knownResources.size(); i++)
