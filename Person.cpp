@@ -440,9 +440,51 @@ bool Person::hasMaxEnergy() {
   }
 }
 
-bool Person::communicate(vector<Person*> Population)
+//tries to communicate with another random person at home
+//if succesful removes energy and return true, else returns false
+bool Person::communicate(vector<Person*> population, int date)
 {
-  return true;
+  //get random order of population
+  int * randomVector;
+  randomVector = new int[population.size()];
+  for (int i = 0; i < population.size(); i++) {
+      randomVector[i] = i;
+  }
+
+  gsl_ran_shuffle(r_global, randomVector, population.size(), sizeof(int));
+
+  //try to communicate once
+  for(int i = 0; i < population.size(); i++)
+  {
+    PerPtr other = population[randomVector[i]];
+
+    //if the other person isnt home or has no energy (will be culled after) then dont share
+    //they will die soon and it wont be worth it
+    if(!other->isHome || other->current_energy < sleepEnergyLoss)
+      continue;
+    
+    //Go through each known resource
+    //if they share a known resource, and the sharer has wipeout/plenty information that the other does not
+    //  (and if wipeout check if they can share nonpositive information) then share
+    //if they don't share a known resource, see if there is a resource on the edge of the others known map and share its location
+    LocNode* resShare = nullptr;
+
+    for(int i = 0; i < mind.knownResources.size(); i++)
+    {
+      int index = other->mind.needsKnowledgeOn(mind.knownResources[i], mind.resInfo[i]->isWipeout, mind.resInfo[i]->isPlenty);
+
+      //Share the knowledge
+      if(index != -1)
+      {
+        other->mind.receiveCommunication(index, mind.resInfo[i]);
+        current_energy = current_energy - commCost;
+        comm_record << date << " " << identifier << " " << other->identifier << " " << mind.knownResources[i]->x << " " << mind.knownResources[i]->y << " " << "TRUE" << endl;
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 string Person::toid() {
@@ -675,6 +717,7 @@ bool Population::update(int date){
   /* execute day's worth of moving about to find and consume food */
   /****************************************************************/
   //db_level = 0;
+  debug_record << date << " TOC TOC TOC TOC TOC TOC" << endl;
   for(int tic = 0; tic < hbt; tic++)
   {
     //cout << "Tic: " << tic << endl;
@@ -683,7 +726,6 @@ bool Population::update(int date){
     updatePeopleTic(tic);
     update_by_action(date, tic);
   }
-  debug_record << date << " TOC TOC TOC TOC TOC TOC" << endl;
   #if DEBUG
   db("------------------------\n");
   db("> feeding\n ");
@@ -756,7 +798,7 @@ void Population::update_by_communication(int date)
       && canComm
       && (rand() % 100) >= commChance)
       {
-        canComm = population[i]->communicate(population);
+        canComm = population[i]->communicate(population, date);
 
         commChance += 15;
       }

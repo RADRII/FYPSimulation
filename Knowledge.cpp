@@ -77,6 +77,33 @@ int Knowledge::needsKnowledgeOn(LocNode* res, bool wipeout, bool plenty)
   return -1;
 }
 
+//takes in communication and updates internal knowledge
+void Knowledge::receiveCommunication(int index, InfoRes* info)
+{
+  resInfo[index]->known_total_of_patches.clear();
+  for(int i = 0; i < info->known_total_of_patches.size(); i++)
+  {
+    resInfo[index]->known_total_of_patches.push_back(info->known_total_of_patches[i]);
+  }
+
+  if(info->isWipeout)
+  {
+    resInfo[index]->isWipeout = true;
+    resInfo[index]->till_non_zero = info->till_non_zero;
+    resInfo[index]->till_normal = info->till_normal;
+    resInfo[index]->wipeOutOrig = TALKING;
+  }
+  else if(info->isPlenty)
+  {
+    resInfo[index]->isPlenty = true;
+    resInfo[index]->till_non_plenty = info->till_non_plenty;
+    resInfo[index]->originalSize = info->originalSize;
+    resInfo[index]->plentyOrig = TALKING;
+  }
+
+  return;
+}
+
 int Knowledge::getInfoIndex(LocNode* res)
 {
   for(int i = 0; i < knownResources.size(); i++)

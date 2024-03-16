@@ -146,7 +146,7 @@ class Person {
   /**********************************************************/
   /* following relating to communication */
   /**********************************************************/
-  bool communicate(vector<Person*> Population);
+  bool communicate(vector<Person*> Population, int date);
   
 
   /*************************************/

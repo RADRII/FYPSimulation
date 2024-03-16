@@ -57,7 +57,9 @@ int main(int argc, char **argv) {
   debug_record << "Welcome." << endl;
 
   open_an_output(comm_record,"comm_record");
-  comm_record << "DATE FROM TO COMMTYPE LOCX LOCY." << endl;
+  comm_record << "DATE FROM TO COMMTYPE LOCX LOCY ABOUTKNOWNRES." << endl;
+  //last one is true if its about a shared known resource
+  //false if sharing a loc of a res
 
 #if DEBUG1
   init_db_file("/tmp/Toss/junk");
