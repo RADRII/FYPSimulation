@@ -6,7 +6,6 @@ using namespace std;
 InfoRes::InfoRes()
 {
     knownResIndex = -1;
-    numPatches = -1;
     isWipeout = false;
     isNotNormal = false;
     wipeOutOrig = SENSES;

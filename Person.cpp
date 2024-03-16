@@ -35,9 +35,10 @@ Person::Person() {
   max_energy = 70;
   sleepEnergyLoss = 15;
   moveCost = 2; //fiddle
+  commCost = 2; //fiddle
   max_daily_eat = 35; //fiddle
 
-  willCommunicate = false;
+  willCommunicate = true;
   onlyPos = false;
   communicateAboveEnergy = 8;
   
@@ -439,6 +440,11 @@ bool Person::hasMaxEnergy() {
   }
 }
 
+bool Person::communicate(vector<Person*> Population)
+{
+  return true;
+}
+
 string Person::toid() {
   string s = "";
   s += to_string(identifier);
@@ -731,13 +737,29 @@ bool Population::update(int date){
   return updated;
 }
 
+//Goes through list of people, if that person is the type to communicate and is home
+//Communicates until energy is below communicateaboveEnergy or loses on random chance or theres no one to communicate with
 void Population::update_by_communication(int date)
 {
   for(int i = 0; i < population.size(); i++)
   {
-    if(population[i]->isHome)
+    if(population[i]->isHome && population[i]->willCommunicate)
     {
-      
+      //Gets random number 0-99, if number is above commchance then will communicate
+      //ergo if a person has energy, will always communicate at least once
+      //and then after has a 85% chance then 70, then 55, 40, etc
+      int commChance = 0;
+
+      bool canComm = true; //if theres no one to communicate too (everyone dead or knows everything) stop loop
+
+      while(population[i]->current_energy > population[i]->communicateAboveEnergy
+      && canComm
+      && (rand() % 100) >= commChance)
+      {
+        canComm = population[i]->communicate(population);
+
+        commChance += 15;
+      }
     }
   }
 

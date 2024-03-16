@@ -10,7 +10,6 @@ class InfoRes { // info about a resource area
  public:
     InfoRes();
     int knownResIndex;
-    int numPatches;
     vector<int> known_total_of_patches;
 
     bool isWipeout;

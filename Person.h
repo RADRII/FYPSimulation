@@ -59,7 +59,9 @@ class Person {
 
   int sleepEnergyLoss; // how much energy is lost between days
 
-  int moveCost; //how much energy does moving cost;
+  int moveCost; //how much energy does moving cost
+
+  int commCost; //how much energy does communicating cost
   
   int max_daily_eat; // cannot cram more food in (as energy) in a single day than this in
   // NB: max_energy could be 15 and this could be 5 so *less*
@@ -140,6 +142,11 @@ class Person {
   Knowledge mind;
   LocNode* home_loc;
   bool getRoute(vector<LocNode*> internalRoute);
+
+  /**********************************************************/
+  /* following relating to communication */
+  /**********************************************************/
+  bool communicate(vector<Person*> Population);
   
 
   /*************************************/
