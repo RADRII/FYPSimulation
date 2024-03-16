@@ -147,7 +147,6 @@ int main(int argc, char **argv) {
 
     r_line.BIRTHS = 0;
     r_line.POP = 0;
-    r_line.TYPEA = 0;
     r_line.A_EN = 0;
     r_line.A_EATEN = 0;
     

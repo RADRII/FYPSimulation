@@ -198,7 +198,9 @@ class Population {
   
   int update_by_repro(); // add new population members, set num to number born
   
-  void update_by_action(int date, int tic);
+  void update_by_action(int date, int tic); //goes through 20 tics of time, each person queues an action for each tic
+
+  void update_by_communication(int date); //after all tics for a day are done and people are home
 
   void RouteAction_proc(RouteAction *route_ptr, int tic);
   void EatAction_proc(EatAction *eat_ptr,ActionList& list, int& date, int tic);

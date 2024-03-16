@@ -34,8 +34,8 @@ Person::Person() {
   
   max_energy = 70;
   sleepEnergyLoss = 15;
-  moveCost = 2; //Todo fiddle with
-  max_daily_eat = 35;
+  moveCost = 2; //fiddle
+  max_daily_eat = 35; //fiddle
   
   eaten_today = 0;
   repro_age_start = 200;
@@ -642,14 +642,6 @@ bool Population::update(int date){
   int deaths_starve = 0;
   int deaths_strand = 0;
 
-  /******************************************************/
-  /* remove those too old, those who aren't home at night, those with not enough energy */
-  /******************************************************/
-  update_by_cull(deaths_age, deaths_starve, deaths_strand);
-  r_line.DEATHS_AGE = deaths_age;
-  r_line.DEATHS_STARVE = deaths_starve;
-  r_line.DEATHS_STRANDED = deaths_strand;
-
   //reset peoples daily bools
   resetDayBools(date);
   
@@ -660,7 +652,6 @@ bool Population::update(int date){
   if(population.size() == 0) { // extinction
     r_line.BIRTHS = 0;
     r_line.POP = 0;
-    r_line.TYPEA = 0;
     r_line.A_EN = 0;
     r_line.A_EATEN = 0;
     r_line.MAX_NUM_PLACES_EATEN = 0;
@@ -700,36 +691,39 @@ bool Population::update(int date){
   }
   #endif
 
-  /************************************************/
-  /* do updates of population due to reproduction */
-  /************************************************/
-  int num_births = update_by_repro(); 
-  r_line.BIRTHS = num_births;
-
-  r_line.POP = get_total();
-
-  r_line.A_EN = get_mean_energy('A'); // includes new births in denom
-  r_line.A_EATEN = get_mean_eaten('A'); // includes new births in denom
-  
   /***************************************************************************************************/
   /* do knowledge update by having people talk to each other based on what they learned while eating */
   /***************************************************************************************************/
   //db_level = 0;
   //TODO
 
-  //db_level = 1;
-  
-  int numA = 0;
+  /************************************************/
+  /* do updates of population due to reproduction */
+  /************************************************/
+  int num_births = update_by_repro(); 
+  r_line.BIRTHS = num_births;
+
+  r_line.A_EN = get_mean_energy('A'); // includes new births in denom
+  r_line.A_EATEN = get_mean_eaten('A'); // includes new births in denom
+
+  //Check for new maxs (stats)
   for(size_t i=0; i < population.size(); i++)  
   {
     if(population[i]->num_places_eaten > max_places_eaten) 
       max_places_eaten = population[i]->num_places_eaten;
     if(population[i]->num_places_explored > max_places_explored)
 	    max_places_explored = population[i]->num_places_explored;
-    numA++;
   }
 
-  r_line.TYPEA = numA;
+  /******************************************************/
+  /* remove those too old, those who aren't home at night, those with not enough energy */
+  /******************************************************/
+  update_by_cull(deaths_age, deaths_starve, deaths_strand);
+  r_line.DEATHS_AGE = deaths_age;
+  r_line.DEATHS_STARVE = deaths_starve;
+  r_line.DEATHS_STRANDED = deaths_strand;
+
+  r_line.POP = get_total();
 
   return updated;
 }
