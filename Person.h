@@ -68,9 +68,6 @@ class Person {
   // REPRO
   int repro_age_start;
   int repro_age_end;
-
-  // MOVEMENT
-  int speed; //typically always 1, might remove
   
   /*******************************/
   /* end of FIXED attributes     */

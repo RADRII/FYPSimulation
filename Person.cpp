@@ -42,7 +42,6 @@ Person::Person() {
   repro_age_end = 450;
   num_offspring = 0;
   fam_plan.planned_offspring = -1;
-  speed = 1.0;
 
   homeByTime = 20;
   atResource = false;
@@ -74,7 +73,6 @@ void Person::show_defaults(ostream& o) {
   o << " max_daily_eat:" << max_daily_eat;
   o << " repro_age_start:" << repro_age_start;
   o << " repro_age_end:" << repro_age_end;
-  o << " speed:" << speed;
   o << endl;
 }
 
@@ -397,7 +395,7 @@ bool Person::setResourceRoute()
 //User eats one berry
 int Person::eat_from(CropPatch& c){
   #if DEBUG
-  db(identifier); db(type); db(" frm "); db(c.pos.tostring()); db(c.sym); db("\n");
+  db(identifier); db(type); db(" frm "); db(c.name); db(c.sym); db("\n");
   #endif
 
   if(max_daily_eat > eaten_today && max_energy > current_energy && c.get_total() > 0)
@@ -1190,7 +1188,6 @@ void Person::set_frm_parent(Person *p) {
   max_energy = p->max_energy;
   max_daily_eat = p->max_daily_eat;
   init_energy =  p->init_energy;
-  speed = p->speed;
 
   sleepEnergyLoss = p->sleepEnergyLoss;
   moveCost = p->moveCost;
