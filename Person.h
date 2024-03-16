@@ -68,6 +68,11 @@ class Person {
   // REPRO
   int repro_age_start;
   int repro_age_end;
+
+  // COMMUNICATION
+  bool willCommunicate; //false if person won't communicate at all, true otherwise
+  bool onlyPos; //true is person only communicates 'positive' information (plenties, new resources, etc), false otherwise
+  int communicateAboveEnergy; //Person will communicate above a certain threshold of energy
   
   /*******************************/
   /* end of FIXED attributes     */
@@ -207,8 +212,6 @@ class Population {
   void ExploreAction_proc(ExploreAction *explore_ptr,ActionList& list, int tic);
   void HomeAction_proc(HomeAction *home_ptr, int tic);
   void WaitAction_proc(WaitAction *wait_ptr, int tic);
-
-  void update_by_redistrib(); // make all equal
   
   void show();
   void zero_eaten_today();

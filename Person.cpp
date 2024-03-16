@@ -36,6 +36,10 @@ Person::Person() {
   sleepEnergyLoss = 15;
   moveCost = 2; //fiddle
   max_daily_eat = 35; //fiddle
+
+  willCommunicate = false;
+  onlyPos = false;
+  communicateAboveEnergy = 8;
   
   eaten_today = 0;
   repro_age_start = 200;
@@ -694,17 +698,10 @@ bool Population::update(int date){
   /***************************************************************************************************/
   /* do knowledge update by having people talk to each other based on what they learned while eating */
   /***************************************************************************************************/
-  //db_level = 0;
-  //TODO
+  update_by_communication(date);
 
-  /************************************************/
-  /* do updates of population due to reproduction */
-  /************************************************/
-  int num_births = update_by_repro(); 
-  r_line.BIRTHS = num_births;
-
-  r_line.A_EN = get_mean_energy('A'); // includes new births in denom
-  r_line.A_EATEN = get_mean_eaten('A'); // includes new births in denom
+  r_line.A_EN = get_mean_energy('A');
+  r_line.A_EATEN = get_mean_eaten('A');
 
   //Check for new maxs (stats)
   for(size_t i=0; i < population.size(); i++)  
@@ -723,11 +720,29 @@ bool Population::update(int date){
   r_line.DEATHS_STARVE = deaths_starve;
   r_line.DEATHS_STRANDED = deaths_strand;
 
+  /************************************************/
+  /* do updates of population due to reproduction */
+  /************************************************/
+  int num_births = update_by_repro(); 
+  r_line.BIRTHS = num_births;
+
   r_line.POP = get_total();
 
   return updated;
 }
 
+void Population::update_by_communication(int date)
+{
+  for(int i = 0; i < population.size(); i++)
+  {
+    if(population[i]->isHome)
+    {
+
+    }
+  }
+
+  return;
+}
 
 void Population::update_by_cull(int& deaths_age, int& deaths_starve, int& deaths_strand) { // age, expend energy, then cull, set nums to amounts culled
 
@@ -757,7 +772,7 @@ void Population::update_by_cull(int& deaths_age, int& deaths_starve, int& deaths
       p = population.erase(p);
       deaths_starve++; 
     }
-    else if((*p)->loc->type != HAB_ZONE) {
+    else if(!(*p)->isHome) {
       #if DEBUG
       db((*p)->type); db(" DEATH (strand)\n");
       #endif
