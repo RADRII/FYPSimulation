@@ -191,7 +191,7 @@ ActionPtr Person::getNextAction(bool failedEat)
     //plus random chance with curiosity
     //plus is there anything to explore
     else if(
-      !mind.internalWorld.findPathClosestUnexplored(loc).empty() &&
+      mind.numUnknown > 0 &&
       current_energy - (timeHome * moveCost) - sleepEnergyLoss > energyExploreAbove &&
       (1+ (rand() % 100)) < curiosity)
     {
@@ -294,7 +294,7 @@ ActionPtr Person::getNextAction(bool failedEat)
     vector<LocNode*> pathHome = mind.internalWorld.findPath(loc, home_loc);
     int tHome = pathHome.size();
     if(
-      !mind.internalWorld.findPathClosestUnexplored(loc).empty() &&
+      mind.numUnknown > 0 &&
       current_energy - (tHome * moveCost) - sleepEnergyLoss > energyExploreAbove &&
       (1+ (rand() % 100)) < curiosity)
     {
@@ -325,7 +325,7 @@ ActionPtr Person::getNextAction(bool failedEat)
     return next;
   }
 
-  //If Have everything explored just go home or homerest
+  //If have everything explored just go home or homerest
   if(mind.numUnknown <= 0)
   {
     //if home then rest
@@ -962,7 +962,6 @@ void Population::update_by_action(int date, int tic) {
     }
     cout << "Warning: not a valid action" << endl;
   }
-
   r_line.MAX_NUM_PLACES_EATEN = max_places_eaten;
   r_line.MAX_NUM_PLACES_EXPLORED = max_places_explored;
 }
@@ -1074,7 +1073,7 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
   else
   {
     vector<LocNode*> pathToClosestUnknown = p->mind.internalWorld.findPathClosestUnexplored(p->loc);
-    toGo = pathToClosestUnknown[0];
+    toGo = pathToClosestUnknown[0]; //still the issue lol
   }
 
   int x = toGo->x;
@@ -1086,6 +1085,13 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
   //if togo is an obstacle update knowledge and requeue explore
   if(world.getNode(x,y)->type == OBSTACLE)
   {
+    //If that was the last unknown then requeue action
+    if(p->mind.numUnknown <= 0)
+    {
+      list.insert(p->getNextAction(false));
+      return;
+    }
+
     ExploreAction *retry = new ExploreAction;
     retry->p = p;
     list.insert(retry);
