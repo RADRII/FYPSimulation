@@ -668,18 +668,23 @@ Population::Population(string name, int size){
 
   id = name;
   hbt = 20;
-  for(int i=0; i < size; i++) {
-    
-
+  for(int i=0; i < size; i++) 
+  {
     Person *p = new Person;
 
     p->age = ((float)i/size) * 500; // unif distrib over ages ?
     if(p->age > 350) { p->num_offspring = 1; }
     p->homeByTime = hbt;
     population.push_back(p);
-
   }
   currentTic = 0;
+}
+
+void Population::add(Population& other)
+{
+  population.insert(population.end(), other.population.begin(), other.population.end());
+  // bring tribes info from other
+  tribes.insert(tribes.end(),other.tribes.begin(), other.tribes.end());
 }
 
 void Population::zero_eaten_today() {
@@ -1396,11 +1401,6 @@ void Population::show(){
 
 int Population::get_total() {
   return population.size();
-
-}
-
-bool Population::compare_by_index(const int& p1_index, const int& p2_index) {
-  return compare_person(population[p1_index], population[p2_index]);
 
 }
 

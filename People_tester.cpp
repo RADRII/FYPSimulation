@@ -176,7 +176,6 @@ int main(int argc, char **argv) {
   //WorldShow::res_level = 1;
 #endif
 
-  
   int extinction_date = 0;
   char extinct_tribe;
 
