@@ -325,7 +325,28 @@ ActionPtr Person::getNextAction(bool failedEat)
     return next;
   }
 
-  //Finally just explore
+  //If Have everything explored just go home or homerest
+  if(mind.numUnknown <= 0)
+  {
+    //if home then rest
+    if(loc->type == HAB_ZONE)
+    {
+      HomeAction *next = new HomeAction;
+      next->p = this;
+      return next;
+    }
+
+    isHeadingHome = true;
+    route = pathHome;
+    route_index = 0;
+    
+    RouteAction *next = new RouteAction;
+    next->p = this;
+    next->route_index = route_index;
+    return next;
+  }
+
+  //Finally, explore
   ExploreAction *next = new ExploreAction;
   next->p = this;
 
@@ -1053,7 +1074,7 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
   else
   {
     vector<LocNode*> pathToClosestUnknown = p->mind.internalWorld.findPathClosestUnexplored(p->loc);
-    toGo = pathToClosestUnknown[0]; //////THE ISSUE
+    toGo = pathToClosestUnknown[0];
   }
 
   int x = toGo->x;
