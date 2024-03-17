@@ -234,6 +234,7 @@ class Population {
 
   float get_mean_energy(char type);
   float get_mean_eaten(char type);
+  float get_mean_explore(char type);
 
   int max_places_eaten = 0;
   int max_places_explored;

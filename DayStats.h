@@ -20,7 +20,7 @@ class DayStats {
   float A_EN;
   float A_EATEN;
   int MAX_NUM_PLACES_EATEN;
-  int MAX_NUM_PLACES_EXPLORED;
+  int MEAN_NUM_PLACES_EXPLORED;
   void clear();
   void write(ostream& o);
   void write_header(ostream& o);

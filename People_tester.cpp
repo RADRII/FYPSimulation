@@ -156,7 +156,7 @@ int main(int argc, char **argv) {
     r_line.A_EATEN = 0;
     
     r_line.MAX_NUM_PLACES_EATEN = 0;
-    r_line.MAX_NUM_PLACES_EXPLORED = 0;
+    r_line.MEAN_NUM_PLACES_EXPLORED = 0;
     r_line.write(r_stats);
   }
 

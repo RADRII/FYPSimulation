@@ -35,8 +35,8 @@ Person::Person() {
   max_energy = 70;
   sleepEnergyLoss = 15;
   moveCost = 2; //fiddle
-  commCost = 2; //fiddle
-  max_daily_eat = 35; //fiddle
+  commCost = 6; //fiddle
+  max_daily_eat = 30; //fiddle
 
   willCommunicate = true;
   onlyPos = false;
@@ -668,7 +668,6 @@ Population::Population(string name, int size){
 
   id = name;
   hbt = 20;
-  max_places_explored = 0;
   for(int i=0; i < size; i++) {
     
 
@@ -798,6 +797,7 @@ bool Population::update(int date){
   /***************************************************************************************************/
   update_by_communication(date);
 
+  r_line.MEAN_NUM_PLACES_EXPLORED = get_mean_explore('A');
   r_line.A_EN = get_mean_energy('A');
   r_line.A_EATEN = get_mean_eaten('A');
 
@@ -806,8 +806,6 @@ bool Population::update(int date){
   {
     if(population[i]->num_places_eaten > max_places_eaten) 
       max_places_eaten = population[i]->num_places_eaten;
-    if(population[i]->num_places_explored > max_places_explored)
-	    max_places_explored = population[i]->num_places_explored;
   }
 
   /******************************************************/
@@ -968,7 +966,6 @@ void Population::update_by_action(int date, int tic) {
     cout << "Warning: not a valid action" << endl;
   }
   r_line.MAX_NUM_PLACES_EATEN = max_places_eaten;
-  r_line.MAX_NUM_PLACES_EXPLORED = max_places_explored;
 }
 
 void Population::RouteAction_proc(RouteAction *route_ptr, int tic)
@@ -1223,6 +1220,23 @@ void Population::collect_subtype(char type, vector<PerPtr>& sub_pop) {
   }
 }
 
+float Population::get_mean_explore(char type) {
+  vector<PerPtr> sub_pop;
+  collect_subtype(type, sub_pop);
+  float m_explore = 0;
+  for(size_t i=0; i < sub_pop.size(); i++) {
+    m_explore += sub_pop[i]->num_places_explored;
+  }
+
+  if(sub_pop.size() > 0) {
+    return m_explore/sub_pop.size();
+  }
+  else {
+    return 0.0;
+  }
+  
+}
+
 float Population::get_mean_eaten(char type) {
   vector<PerPtr> sub_pop;
   collect_subtype(type, sub_pop);
@@ -1323,6 +1337,11 @@ void Person::set_frm_parent(Person *p) {
   moveCost = p->moveCost;
   homeByTime = p->homeByTime;
   curiosity = p->curiosity;
+  commCost = p->commCost;
+
+  willCommunicate = p->willCommunicate;
+  onlyPos = p->onlyPos;
+  communicateAboveEnergy = p->communicateAboveEnergy;
   
   current_energy = init_energy;
   home_loc = p->home_loc;
