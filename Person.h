@@ -59,7 +59,9 @@ class Person {
 
   int sleepEnergyLoss; // how much energy is lost between days
 
-  int moveCost; //how much energy does moving cost;
+  int moveCost; //how much energy does moving cost
+
+  int commCost; //how much energy does communicating cost
   
   int max_daily_eat; // cannot cram more food in (as energy) in a single day than this in
   // NB: max_energy could be 15 and this could be 5 so *less*
@@ -69,8 +71,10 @@ class Person {
   int repro_age_start;
   int repro_age_end;
 
-  // MOVEMENT
-  int speed; //typically always 1, might remove
+  // COMMUNICATION
+  bool willCommunicate; //false if person won't communicate at all, true otherwise
+  bool onlyPos; //true is person only communicates 'positive' information (plenties, new resources, etc), false otherwise
+  int communicateAboveEnergy; //Person will communicate above a certain threshold of energy
   
   /*******************************/
   /* end of FIXED attributes     */
@@ -138,6 +142,11 @@ class Person {
   Knowledge mind;
   LocNode* home_loc;
   bool getRoute(vector<LocNode*> internalRoute);
+
+  /**********************************************************/
+  /* following relating to communication */
+  /**********************************************************/
+  bool communicate(vector<Person*> Population, int date);
   
 
   /*************************************/
@@ -201,15 +210,15 @@ class Population {
   
   int update_by_repro(); // add new population members, set num to number born
   
-  void update_by_action(int date, int tic);
+  void update_by_action(int date, int tic); //goes through 20 tics of time, each person queues an action for each tic
+
+  void update_by_communication(int date); //after all tics for a day are done and people are home
 
   void RouteAction_proc(RouteAction *route_ptr, int tic);
   void EatAction_proc(EatAction *eat_ptr,ActionList& list, int& date, int tic);
-  void ExploreAction_proc(ExploreAction *explore_ptr,ActionList& list, int tic);
+  void ExploreAction_proc(ExploreAction *explore_ptr,ActionList& list, int tic, int date);
   void HomeAction_proc(HomeAction *home_ptr, int tic);
   void WaitAction_proc(WaitAction *wait_ptr, int tic);
-
-  void update_by_redistrib(); // make all equal
   
   void show();
   void zero_eaten_today();

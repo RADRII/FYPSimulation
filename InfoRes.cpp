@@ -6,14 +6,13 @@ using namespace std;
 InfoRes::InfoRes()
 {
     knownResIndex = -1;
-    numPatches = -1;
     isWipeout = false;
     isNotNormal = false;
-    wipeOutOrig = SENSES;
+    wipeOutOrig = NA;
     till_non_zero = -1;
     till_normal = -1; 
     originalSize = -1;
-    plentyOrig = SENSES;
+    plentyOrig = NA;
     till_non_plenty = -1;
 }
 
@@ -29,12 +28,14 @@ void InfoRes::dailyDateCheck(int date)
     isNotNormal = false;
     till_non_zero = -1;
     till_normal = -1;
+    wipeOutOrig = NA;
   }
   else if(isPlenty && date >= till_non_plenty)
   {
     isPlenty = false;
     till_non_plenty = -1;
     known_total_of_patches.resize(originalSize);
+    plentyOrig = NA;
   }
 }
 

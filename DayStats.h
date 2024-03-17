@@ -17,7 +17,6 @@ class DayStats {
   int DEATHS_STRANDED;
   int BIRTHS;
   int POP;
-  int TYPEA;
   float A_EN;
   float A_EATEN;
   int MAX_NUM_PLACES_EATEN;

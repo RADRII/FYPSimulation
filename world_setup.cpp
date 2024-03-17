@@ -146,7 +146,6 @@ void set_up_population() {
     PerPtr p = people.population[0];
     setup_record << "type: " << p->type;
     setup_record << "type:" << p->type;
-    setup_record << " speed:" << p->speed;
 
     setup_record << endl;
   }
