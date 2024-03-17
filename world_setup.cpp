@@ -127,7 +127,6 @@ void set_up_population() {
   
   // get defaults from first person
   people.population[0]->show_defaults(setup_record);
-  cout << "hello" << endl;
   setup_record << "have " << tribe_name;
   setup_record << " size " << tribe_size << " \n";
 

@@ -230,9 +230,9 @@ class Population {
 
   void collect_subtype(char type, vector<PerPtr>& sub_pop);
 
-  float get_mean_energy(char type);
-  float get_mean_eaten(char type);
-  float get_mean_explore(char type);
+  float get_mean_energy();
+  float get_mean_eaten();
+  float get_mean_explore();
 
   int max_places_eaten = 0;
   int max_places_explored;
