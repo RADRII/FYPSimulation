@@ -27,6 +27,8 @@ ofstream stranding_stats;
 
 ofstream debug_record;
 
+ofstream comm_record;
+
 void write_pop_snapshot_header(ostream& o) {
   o << "DATE TYPE AGE EN EATEN" << endl;
 }
@@ -58,7 +60,7 @@ void write_pop_snapshot(ostream& o) {
 
 
 void write_starvation_stats_header(ostream& o) {
-  o << "DATE ID TYPE AGE EN" << endl;
+  o << "DATE ID TYPE AGE EN NUMKNOWNRESOURCES" << endl;
 
 }
 
@@ -67,7 +69,8 @@ void write_starvation_stats_line(ostream& o,PerPtr p) {
   o << p->toid() << " ";
   o << p->type << " ";
   o << p->age << " ";
-  o << p->current_energy << " ";   
+  o << p->current_energy << " ";
+  o << p->mind.knownResources.size() << " ";
   o << endl;
 }
 

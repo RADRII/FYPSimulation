@@ -3,9 +3,8 @@
 
 // things a Person may come to know which can be used to influence choices
 #include "Grid.h"
-#include "InfoTypes.h"
+#include "InfoRes.h"
 #include <set>
-//#include "Resource.h"
 
 class Person;
 extern int gridSize;
@@ -20,9 +19,28 @@ class Knowledge {
   /* Location Based knowledge */
   /**********************/
   LocGrid internalWorld;
-  std::vector<LocNode*> knownResources;
-
   int numUnknown;
+
+  /**********************/
+  /* Knowledge on each Resource */
+  /**********************/
+  std::vector<LocNode*> knownResources;
+  std::vector<InfoRes*> resInfo; //shares index with knownresources, so info at index 0 will be for the resource at index 0 of knownresources
+  void addNewResToMind(LocNode* res);
+  void updateInfoRes(LocNode* res);
+  int getInfoIndex(LocNode* res);
+
+  /**********************/
+  /* Communication */
+  /**********************/
+  int needsKnowledgeOn(LocNode* res, bool wipeout, bool plenty);
+  void receiveCommunication(int index, InfoRes* info); //receives communication on a known resource
+  void receiveCommunication(LocNode* res, InfoRes* info); //receives communication on a new resource
+
+  /**********************/
+  /* Wipeout and Plentys */
+  /**********************/
+  void dailyBoolUpdate(int date);
 
   string tostring();
 

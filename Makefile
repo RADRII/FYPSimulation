@@ -24,11 +24,11 @@ QtVisDir = QtVis
 # QTLFLAGS        = -m64 -Wl,-O1
 
 
-People_tester.o: People_tester.cpp Person.h Knowledge.h InfoTypes.h AreaGain.h Resource.h Grid.h Action.h Util.h DayStats.h Debug.h CmdLineVersions.h $(QtVisDir)/world_show.h
+People_tester.o: People_tester.cpp Person.h Knowledge.h InfoRes.h Resource.h Grid.h Action.h Util.h DayStats.h Debug.h CmdLineVersions.h $(QtVisDir)/world_show.h
 	g++ -std=c++11 $(CPPFLAGS) $(INCPATH) $(QTCXXFLAGS) $(QTINCPATH) -c People_tester.cpp
 
-People_tester: People_tester.o world_setup.o Grid.o Person.o Knowledge.o InfoTypes.o AreaGain.o Resource.o Action.o Util.o DayStats.o Debug.o CmdLineVersions.o $(QtVisObjects)
-	g++ -std=c++11 $(CPPFLAGS) $(QTCXXFLAGS) $(LIBPATH) People_tester.o world_setup.o Grid.o Person.o Knowledge.o InfoTypes.o AreaGain.o Resource.o Action.o Util.o DayStats.o Debug.o CmdLineVersions.o $(LIBS) $(QtVisObjects) $(QTLFLAGS) $(QTLIBS) -o People_tester
+People_tester: People_tester.o world_setup.o Grid.o Person.o Knowledge.o InfoRes.o Resource.o Action.o Util.o DayStats.o Debug.o CmdLineVersions.o $(QtVisObjects)
+	g++ -std=c++11 $(CPPFLAGS) $(QTCXXFLAGS) $(LIBPATH) People_tester.o world_setup.o Grid.o Person.o Knowledge.o InfoRes.o Resource.o Action.o Util.o DayStats.o Debug.o CmdLineVersions.o $(LIBS) $(QtVisObjects) $(QTLFLAGS) $(QTLIBS) -o People_tester
 
 DayStats.o: DayStats.cpp DayStats.h
 	g++ -std=c++11 $(CPPFLAGS) $(INCPATH) -c DayStats.cpp
@@ -46,16 +46,13 @@ Resource.o: Resource.cpp Resource.h Grid.h Util.h DayStats.h
 Debug.o: Debug.cpp Debug.h
 	g++ -std=c++11 $(CPPFLAGS) $(INCPATH) -c Debug.cpp
 
-Knowledge.o: Knowledge.cpp Knowledge.h InfoTypes.h AreaGain.h Resource.h Grid.h Util.h Grid.h
+Knowledge.o: Knowledge.cpp Knowledge.h InfoRes.h Resource.h Grid.h Util.h Grid.h
 	g++ -std=c++11 $(CPPFLAGS) $(INCPATH) -c Knowledge.cpp
 
-AreaGain.o: AreaGain.cpp AreaGain.h Resource.h
-	g++ -std=c++11 $(CPPFLAGS) $(INCPATH) -c AreaGain.cpp
+InfoRes.o: InfoRes.cpp InfoRes.h Resource.h
+	g++ -std=c++11 $(CPPFLAGS) $(INCPATH) -c InfoRes.cpp
 
-InfoTypes.o: InfoTypes.cpp InfoTypes.h AreaGain.h Resource.h
-	g++ -std=c++11 $(CPPFLAGS) $(INCPATH) -c InfoTypes.cpp
-
-Person.o: Person.cpp Person.h Knowledge.h InfoTypes.h AreaGain.h Resource.h Grid.h Util.h DayStats.h Debug.h
+Person.o: Person.cpp Person.h Knowledge.h InfoRes.h Resource.h Grid.h Util.h DayStats.h Debug.h
 	g++ -std=c++11 $(CPPFLAGS) $(INCPATH) $(LIBPATH) $(QTCXXFLAGS) $(QTINCPATH) -c Person.cpp
 
 world_setup.o: world_setup.cpp Person.h Resource.h Grid.h Action.h Util.h DayStats.h Debug.h
@@ -69,5 +66,5 @@ Grid.o: Grid.cpp Grid.h Util.h Debug.h
 
 
 clean:
-	rm -f People_tester.o world_setup.o Person.o Knowledge.o InfoTypes.o AreaGain.o Resource.o Grid.o Action.o Util.o DayStats.o Debug.o CmdLineVersions.o People_tester
+	rm -f People_tester.o world_setup.o Person.o Knowledge.o InfoRes.o Resource.o Grid.o Action.o Util.o DayStats.o Debug.o CmdLineVersions.o People_tester
 

@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include "Resource.h"
-#include "AreaGain.h"
 #include "Action.h"
 #include "Knowledge.h"
 using namespace std;
@@ -60,7 +59,9 @@ class Person {
 
   int sleepEnergyLoss; // how much energy is lost between days
 
-  int moveCost; //how much energy does moving cost;
+  int moveCost; //how much energy does moving cost
+
+  int commCost; //how much energy does communicating cost
   
   int max_daily_eat; // cannot cram more food in (as energy) in a single day than this in
   // NB: max_energy could be 15 and this could be 5 so *less*
@@ -70,8 +71,10 @@ class Person {
   int repro_age_start;
   int repro_age_end;
 
-  // MOVEMENT
-  int speed; //typically always 1, might remove
+  // COMMUNICATION
+  bool willCommunicate; //false if person won't communicate at all, true otherwise
+  bool onlyPos; //true is person only communicates 'positive' information (plenties, new resources, etc), false otherwise
+  int communicateAboveEnergy; //Person will communicate above a certain threshold of energy
   
   /*******************************/
   /* end of FIXED attributes     */
@@ -100,9 +103,6 @@ class Person {
                            // NB: this should be consistent with the patch's being_eaten
   
 
-  // if eating at a location find if there are others also there
-  bool others_at_loc(vector<PerPtr>& others);
-
   // relating to REPRO 
 
   int num_offspring;
@@ -118,7 +118,6 @@ class Person {
   /**********************************************************/
   bool isHeadingHome;
   vector<LocNode*> route;
-  int closestViableResource();
   bool clear_route();
   size_t route_index;
   void show_route();
@@ -131,10 +130,11 @@ class Person {
   bool atResource;
   bool isHome;
   int currentTic;
-  vector<LocNode*> knownResources;
   double energyExploreAbove;
   double exploreBoundary;
+
   ActionPtr getNextAction(bool failedEat);
+  bool setResourceRoute();
 
   /**********************************************************/
   /* following relating to updating knowledge */
@@ -142,6 +142,11 @@ class Person {
   Knowledge mind;
   LocNode* home_loc;
   bool getRoute(vector<LocNode*> internalRoute);
+
+  /**********************************************************/
+  /* following relating to communication */
+  /**********************************************************/
+  bool communicate(vector<Person*> Population, int date);
   
 
   /*************************************/
@@ -153,9 +158,6 @@ class Person {
 
   string info_type_to_string();
   void info_type_show();
-
-  // used for stats and knowledge
-  AreaGains area_gains;
   
   // used only for compiling stats
   vector<ResPtr> resEatenAt;
@@ -170,7 +172,6 @@ class Person {
  private:
   void show_home_time();
   void show_num_places();
-
 
   int eat_from(CropPatch& c);
   // determine energy update via consuming food from c
@@ -194,7 +195,7 @@ class Population {
   int hbt;
 
   void updatePeopleTic(int tic);
-  void resetDayBools();
+  void resetDayBools(int date);
 
   vector<Person *> population;
   bool update(int date); // top-level 'update' function which calls series of further update_... functions
@@ -208,15 +209,15 @@ class Population {
   
   int update_by_repro(); // add new population members, set num to number born
   
-  void update_by_action(int date, int tic);
+  void update_by_action(int date, int tic); //goes through 20 tics of time, each person queues an action for each tic
+
+  void update_by_communication(int date); //after all tics for a day are done and people are home
 
   void RouteAction_proc(RouteAction *route_ptr, int tic);
   void EatAction_proc(EatAction *eat_ptr,ActionList& list, int& date, int tic);
-  void ExploreAction_proc(ExploreAction *explore_ptr,ActionList& list, int tic);
+  void ExploreAction_proc(ExploreAction *explore_ptr,ActionList& list, int tic, int date);
   void HomeAction_proc(HomeAction *home_ptr, int tic);
   void WaitAction_proc(WaitAction *wait_ptr, int tic);
-
-  void update_by_redistrib(); // make all equal
   
   void show();
   void zero_eaten_today();
@@ -224,14 +225,14 @@ class Population {
 
   vector<Tribe> tribes;
   
-  bool compare_by_index(const int&p1, const int& p2);
   void show_occupancy();
   void show_occupants(LocNode* l);
 
   void collect_subtype(char type, vector<PerPtr>& sub_pop);
 
-  float get_mean_energy(char type);
-  float get_mean_eaten(char type);
+  float get_mean_energy();
+  float get_mean_eaten();
+  float get_mean_explore();
 
   int max_places_eaten = 0;
   int max_places_explored;

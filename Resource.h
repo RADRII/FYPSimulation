@@ -136,8 +136,6 @@ class CropPatch {
   // eg. if already been wiped-out at some non-dormant day, that will have prematurely switched it to
   // a dormant date, and again nothing really happens
   // NB: currently calling of this is via a Resources area which contains the CropPatchs
- 
-  
 };
 
 /****************************************************************/
@@ -162,6 +160,9 @@ public:
   int y;
 
   int numWaiters;
+  int numHeading;
+
+  int getNumPersonsInterestedInResource();
 
   // these run functions of same name over its CropPatch's
   void show_bands(); 
@@ -182,16 +183,22 @@ public:
   bool in_wipeout; // true if after a wipeout and not reached day of 'normal_after_wipeout'
   double p_wipeout; // 'daily' prob of the area having a wipeout ie. running wipeout_at_date(..)
 
+  void  plenty_at_date(int d);   // does 'plenty' on all contained CropPatches
+  int normal_after_plenty; // after a plenty the first day normal food amount again
+  bool in_plenty; // true if after a plenty event and not reached day of 'normal_after_plenty'
+  double p_plenty; // 'daily' prob of the area having a plenty event ie. running plenty_at_date(..)
+  int numDaysPlenty; //how many days a plenty should last
+  int originalSize;
+
   /***************************************/
   /* relating to EATING processes */
   /***************************************/
   
   // get random non-empty patch which are also not being_eaten
   int get_available_patch();
-  
-  bool being_eaten_patches_at_location();
-  // checks whether any patches are being_eaten at given location
-  // used to see the location should be added to someone's revisit list
+
+  // get num of patches with food
+  int getNumViablePatches();
 
   bool equals(Resources* r);
   

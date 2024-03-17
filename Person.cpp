@@ -21,7 +21,7 @@ Person::Person() {
   age=0;
   person_count++;
   identifier = person_count;
-  type = 'A';
+  type = 'N';
   expiry_age = 500;  // will not live beyod this age could die earlier
 
   curiosity = 60.0;
@@ -33,16 +33,20 @@ Person::Person() {
   current_energy = init_energy;
   
   max_energy = 70;
-  sleepEnergyLoss = 20;
-  moveCost = 2; //Todo fiddle with
-  max_daily_eat = 35;
+  sleepEnergyLoss = 15;
+  moveCost = 2; //fiddle
+  commCost = 2; //fiddle
+  max_daily_eat = 30; //fiddle
+
+  willCommunicate = true;
+  onlyPos = false;
+  communicateAboveEnergy = 8;
   
   eaten_today = 0;
   repro_age_start = 200;
   repro_age_end = 450;
   num_offspring = 0;
   fam_plan.planned_offspring = -1;
-  speed = 1.0;
 
   homeByTime = 20;
   atResource = false;
@@ -58,8 +62,6 @@ Person::Person() {
   home_loc = NULL;
 
   mind.who = this;
-
-  area_gains.clear_area_gains();
   
   homeTime = 0;
   clear_places_eaten();
@@ -76,34 +78,7 @@ void Person::show_defaults(ostream& o) {
   o << " max_daily_eat:" << max_daily_eat;
   o << " repro_age_start:" << repro_age_start;
   o << " repro_age_end:" << repro_age_end;
-  o << " speed:" << speed;
   o << endl;
-}
-
-//Closest resource to current location, which also lets the player get back home after.
-int Person::closestViableResource() {
-  int index = -1;
-  int shortestRoute = 1000;
-  for(int i = 0; i < knownResources.size(); i++)
-  {
-    vector<LocNode*> temp = mind.internalWorld.findPath(loc, knownResources[i]);
-    if(!temp.empty())
-    {
-      if(temp.size() < shortestRoute)
-      {
-        int timeLeft = homeByTime - currentTic;
-        vector<LocNode*> resToHome = mind.internalWorld.findPath(knownResources[i], home_loc);
-        int timeToEat = timeLeft - (resToHome.size() + temp.size());
-
-        if((timeToEat * knownResources[i]->resourceObject->resources[0].energy_conv) > ((resToHome.size() + temp.size()) * moveCost)) //AKA does going there waste energy or no
-        {
-          shortestRoute = temp.size();
-          index = i;
-        }
-      }
-    }
-  }
-  return index;
 }
 
 void Person::update_places_explored(LocNode* l) {
@@ -116,7 +91,7 @@ void Person::update_places_explored(LocNode* l) {
     //cout << "Explored: " << l->x << " " << l->y << " is " << l->type << endl;
 
     if(l->type == RESOURCE)
-      knownResources.push_back(l);
+      mind.addNewResToMind(l);
   }
 }
 
@@ -179,6 +154,8 @@ ActionPtr Person::getNextAction(bool failedEat)
     //routed to resource, try to eat
     else if(loc->type == RESOURCE)
     {
+      loc->resourceObject->numHeading = loc->resourceObject->numHeading - 1;
+
       EatAction *next = new EatAction;
       next->p = this;
       return next;
@@ -204,7 +181,7 @@ ActionPtr Person::getNextAction(bool failedEat)
       return next;
     }
     //else if not full try to eat again
-    else if(current_energy < max_energy && eaten_today < max_daily_eat)
+    else if(!hasMaxEnergy())
     {
       EatAction *next = new EatAction;
       next->p = this;
@@ -214,7 +191,7 @@ ActionPtr Person::getNextAction(bool failedEat)
     //plus random chance with curiosity
     //plus is there anything to explore
     else if(
-      !mind.internalWorld.findPathClosestUnexplored(loc).empty() &&
+      mind.numUnknown > 0 &&
       current_energy - (timeHome * moveCost) - sleepEnergyLoss > energyExploreAbove &&
       (1+ (rand() % 100)) < curiosity)
     {
@@ -273,7 +250,8 @@ ActionPtr Person::getNextAction(bool failedEat)
       cout << "Warning: tried to eat at non resource somehow" << endl;
     
     //if not too many people waiting, wait
-    if(loc->resourceObject->numWaiters < loc->resourceObject->resources.size())
+    //can use resource number not mind numbers as person is physically there
+    if(loc->resourceObject->numWaiters < loc->resourceObject->getNumViablePatches())
     {
       WaitAction *next = new WaitAction;
       next->p = this;
@@ -285,7 +263,7 @@ ActionPtr Person::getNextAction(bool failedEat)
   //Finally either route to a resource or explore
   //Route to a random (viable) resource if not full
   //Explore if not
-  if(!knownResources.empty() && eaten_today < max_daily_eat)
+  if(!mind.knownResources.empty() && eaten_today < max_daily_eat)
   {
     //Check if currently on a resource, try to eat if haven't failed already
     if(loc->type == RESOURCE && !failedEat)
@@ -295,41 +273,28 @@ ActionPtr Person::getNextAction(bool failedEat)
       return next;
     }
 
-    //remove non viable resources
-    vector<LocNode*> viable;
-    for(int i = 0; i < knownResources.size(); i++)
-    {
-      vector<LocNode*> potential = mind.internalWorld.findPath(loc, knownResources[i]);
-      vector<LocNode*> backHome = mind.internalWorld.findPath(knownResources[i], home_loc);
+    bool wasSet = setResourceRoute();
 
-      if(homeByTime - currentTic > potential.size() + backHome.size() && !knownResources[i]->equals(loc)) //viable if not current location and if possible to get there in time
-        viable.push_back(knownResources[i]);
-    }
-
-    if(!viable.empty())
+    if(wasSet)
     {
-      int randIndex = rand() % viable.size();
-      route = mind.internalWorld.findPath(loc, viable[randIndex]);;
-      route_index = 0;
-      
       RouteAction *next = new RouteAction;
       next->p = this;
       next->route_index = route_index;
 
       if(failedEat)
-        debug_record << identifier << " decided to " << ROUTE << endl; 
+        debug_record << identifier << " (retry) decided to " << ROUTE << endl; 
       return next;
     }
   }
 
   //If have been exploring, while knowing of a resource then either keep exploring or go home
-  if(prev == EXPLORE && !knownResources.empty())
+  if(prev == EXPLORE && !mind.knownResources.empty())
   {
     //Should keep exploring?
     vector<LocNode*> pathHome = mind.internalWorld.findPath(loc, home_loc);
     int tHome = pathHome.size();
     if(
-      !mind.internalWorld.findPathClosestUnexplored(loc).empty() &&
+      mind.numUnknown > 0 &&
       current_energy - (tHome * moveCost) - sleepEnergyLoss > energyExploreAbove &&
       (1+ (rand() % 100)) < curiosity)
     {
@@ -360,13 +325,92 @@ ActionPtr Person::getNextAction(bool failedEat)
     return next;
   }
 
-  //Finally just explore
+  //If have everything explored just go home or homerest
+  if(mind.numUnknown <= 0)
+  {
+    //if home then rest
+    if(loc->type == HAB_ZONE)
+    {
+      HomeAction *next = new HomeAction;
+      next->p = this;
+      return next;
+    }
+
+    isHeadingHome = true;
+    route = pathHome;
+    route_index = 0;
+    
+    RouteAction *next = new RouteAction;
+    next->p = this;
+    next->route_index = route_index;
+    return next;
+  }
+
+  //Finally, explore
   ExploreAction *next = new ExploreAction;
   next->p = this;
 
   if(failedEat)
-    debug_record << identifier << " decided to " << EXPLORE << endl; 
+    debug_record << identifier << " (retry) decided to " << EXPLORE << endl; 
   return next;
+}
+
+//Tries to find a viable known resource to start a route too
+//returns true if one is found and route is set
+//false otherwise
+bool Person::setResourceRoute()
+{
+  //remove non viable resources
+  vector<LocNode*> viable;
+  for(int i = 0; i < mind.knownResources.size(); i++)
+  {
+    vector<LocNode*> potential = mind.internalWorld.findPath(loc, mind.knownResources[i]);
+    vector<LocNode*> backHome = mind.internalWorld.findPath(mind.knownResources[i], home_loc);
+    
+    //viable  if possible to get there in time and
+    // if not current location and
+    // if not still zero from wipeout and
+    // 50% if still not normal from wipeout
+    //on tic 0 (when their all at home) it also checks if there aren't too many people there/going there already 
+    //it doesnt make sense for people to know that information afterwards afterwards
+    if(homeByTime - currentTic > potential.size() + backHome.size() && 
+      !mind.knownResources[i]->equals(loc) &&
+      !mind.resInfo[i]->isWipeout)
+    {
+      if(mind.resInfo[i]->isNotNormal)
+      {
+        if(rand() % 100 > 50)
+          continue;
+      }
+      if(currentTic == 0)
+      {
+        if(mind.knownResources[i]->resourceObject->getNumPersonsInterestedInResource() < mind.knownResources[i]->resourceObject->resources.size())
+          viable.push_back(mind.knownResources[i]);
+      }
+      else if(mind.resInfo[i]->isPlenty)
+      {
+        //add in twice if the resource is in plenty mode
+        //to make it more likely to be picked
+        viable.push_back(mind.knownResources[i]);
+        viable.push_back(mind.knownResources[i]);
+      }
+      else
+      {
+        viable.push_back(mind.knownResources[i]);
+      }
+    }
+  }
+
+  if(viable.empty())
+    return false;
+  
+  //Pick randomly
+  int randIndex = rand() % viable.size();
+  route = mind.internalWorld.findPath(loc, viable[randIndex]);;
+  route_index = 0;
+
+  viable[randIndex]->resourceObject->numHeading = viable[randIndex]->resourceObject->numHeading + 1;
+  return true;
 }
 
 // amout returned as 'gained' can assume
@@ -377,7 +421,7 @@ ActionPtr Person::getNextAction(bool failedEat)
 //User eats one berry
 int Person::eat_from(CropPatch& c){
   #if DEBUG
-  db(identifier); db(type); db(" frm "); db(c.pos.tostring()); db(c.sym); db("\n");
+  db(identifier); db(type); db(" frm "); db(c.name); db(c.sym); db("\n");
   #endif
 
   if(max_daily_eat > eaten_today && max_energy > current_energy && c.get_total() > 0)
@@ -409,7 +453,7 @@ int Person::eat_from_dry_run(CropPatch& c) {
 }
 
 bool Person::hasMaxEnergy() {
-  if((eaten_today == max_daily_eat) ||  (current_energy == max_energy)) {
+  if((eaten_today >= max_daily_eat) ||  (current_energy >= max_energy)) {
     return true;
   }
   else {
@@ -417,9 +461,80 @@ bool Person::hasMaxEnergy() {
   }
 }
 
-// check if others are eating at the same location
-bool Person::others_at_loc(vector<PerPtr>& others) {
-  return loc->resourceObject->being_eaten_patches_at_location();
+//tries to communicate with another random person at home
+//if succesful removes energy and return true, else returns false
+bool Person::communicate(vector<Person*> population, int date)
+{
+  //get random order of population
+  int * randomVector;
+  randomVector = new int[population.size()];
+  for (int i = 0; i < population.size(); i++) {
+      randomVector[i] = i;
+  }
+
+  gsl_ran_shuffle(r_global, randomVector, population.size(), sizeof(int));
+
+  int indexToShare = -1;
+  int personIndex = -1;
+
+  //try to communicate once
+  for(int o = 0; o < population.size(); o++)
+  {
+    PerPtr other = population[randomVector[o]];
+
+    //if the other person isnt home or has no energy (will be culled after) then dont share
+    //they will die soon and it wont be worth it
+    if(!other->isHome || other->current_energy < sleepEnergyLoss)
+      continue;
+    
+    //Go through each known resource
+    //if they share a known resource, and the sharer has wipeout/plenty information that the other does not
+    //  (and if wipeout check if they can share nonpositive information) then share
+    //if they don't share a known resource, see if there is a resource on the edge of the others known map and share its location
+
+    for(int i = 0; i < mind.knownResources.size(); i++)
+    {
+      int index = other->mind.needsKnowledgeOn(mind.knownResources[i], mind.resInfo[i]->isWipeout, mind.resInfo[i]->isPlenty);
+
+      //Share the knowledge
+      //IF person is type to only share positive info check if shareinfo is about a wipeout
+      if(onlyPos)
+          if(mind.resInfo[i]->isWipeout)
+            index = -1;
+
+      if(index != -1)
+      {
+        other->mind.receiveCommunication(index, mind.resInfo[i]);
+        current_energy = current_energy - commCost;
+        comm_record << date << " " << toid() << " " << other->toid() << " " << mind.knownResources[i]->x << " " << mind.knownResources[i]->y << " " << "TRUE" << endl;
+        return true;
+      }
+
+      //check if possible to share location of resource with neighbor
+      //aka is the resource unknown and is there at least one non obstacle explored neighbor around it (so its reachable)
+      if(indexToShare == -1
+      && other->mind.internalWorld.getNode(mind.knownResources[i]->x, mind.knownResources[i]->y)->type == UNKNOWN
+      && other->mind.internalWorld.hasExploredNeighbors(mind.knownResources[i]))
+      {
+        personIndex = o;
+        indexToShare = i;
+      } 
+    }
+  }
+
+  //share location of a new resource if found one to share wipeout/plenty with
+  if(indexToShare != -1)
+  {
+    PerPtr other = population[randomVector[personIndex]];
+    other->mind.receiveCommunication(mind.knownResources[indexToShare], mind.resInfo[indexToShare]);
+    other->num_places_explored = other->num_places_explored + 1;
+
+    current_energy = current_energy - commCost;
+    comm_record << date << " " << identifier << " " << other->identifier << " " << mind.knownResources[indexToShare]->x << " " << mind.knownResources[indexToShare]->y << " " << "FALSE" << endl;
+    return true;
+  }
+
+  return false;
 }
 
 string Person::toid() {
@@ -439,7 +554,6 @@ void Person::show(){
   show_var_energy();
   show_home_time();
   show_num_places();
-  area_gains.show_area_gains();
   //  cout << " Rep: " << have_reproduced;
 }
 
@@ -554,19 +668,43 @@ Population::Population(string name, int size){
 
   id = name;
   hbt = 20;
-  max_places_explored = 0;
-  for(int i=0; i < size; i++) {
-    
-
+  for(int i=0; i < size; i++) 
+  {
     Person *p = new Person;
 
     p->age = ((float)i/size) * 500; // unif distrib over ages ?
     if(p->age > 350) { p->num_offspring = 1; }
     p->homeByTime = hbt;
     population.push_back(p);
-
   }
   currentTic = 0;
+}
+
+void Population::add(Population& other)
+{
+  population.insert(population.end(), other.population.begin(), other.population.end());
+  // bring tribes info from other
+  tribes.insert(tribes.end(),other.tribes.begin(), other.tribes.end());
+
+  //shuffle pop
+  //get random order of population
+  int * randomVector;
+  randomVector = new int[population.size()];
+  for (int i = 0; i < population.size(); i++) {
+      randomVector[i] = i;
+  }
+
+  //shuffle
+  gsl_ran_shuffle(r_global, randomVector, population.size(), sizeof(int));
+
+  //Create and establish new pop vector
+  vector<Person*> newPop;
+  for(int i = 0; i < population.size(); i++)
+  {
+    newPop.push_back(population[randomVector[i]]);
+  }
+
+  population = newPop;
 }
 
 void Population::zero_eaten_today() {
@@ -578,7 +716,7 @@ void Population::zero_eaten_today() {
   }
 }
 
-void Population::resetDayBools() {
+void Population::resetDayBools(int date) {
   vector<Person *>::iterator p;
   p = population.begin();
   while(p != population.end()) {
@@ -586,7 +724,7 @@ void Population::resetDayBools() {
     (*p)->hasBeenEating = false;
     (*p)->isHome = false;
     (*p)->prevAction = START;
-
+    (*p)->mind.dailyBoolUpdate(date);
     p++;
   }
 }
@@ -609,7 +747,9 @@ void Population::updatePeopleTic(int tic)
   }
 
   for(int i = 0; i < all_res.size(); i++)
+  {
     all_res[i]->numWaiters = 0;
+  }
 }
 
 void sanity_check_area_gains(vector<PerPtr> &population);
@@ -628,16 +768,8 @@ bool Population::update(int date){
   int deaths_starve = 0;
   int deaths_strand = 0;
 
-  /******************************************************/
-  /* remove those too old, those who aren't home at night, those with not enough energy */
-  /******************************************************/
-  update_by_cull(deaths_age, deaths_starve, deaths_strand);
-  r_line.DEATHS_AGE = deaths_age;
-  r_line.DEATHS_STARVE = deaths_starve;
-  r_line.DEATHS_STRANDED = deaths_strand;
-
   //reset peoples daily bools
-  resetDayBools();
+  resetDayBools(date);
   
   #if DEBUG
   db("> age cull, expend nrg "); show(); db("\n");
@@ -646,9 +778,8 @@ bool Population::update(int date){
   if(population.size() == 0) { // extinction
     r_line.BIRTHS = 0;
     r_line.POP = 0;
-    r_line.TYPEA = 0;
-    r_line.A_EN = 0;
-    r_line.A_EATEN = 0;
+    r_line.MEAN_EN = 0;
+    r_line.MEAN_EATEN = 0;
     r_line.MAX_NUM_PLACES_EATEN = 0;
     // no other person related updates are possible so return
     return true;
@@ -660,6 +791,7 @@ bool Population::update(int date){
   /* execute day's worth of moving about to find and consume food */
   /****************************************************************/
   //db_level = 0;
+  debug_record << date << " TOC TOC TOC TOC TOC TOC" << endl;
   for(int tic = 0; tic < hbt; tic++)
   {
     //cout << "Tic: " << tic << endl;
@@ -668,7 +800,6 @@ bool Population::update(int date){
     updatePeopleTic(tic);
     update_by_action(date, tic);
   }
-  debug_record << "TOC TOC TOC TOC TOC TOC" << endl;
   #if DEBUG
   db("------------------------\n");
   db("> feeding\n ");
@@ -686,40 +817,80 @@ bool Population::update(int date){
   }
   #endif
 
+  /***************************************************************************************************/
+  /* do knowledge update by having people talk to each other based on what they learned while eating */
+  /***************************************************************************************************/
+  update_by_communication(date);
+
+  r_line.MEAN_NUM_PLACES_EXPLORED = get_mean_explore();
+  r_line.MEAN_EN = get_mean_energy();
+  r_line.MEAN_EATEN = get_mean_eaten();
+
+  //Check for new maxs (stats)
+  for(size_t i=0; i < population.size(); i++)  
+  {
+    if(population[i]->num_places_eaten > max_places_eaten) 
+      max_places_eaten = population[i]->num_places_eaten;
+  }
+
+  /******************************************************/
+  /* remove those too old, those who aren't home at night, those with not enough energy */
+  /******************************************************/
+  update_by_cull(deaths_age, deaths_starve, deaths_strand);
+  r_line.DEATHS_AGE = deaths_age;
+  r_line.DEATHS_STARVE = deaths_starve;
+  r_line.DEATHS_STRANDED = deaths_strand;
+
   /************************************************/
   /* do updates of population due to reproduction */
   /************************************************/
   int num_births = update_by_repro(); 
   r_line.BIRTHS = num_births;
 
+  //Stats Stuff
   r_line.POP = get_total();
-
-  r_line.A_EN = get_mean_energy('A'); // includes new births in denom
-  r_line.A_EATEN = get_mean_eaten('A'); // includes new births in denom
   
-  /***************************************************************************************************/
-  /* do knowledge update by having people talk to each other based on what they learned while eating */
-  /***************************************************************************************************/
-  //db_level = 0;
-  //TODO
-
-  //db_level = 1;
-  
-  int numA = 0;
-  for(size_t i=0; i < population.size(); i++)  
-  {
-    if(population[i]->num_places_eaten > max_places_eaten) 
-      max_places_eaten = population[i]->num_places_eaten;
-    if(population[i]->num_places_explored > max_places_explored)
-	    max_places_explored = population[i]->num_places_explored;
-    numA++;
-  }
-
-  r_line.TYPEA = numA;
+  vector<Person*> aPop;
+  vector<Person*> bPop;
+  vector<Person*> cPop;
+  collect_subtype('A', aPop);
+  collect_subtype('B', bPop);
+  collect_subtype('C', cPop);
+  r_line.APOP = aPop.size();
+  r_line.BPOP = bPop.size();
+  r_line.CPOP = cPop.size();
 
   return updated;
 }
 
+//Goes through list of people, if that person is the type to communicate and is home
+//Communicates until energy is below communicateaboveEnergy or loses on random chance or theres no one to communicate with
+void Population::update_by_communication(int date)
+{
+  for(int i = 0; i < population.size(); i++)
+  {
+    if(population[i]->isHome && population[i]->willCommunicate)
+    {
+      //Gets random number 0-99, if number is above commchance then will communicate
+      //ergo if a person has energy, will always communicate at least once
+      //and then after has a 85% chance then 70, then 55, 40, etc
+      int commChance = 0;
+
+      bool canComm = true; //if theres no one to communicate too (everyone dead or knows everything) stop loop
+
+      while(population[i]->current_energy > population[i]->communicateAboveEnergy
+      && canComm
+      && (rand() % 100) >= commChance)
+      {
+        canComm = population[i]->communicate(population, date);
+
+        commChance += 15;
+      }
+    }
+  }
+
+  return;
+}
 
 void Population::update_by_cull(int& deaths_age, int& deaths_starve, int& deaths_strand) { // age, expend energy, then cull, set nums to amounts culled
 
@@ -749,7 +920,7 @@ void Population::update_by_cull(int& deaths_age, int& deaths_starve, int& deaths
       p = population.erase(p);
       deaths_starve++; 
     }
-    else if((*p)->loc->type != HAB_ZONE) {
+    else if(!(*p)->isHome) {
       #if DEBUG
       db((*p)->type); db(" DEATH (strand)\n");
       #endif
@@ -777,7 +948,7 @@ void Population::update_by_action(int date, int tic) {
   //Initialize action list
   ActionList actList;
   actList.init_from_population(pop.population);
-
+  
   //Complete each action in list
   while(!actList.is_empty())
   {
@@ -806,7 +977,7 @@ void Population::update_by_action(int date, int tic) {
     { 
       ExploreAction *arr_ptr;	
       arr_ptr = (ExploreAction *)a;
-      ExploreAction_proc(arr_ptr,actList,tic);
+      ExploreAction_proc(arr_ptr,actList,tic, date);
       delete a;
       continue;
     }
@@ -830,9 +1001,7 @@ void Population::update_by_action(int date, int tic) {
     }
     cout << "Warning: not a valid action" << endl;
   }
-
   r_line.MAX_NUM_PLACES_EATEN = max_places_eaten;
-  r_line.MAX_NUM_PLACES_EXPLORED = max_places_explored;
 }
 
 void Population::RouteAction_proc(RouteAction *route_ptr, int tic)
@@ -868,12 +1037,11 @@ void Population::RouteAction_proc(RouteAction *route_ptr, int tic)
   if(p->loc->type == RESOURCE && p->route_index >= p->route.size())
     p->atResource = true;
   else p->atResource = false;
-
   return;
 }
 
 //Picks random unexplored direction or tries to go to closest unexplored location
-void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, int tic)
+void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, int tic, int date)
 {
   //Get person related to action and set it as their prev action
   PerPtr p;
@@ -932,7 +1100,6 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
     list.insert(retry);
     return;
   }
-
   //We can get home for sure now
   //choose where to go, either immediete unexplored neighbor or moving towards closest unexplored
   LocNode* toGo;
@@ -944,7 +1111,7 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
   else
   {
     vector<LocNode*> pathToClosestUnknown = p->mind.internalWorld.findPathClosestUnexplored(p->loc);
-    toGo = pathToClosestUnknown[0];
+    toGo = pathToClosestUnknown[0]; //still the issue lol
   }
 
   int x = toGo->x;
@@ -956,6 +1123,13 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
   //if togo is an obstacle update knowledge and requeue explore
   if(world.getNode(x,y)->type == OBSTACLE)
   {
+    //If that was the last unknown then requeue action
+    if(p->mind.numUnknown <= 0)
+    {
+      list.insert(p->getNextAction(false));
+      return;
+    }
+
     ExploreAction *retry = new ExploreAction;
     retry->p = p;
     list.insert(retry);
@@ -989,7 +1163,6 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
     p->isHome = false;
   }
 
-
   return;
 }
 
@@ -1014,7 +1187,6 @@ void Population::WaitAction_proc(WaitAction *wait_ptr, int tic)
   p->hasBeenEating = false;
 
   p->loc->resourceObject->numWaiters = p->loc->resourceObject->numWaiters + 1;
-
   return;
 }
 
@@ -1025,6 +1197,9 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
   //Get person related to action and set it as their prev action
   PerPtr p;
   p = eat_ptr->p;
+
+  //Update knowledge on that resource
+  p->mind.updateInfoRes(p->loc);
 
   // get all patches at x (i) not empty (ii) not occupied (ie. being_eaten is set true there)
   int cropIndex = p->loc->resourceObject->get_available_patch();
@@ -1064,8 +1239,6 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
     // update person's energy attributes from this
     p->eaten_today = p->eaten_today + gain;
     p->current_energy = p->current_energy + gain;
-    // also update person's AreaGain info
-    p->area_gains.increment_an_area_gain(p->loc->resourceObject, gain);
     // update patch	
     p->eating_patch->remove_units(1);
 
@@ -1075,24 +1248,24 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
 
 void Population::collect_subtype(char type, vector<PerPtr>& sub_pop) {
   sub_pop.clear();
-  for(size_t i=0; i < population.size(); i++) {
-    PerPtr p = population[i];
-    if(p->type == type) {
-      sub_pop.push_back(p);
+
+  for(int i=0; i < population.size(); i++) 
+  {
+    if(population[i]->type == type) 
+    {
+      sub_pop.push_back(population[i]);
     }
   }
 }
 
-float Population::get_mean_eaten(char type) {
-  vector<PerPtr> sub_pop;
-  collect_subtype(type, sub_pop);
-  float m_eaten = 0;
-  for(size_t i=0; i < sub_pop.size(); i++) {
-    m_eaten += sub_pop[i]->eaten_today;
+float Population::get_mean_explore() {
+  float m_explore = 0;
+  for(size_t i=0; i < population.size(); i++) {
+    m_explore += population[i]->num_places_explored;
   }
 
-  if(sub_pop.size() > 0) {
-    return m_eaten/sub_pop.size();
+  if(population.size() > 0) {
+    return m_explore/population.size();
   }
   else {
     return 0.0;
@@ -1100,16 +1273,29 @@ float Population::get_mean_eaten(char type) {
   
 }
 
-float Population::get_mean_energy(char type) {
-  vector<PerPtr> sub_pop;
-  collect_subtype(type, sub_pop);
-  float m_e = 0;
-  for(size_t i=0; i < sub_pop.size(); i++) {
-    m_e += sub_pop[i]->current_energy;
+float Population::get_mean_eaten() {
+  float m_eaten = 0;
+  for(size_t i=0; i < population.size(); i++) {
+    m_eaten += population[i]->eaten_today;
   }
 
-  if(sub_pop.size() > 0) {
-    return m_e/sub_pop.size();
+  if(population.size() > 0) {
+    return m_eaten/population.size();
+  }
+  else {
+    return 0.0;
+  }
+  
+}
+
+float Population::get_mean_energy() {
+  float m_e = 0;
+  for(size_t i=0; i < population.size(); i++) {
+    m_e += population[i]->current_energy;
+  }
+
+  if(population.size() > 0) {
+    return m_e/population.size();
   }
   else {
     return 0.0;
@@ -1178,12 +1364,16 @@ void Person::set_frm_parent(Person *p) {
   max_energy = p->max_energy;
   max_daily_eat = p->max_daily_eat;
   init_energy =  p->init_energy;
-  speed = p->speed;
 
   sleepEnergyLoss = p->sleepEnergyLoss;
   moveCost = p->moveCost;
   homeByTime = p->homeByTime;
   curiosity = p->curiosity;
+  commCost = p->commCost;
+
+  willCommunicate = p->willCommunicate;
+  onlyPos = p->onlyPos;
+  communicateAboveEnergy = p->communicateAboveEnergy;
   
   current_energy = init_energy;
   home_loc = p->home_loc;
@@ -1238,11 +1428,6 @@ void Population::show(){
 
 int Population::get_total() {
   return population.size();
-
-}
-
-bool Population::compare_by_index(const int& p1_index, const int& p2_index) {
-  return compare_person(population[p1_index], population[p2_index]);
 
 }
 

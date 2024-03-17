@@ -80,6 +80,25 @@ vector<LocNode*> LocGrid::getNeighbors(LocNode* loc)
     return neighbors;
 }
 
+bool LocGrid::hasExploredNeighbors(LocNode* loc)
+{
+    // Traverse neighbors
+    static const int dx[] = { -1, 1, 0, 0 }; // Left, Right, Up, Down
+    static const int dy[] = { 0, 0, -1, 1 };
+
+    for (int i = 0; i < 4; ++i) 
+    {
+        int newX = loc->x + dx[i];
+        int newY = loc->y + dy[i];
+
+        LocNode* neighbor = getNode(newX, newY);
+        if(neighbor != nullptr && !(neighbor->type == OBSTACLE) && !(neighbor->type == UNKNOWN))
+            return true;
+    }
+
+    return false;
+}
+
 void LocGrid::printGrid()
 {
     for (int x = 0; x < gridSize; x++) {

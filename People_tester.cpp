@@ -56,6 +56,11 @@ int main(int argc, char **argv) {
   open_an_output(debug_record,"debug_record");
   debug_record << "Welcome." << endl;
 
+  open_an_output(comm_record,"comm_record");
+  comm_record << "DATE FROM TO COMMTYPE LOCX LOCY ABOUTKNOWNRES." << endl;
+  //last one is true if its about a shared known resource
+  //false if sharing a loc of a res
+
 #if DEBUG1
   init_db_file("/tmp/Toss/junk");
   //db_level = 1;
@@ -115,10 +120,12 @@ int main(int argc, char **argv) {
     double incr = 0.0;
     double total = 0.0;
     int num_areas_in_wipeout = 0;
+    int num_areas_in_plenty = 0;
     for(size_t i = 0; i < all_res.size(); i++) {
       incr += all_res[i]->update_at_date(date);
       total += all_res[i]->get_total();
       if(all_res[i]->in_wipeout) { num_areas_in_wipeout++; }
+      if(all_res[i]->in_plenty) { num_areas_in_plenty++; }
     }
 
     for(size_t i = 0; i < all_res.size(); i++) {
@@ -138,18 +145,21 @@ int main(int argc, char **argv) {
     r_line.CROP_INCR = incr;
     r_line.CROP_TOTAL = total;
     r_line.NUM_AREAS_IN_WIPEOUT = num_areas_in_wipeout;
+    r_line.NUM_AREAS_IN_PLENTY = num_areas_in_plenty;
     r_line.DEATHS_AGE = 0;
     r_line.DEATHS_STARVE = 0;
     r_line.DEATHS_STRANDED = 0;
 
     r_line.BIRTHS = 0;
     r_line.POP = 0;
-    r_line.TYPEA = 0;
-    r_line.A_EN = 0;
-    r_line.A_EATEN = 0;
+    r_line.APOP = 0;
+    r_line.BPOP = 0;
+    r_line.CPOP = 0;
+    r_line.MEAN_EN = 0;
+    r_line.MEAN_EATEN = 0;
     
     r_line.MAX_NUM_PLACES_EATEN = 0;
-    r_line.MAX_NUM_PLACES_EXPLORED = 0;
+    r_line.MEAN_NUM_PLACES_EXPLORED = 0;
     r_line.write(r_stats);
   }
 
@@ -169,7 +179,6 @@ int main(int argc, char **argv) {
   //WorldShow::res_level = 1;
 #endif
 
-  
   int extinction_date = 0;
   char extinct_tribe;
 
@@ -196,10 +205,12 @@ int main(int argc, char **argv) {
     double incr = 0.0;
     double total = 0.0;
     int num_areas_in_wipeout = 0;
+    int num_areas_in_plenty = 0;
     for(size_t i = 0; i < all_res.size(); i++) {
       incr += all_res[i]->update_at_date(date);
       total += all_res[i]->get_total();
       if(all_res[i]->in_wipeout) { num_areas_in_wipeout++; }
+      if(all_res[i]->in_plenty) { num_areas_in_plenty++; }
     }
 
     
@@ -240,6 +251,7 @@ int main(int argc, char **argv) {
     r_line.CROP_INCR = incr;
     r_line.CROP_TOTAL = total;
     r_line.NUM_AREAS_IN_WIPEOUT = num_areas_in_wipeout;
+    r_line.NUM_AREAS_IN_PLENTY = num_areas_in_plenty;
 
     /**************************************************************/
     /* UPDATE RESOURCES AND PEOPLE BY EATING, DEATH, REPRODUCTION */
@@ -273,7 +285,7 @@ int main(int argc, char **argv) {
 
      /* block to write pop snapshots */
      if((date >= 60) && (date <= 1000)) {
-      write_pop_snapshot(pop_snapshots);
+      //write_pop_snapshot(pop_snapshots);
       }
 
     if(pop.get_total() == 0) {

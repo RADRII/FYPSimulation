@@ -29,6 +29,7 @@ class LocGrid {
   void resetParents();
   LocNode* getNode(int x, int y);
   vector <LocNode*> getNeighbors(LocNode* loc);
+  bool hasExploredNeighbors(LocNode* loc);
   std::vector<LocNode*> findPath(LocNode* startNode, LocNode* endNode);
   std::vector<LocNode*> findPathClosestUnexplored(LocNode* startNode);
 };

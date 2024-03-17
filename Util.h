@@ -6,7 +6,6 @@
 #include <fstream>
 #include <sstream>
 #include "DayStats.h"
-#include "AreaGain.h"
 #include "Person.h"
 
 using namespace std;
@@ -41,7 +40,7 @@ void write_starvation_stats_header(ostream& o);
 void write_starvation_stats_line(ostream& o,PerPtr p);
 
 /********************/
-/* stranding stats */
+/* stranding stats (should be empty lol) */
 /********************/
 
 extern  ofstream stranding_stats;
@@ -56,6 +55,11 @@ void write_stranding_stats_line(ostream& o,PerPtr p);
 /*****************************************************/
 
 extern  ofstream setup_record;
+
+/*****************************************************/
+/* communication log, for who communicated to who     */
+/*****************************************************/
+extern  ofstream comm_record;
 
 /*****************************************************/
 /* debug stream, for whatever i want :)     */
