@@ -152,8 +152,11 @@ int main(int argc, char **argv) {
 
     r_line.BIRTHS = 0;
     r_line.POP = 0;
-    r_line.A_EN = 0;
-    r_line.A_EATEN = 0;
+    r_line.APOP = 0;
+    r_line.BPOP = 0;
+    r_line.CPOP = 0;
+    r_line.MEAN_EN = 0;
+    r_line.MEAN_EATEN = 0;
     
     r_line.MAX_NUM_PLACES_EATEN = 0;
     r_line.MEAN_NUM_PLACES_EXPLORED = 0;
@@ -176,7 +179,6 @@ int main(int argc, char **argv) {
   //WorldShow::res_level = 1;
 #endif
 
-  
   int extinction_date = 0;
   char extinct_tribe;
 

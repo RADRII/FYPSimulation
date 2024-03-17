@@ -111,41 +111,99 @@ void set_up_population() {
   setup_record << "POPULATION\n";
   setup_record << "**********\n";
 
+  //3 different types of people
+  //A - does not communicate
+  //B - Only communicates positive information
+  //C - Communicates everything
+
+  //Setup A
   string tribe_name;
   int tribe_size;
 
-  tribe_name = "tribe1";
-  tribe_size = 20; //fiddle
+  tribe_name = "noComm";
+  tribe_size = 15; //fiddle
 
   Population people(tribe_name,tribe_size);
   
-
   // get defaults from first person
   people.population[0]->show_defaults(setup_record);
-
   setup_record << "have " << tribe_name;
-  setup_record << " size " << tribe_size << " ";
+  setup_record << " size " << tribe_size << " \n";
 
 
   people.tribes.push_back('A');
-  //people.egal_tribes.push_back('A');
 
   for(size_t i=0; i < people.population.size(); i++) {
 
     people.population[i]->type = people.tribes[0];
     
-
     people.population[i]->home_loc = all_home_loc[0];
     people.population[i]->loc = people.population[i]->home_loc;
     all_home_loc[0]->occupancy = all_home_loc[0]->occupancy + 1;
+
+    //Tribe specific setups
+    people.population[i]->willCommunicate = false;
   }
+
+  //Setup B
+  tribe_name = "OnlyPos";
+  tribe_size = 15; //fiddle
+
+  Population peopleB(tribe_name,tribe_size);
+
+  setup_record << "have " << tribe_name;
+  setup_record << " size " << tribe_size << " \n";
+
+
+  peopleB.tribes.push_back('B');
+
+  for(size_t i=0; i < peopleB.population.size(); i++) {
+
+    peopleB.population[i]->type = peopleB.tribes[0];
+    
+    peopleB.population[i]->home_loc = all_home_loc[0];
+    peopleB.population[i]->loc = peopleB.population[i]->home_loc;
+    all_home_loc[0]->occupancy = all_home_loc[0]->occupancy + 1;
+
+    //Tribe specific setups
+    peopleB.population[i]->willCommunicate = true;
+    peopleB.population[i]->onlyPos = true;
+  }
+
+  //Setup C
+  tribe_name = "CommAll";
+  tribe_size = 15; //fiddle
+
+  Population peopleC(tribe_name,tribe_size);
+
+  setup_record << "have " << tribe_name;
+  setup_record << " size " << tribe_size << " \n";
+
+  peopleC.tribes.push_back('C');
+
+  for(size_t i=0; i < peopleC.population.size(); i++) {
+
+    peopleC.population[i]->type = peopleC.tribes[0];
+    
+    peopleC.population[i]->home_loc = all_home_loc[0];
+    peopleC.population[i]->loc = peopleC.population[i]->home_loc;
+    all_home_loc[0]->occupancy = all_home_loc[0]->occupancy + 1;
+
+    //Tribe specific setups
+    peopleC.population[i]->willCommunicate = true;
+    peopleC.population[i]->onlyPos = true;
+  }
+
+  //Condense all tribes into one pop
+  people.add(peopleB);
+  people.add(peopleC);
 
   if(tribe_size > 0) {
     setup_record << "CUSTOM: ";
 
-    PerPtr p = people.population[0];
-    setup_record << "type: " << p->type;
-    setup_record << "type:" << p->type;
+    setup_record << "type: " << 'A';
+    setup_record << "type:" << 'B';
+    setup_record << "type:" << 'C';
 
     setup_record << endl;
   }

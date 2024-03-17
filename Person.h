@@ -173,7 +173,6 @@ class Person {
   void show_home_time();
   void show_num_places();
 
-
   int eat_from(CropPatch& c);
   // determine energy update via consuming food from c
   // note: does not update the Person 
@@ -226,15 +225,14 @@ class Population {
 
   vector<Tribe> tribes;
   
-  bool compare_by_index(const int&p1, const int& p2);
   void show_occupancy();
   void show_occupants(LocNode* l);
 
   void collect_subtype(char type, vector<PerPtr>& sub_pop);
 
-  float get_mean_energy(char type);
-  float get_mean_eaten(char type);
-  float get_mean_explore(char type);
+  float get_mean_energy();
+  float get_mean_eaten();
+  float get_mean_explore();
 
   int max_places_eaten = 0;
   int max_places_explored;

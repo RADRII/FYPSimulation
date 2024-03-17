@@ -21,7 +21,7 @@ Person::Person() {
   age=0;
   person_count++;
   identifier = person_count;
-  type = 'A';
+  type = 'N';
   expiry_age = 500;  // will not live beyod this age could die earlier
 
   curiosity = 60.0;
@@ -35,7 +35,7 @@ Person::Person() {
   max_energy = 70;
   sleepEnergyLoss = 15;
   moveCost = 2; //fiddle
-  commCost = 6; //fiddle
+  commCost = 2; //fiddle
   max_daily_eat = 30; //fiddle
 
   willCommunicate = true;
@@ -506,7 +506,7 @@ bool Person::communicate(vector<Person*> population, int date)
       {
         other->mind.receiveCommunication(index, mind.resInfo[i]);
         current_energy = current_energy - commCost;
-        comm_record << date << " " << identifier << " " << other->identifier << " " << mind.knownResources[i]->x << " " << mind.knownResources[i]->y << " " << "TRUE" << endl;
+        comm_record << date << " " << toid() << " " << other->toid() << " " << mind.knownResources[i]->x << " " << mind.knownResources[i]->y << " " << "TRUE" << endl;
         return true;
       }
 
@@ -668,18 +668,43 @@ Population::Population(string name, int size){
 
   id = name;
   hbt = 20;
-  for(int i=0; i < size; i++) {
-    
-
+  for(int i=0; i < size; i++) 
+  {
     Person *p = new Person;
 
     p->age = ((float)i/size) * 500; // unif distrib over ages ?
     if(p->age > 350) { p->num_offspring = 1; }
     p->homeByTime = hbt;
     population.push_back(p);
-
   }
   currentTic = 0;
+}
+
+void Population::add(Population& other)
+{
+  population.insert(population.end(), other.population.begin(), other.population.end());
+  // bring tribes info from other
+  tribes.insert(tribes.end(),other.tribes.begin(), other.tribes.end());
+
+  //shuffle pop
+  //get random order of population
+  int * randomVector;
+  randomVector = new int[population.size()];
+  for (int i = 0; i < population.size(); i++) {
+      randomVector[i] = i;
+  }
+
+  //shuffle
+  gsl_ran_shuffle(r_global, randomVector, population.size(), sizeof(int));
+
+  //Create and establish new pop vector
+  vector<Person*> newPop;
+  for(int i = 0; i < population.size(); i++)
+  {
+    newPop.push_back(population[randomVector[i]]);
+  }
+
+  population = newPop;
 }
 
 void Population::zero_eaten_today() {
@@ -753,8 +778,8 @@ bool Population::update(int date){
   if(population.size() == 0) { // extinction
     r_line.BIRTHS = 0;
     r_line.POP = 0;
-    r_line.A_EN = 0;
-    r_line.A_EATEN = 0;
+    r_line.MEAN_EN = 0;
+    r_line.MEAN_EATEN = 0;
     r_line.MAX_NUM_PLACES_EATEN = 0;
     // no other person related updates are possible so return
     return true;
@@ -797,9 +822,9 @@ bool Population::update(int date){
   /***************************************************************************************************/
   update_by_communication(date);
 
-  r_line.MEAN_NUM_PLACES_EXPLORED = get_mean_explore('A');
-  r_line.A_EN = get_mean_energy('A');
-  r_line.A_EATEN = get_mean_eaten('A');
+  r_line.MEAN_NUM_PLACES_EXPLORED = get_mean_explore();
+  r_line.MEAN_EN = get_mean_energy();
+  r_line.MEAN_EATEN = get_mean_eaten();
 
   //Check for new maxs (stats)
   for(size_t i=0; i < population.size(); i++)  
@@ -822,7 +847,18 @@ bool Population::update(int date){
   int num_births = update_by_repro(); 
   r_line.BIRTHS = num_births;
 
+  //Stats Stuff
   r_line.POP = get_total();
+  
+  vector<Person*> aPop;
+  vector<Person*> bPop;
+  vector<Person*> cPop;
+  collect_subtype('A', aPop);
+  collect_subtype('B', bPop);
+  collect_subtype('C', cPop);
+  r_line.APOP = aPop.size();
+  r_line.BPOP = bPop.size();
+  r_line.CPOP = cPop.size();
 
   return updated;
 }
@@ -1212,24 +1248,24 @@ void Population::EatAction_proc(EatAction *eat_ptr, ActionList& list, int &date,
 
 void Population::collect_subtype(char type, vector<PerPtr>& sub_pop) {
   sub_pop.clear();
-  for(size_t i=0; i < population.size(); i++) {
-    PerPtr p = population[i];
-    if(p->type == type) {
-      sub_pop.push_back(p);
+
+  for(int i=0; i < population.size(); i++) 
+  {
+    if(population[i]->type == type) 
+    {
+      sub_pop.push_back(population[i]);
     }
   }
 }
 
-float Population::get_mean_explore(char type) {
-  vector<PerPtr> sub_pop;
-  collect_subtype(type, sub_pop);
+float Population::get_mean_explore() {
   float m_explore = 0;
-  for(size_t i=0; i < sub_pop.size(); i++) {
-    m_explore += sub_pop[i]->num_places_explored;
+  for(size_t i=0; i < population.size(); i++) {
+    m_explore += population[i]->num_places_explored;
   }
 
-  if(sub_pop.size() > 0) {
-    return m_explore/sub_pop.size();
+  if(population.size() > 0) {
+    return m_explore/population.size();
   }
   else {
     return 0.0;
@@ -1237,16 +1273,14 @@ float Population::get_mean_explore(char type) {
   
 }
 
-float Population::get_mean_eaten(char type) {
-  vector<PerPtr> sub_pop;
-  collect_subtype(type, sub_pop);
+float Population::get_mean_eaten() {
   float m_eaten = 0;
-  for(size_t i=0; i < sub_pop.size(); i++) {
-    m_eaten += sub_pop[i]->eaten_today;
+  for(size_t i=0; i < population.size(); i++) {
+    m_eaten += population[i]->eaten_today;
   }
 
-  if(sub_pop.size() > 0) {
-    return m_eaten/sub_pop.size();
+  if(population.size() > 0) {
+    return m_eaten/population.size();
   }
   else {
     return 0.0;
@@ -1254,16 +1288,14 @@ float Population::get_mean_eaten(char type) {
   
 }
 
-float Population::get_mean_energy(char type) {
-  vector<PerPtr> sub_pop;
-  collect_subtype(type, sub_pop);
+float Population::get_mean_energy() {
   float m_e = 0;
-  for(size_t i=0; i < sub_pop.size(); i++) {
-    m_e += sub_pop[i]->current_energy;
+  for(size_t i=0; i < population.size(); i++) {
+    m_e += population[i]->current_energy;
   }
 
-  if(sub_pop.size() > 0) {
-    return m_e/sub_pop.size();
+  if(population.size() > 0) {
+    return m_e/population.size();
   }
   else {
     return 0.0;
@@ -1396,11 +1428,6 @@ void Population::show(){
 
 int Population::get_total() {
   return population.size();
-
-}
-
-bool Population::compare_by_index(const int& p1_index, const int& p2_index) {
-  return compare_person(population[p1_index], population[p2_index]);
 
 }
 

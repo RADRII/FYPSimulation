@@ -17,8 +17,11 @@ class DayStats {
   int DEATHS_STRANDED;
   int BIRTHS;
   int POP;
-  float A_EN;
-  float A_EATEN;
+  int APOP;
+  int BPOP;
+  int CPOP;
+  float MEAN_EN;
+  float MEAN_EATEN;
   int MAX_NUM_PLACES_EATEN;
   int MEAN_NUM_PLACES_EXPLORED;
   void clear();
