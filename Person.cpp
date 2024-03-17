@@ -497,6 +497,11 @@ bool Person::communicate(vector<Person*> population, int date)
       int index = other->mind.needsKnowledgeOn(mind.knownResources[i], mind.resInfo[i]->isWipeout, mind.resInfo[i]->isPlenty);
 
       //Share the knowledge
+      //IF person is type to only share positive info check if shareinfo is about a wipeout
+      if(onlyPos)
+          if(mind.resInfo[i]->isWipeout)
+            index = -1;
+
       if(index != -1)
       {
         other->mind.receiveCommunication(index, mind.resInfo[i]);
