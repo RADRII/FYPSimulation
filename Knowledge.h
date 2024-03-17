@@ -34,7 +34,8 @@ class Knowledge {
   /* Communication */
   /**********************/
   int needsKnowledgeOn(LocNode* res, bool wipeout, bool plenty);
-  void receiveCommunication(int index, InfoRes* info);
+  void receiveCommunication(int index, InfoRes* info); //receives communication on a known resource
+  void receiveCommunication(LocNode* res, InfoRes* info); //receives communication on a new resource
 
   /**********************/
   /* Wipeout and Plentys */

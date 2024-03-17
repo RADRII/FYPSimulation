@@ -104,6 +104,46 @@ void Knowledge::receiveCommunication(int index, InfoRes* info)
   return;
 }
 
+//takes in communication and updates internal knowledge
+void Knowledge::receiveCommunication(LocNode* res, InfoRes* newInfo)
+{
+  knownResources.push_back(res);
+
+  //Create info about res from taken info
+  InfoRes* info = new InfoRes();
+  info->knownResIndex = knownResources.size() - 1;
+  info->originalSize = 4; //TODO this is hardcoded because I can't be bothered right now. Figure out a smarter way.
+
+  //setup info
+  for(int i = 0; i < newInfo->known_total_of_patches.size(); i++)
+  {
+    info->known_total_of_patches.push_back(newInfo->known_total_of_patches[i]);
+  }
+
+  if(newInfo->isWipeout)
+  {
+    info->isWipeout = true;
+    info->till_non_zero = newInfo->till_non_zero;
+    info->till_normal = newInfo->till_normal;
+    info->wipeOutOrig = TALKING;
+  }
+  else if(info->isPlenty)
+  {
+    info->isPlenty = true;
+    info->till_non_plenty = newInfo->till_non_plenty;
+    info->plentyOrig = TALKING;
+  }
+
+  // Add to info vector
+  resInfo.push_back(info);
+
+  //update internal world
+  internalWorld.getNode(res->x, res->y)->type = RESOURCE;
+  numUnknown = numUnknown - 1;
+
+  return;
+}
+
 int Knowledge::getInfoIndex(LocNode* res)
 {
   for(int i = 0; i < knownResources.size(); i++)

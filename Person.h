@@ -216,7 +216,7 @@ class Population {
 
   void RouteAction_proc(RouteAction *route_ptr, int tic);
   void EatAction_proc(EatAction *eat_ptr,ActionList& list, int& date, int tic);
-  void ExploreAction_proc(ExploreAction *explore_ptr,ActionList& list, int tic);
+  void ExploreAction_proc(ExploreAction *explore_ptr,ActionList& list, int tic, int date);
   void HomeAction_proc(HomeAction *home_ptr, int tic);
   void WaitAction_proc(WaitAction *wait_ptr, int tic);
   

@@ -330,7 +330,7 @@ ActionPtr Person::getNextAction(bool failedEat)
   next->p = this;
 
   if(failedEat)
-    debug_record << identifier << " decided to " << EXPLORE << endl; 
+    debug_record << identifier << " (retry) decided to " << EXPLORE << endl; 
   return next;
 }
 
@@ -453,10 +453,13 @@ bool Person::communicate(vector<Person*> population, int date)
 
   gsl_ran_shuffle(r_global, randomVector, population.size(), sizeof(int));
 
+  int indexToShare = -1;
+  int personIndex = -1;
+
   //try to communicate once
-  for(int i = 0; i < population.size(); i++)
+  for(int o = 0; o < population.size(); o++)
   {
-    PerPtr other = population[randomVector[i]];
+    PerPtr other = population[randomVector[o]];
 
     //if the other person isnt home or has no energy (will be culled after) then dont share
     //they will die soon and it wont be worth it
@@ -467,7 +470,6 @@ bool Person::communicate(vector<Person*> population, int date)
     //if they share a known resource, and the sharer has wipeout/plenty information that the other does not
     //  (and if wipeout check if they can share nonpositive information) then share
     //if they don't share a known resource, see if there is a resource on the edge of the others known map and share its location
-    LocNode* resShare = nullptr;
 
     for(int i = 0; i < mind.knownResources.size(); i++)
     {
@@ -481,7 +483,29 @@ bool Person::communicate(vector<Person*> population, int date)
         comm_record << date << " " << identifier << " " << other->identifier << " " << mind.knownResources[i]->x << " " << mind.knownResources[i]->y << " " << "TRUE" << endl;
         return true;
       }
+
+      //check if possible to share location of resource with neighbor
+      //aka is the resource unknown and is there at least one non obstacle explored neighbor around it (so its reachable)
+      if(indexToShare == -1
+      && other->mind.internalWorld.getNode(mind.knownResources[i]->x, mind.knownResources[i]->y)->type == UNKNOWN
+      && other->mind.internalWorld.hasExploredNeighbors(mind.knownResources[i]))
+      {
+        personIndex = o;
+        indexToShare = i;
+      } 
     }
+  }
+
+  //share location of a new resource if found one to share wipeout/plenty with
+  if(indexToShare != -1)
+  {
+    PerPtr other = population[randomVector[personIndex]];
+    other->mind.receiveCommunication(mind.knownResources[indexToShare], mind.resInfo[indexToShare]);
+    other->num_places_explored = other->num_places_explored + 1;
+
+    current_energy = current_energy - commCost;
+    comm_record << date << " " << identifier << " " << other->identifier << " " << mind.knownResources[indexToShare]->x << " " << mind.knownResources[indexToShare]->y << " " << "FALSE" << endl;
+    return true;
   }
 
   return false;
@@ -893,7 +917,7 @@ void Population::update_by_action(int date, int tic) {
     { 
       ExploreAction *arr_ptr;	
       arr_ptr = (ExploreAction *)a;
-      ExploreAction_proc(arr_ptr,actList,tic);
+      ExploreAction_proc(arr_ptr,actList,tic, date);
       delete a;
       continue;
     }
@@ -959,7 +983,7 @@ void Population::RouteAction_proc(RouteAction *route_ptr, int tic)
 }
 
 //Picks random unexplored direction or tries to go to closest unexplored location
-void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, int tic)
+void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, int tic, int date)
 {
   //Get person related to action and set it as their prev action
   PerPtr p;
@@ -991,6 +1015,7 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
       }
     }
   }
+
   //if we can't get home from any neighbor we need to go home now.
   if(canGetHome == false)
   {
@@ -1028,7 +1053,7 @@ void Population::ExploreAction_proc(ExploreAction *expl_ptr,ActionList& list, in
   else
   {
     vector<LocNode*> pathToClosestUnknown = p->mind.internalWorld.findPathClosestUnexplored(p->loc);
-    toGo = pathToClosestUnknown[0];
+    toGo = pathToClosestUnknown[0]; //////THE ISSUE
   }
 
   int x = toGo->x;
