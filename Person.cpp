@@ -21,7 +21,7 @@ Person::Person() {
   age=0;
   person_count++;
   identifier = person_count;
-  type = 'A';
+  type = 'N';
   expiry_age = 500;  // will not live beyod this age could die earlier
 
   curiosity = 60.0;
@@ -35,7 +35,7 @@ Person::Person() {
   max_energy = 70;
   sleepEnergyLoss = 15;
   moveCost = 2; //fiddle
-  commCost = 6; //fiddle
+  commCost = 2; //fiddle
   max_daily_eat = 30; //fiddle
 
   willCommunicate = true;
@@ -685,6 +685,26 @@ void Population::add(Population& other)
   population.insert(population.end(), other.population.begin(), other.population.end());
   // bring tribes info from other
   tribes.insert(tribes.end(),other.tribes.begin(), other.tribes.end());
+
+  //shuffle pop
+  //get random order of population
+  int * randomVector;
+  randomVector = new int[population.size()];
+  for (int i = 0; i < population.size(); i++) {
+      randomVector[i] = i;
+  }
+
+  //shuffle
+  gsl_ran_shuffle(r_global, randomVector, population.size(), sizeof(int));
+
+  //Create and establish new pop vector
+  vector<Person*> newPop;
+  for(int i = 0; i < population.size(); i++)
+  {
+    newPop.push_back(population[randomVector[i]]);
+  }
+
+  population = newPop;
 }
 
 void Population::zero_eaten_today() {
