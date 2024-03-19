@@ -38,47 +38,59 @@ plot_wipeouts <- function(FileName,First,Last) {
     
 }
 
-plot_deaths_starve <- function(FileName,First,Last) {
+plot_deaths_starve <- function(FileName,First,Last) 
+{
     AllVals <- read.table(FileName,header=T);
     dates = AllVals$DATE[First:Last];
     deaths_starve = AllVals$DEATHS_STARVE[First:Last];
-  plot(dates,deaths_starve);
-    
+
+    plot(dates,deaths_starve,pch='.');
+    lines(dates,deaths_starve,pch='.');
 }
 
 
-plot_deaths_age <- function(FileName,First,Last) {
+plot_deaths_age <- function(FileName,First,Last)
+{
     AllVals <- read.table(FileName,header=T);
     dates = AllVals$DATE[First:Last];
     deaths_age = AllVals$DEATHS_AGE[First:Last];
-  plot(dates,deaths_age,ylim=c(1,30));
-    
+
+    plot(dates,deaths_age,pch='.');
+    lines(dates,deaths_age,pch='.');
 }
 
-mean_people <- function(FileName,First,Last) {
+mean_people <- function(FileName,First,Last)
+{
     AllVals <- read.table(FileName,header=T);
     summary(AllVals$POP[First:Last]);
 }
 
 
     
-plot_people <- function(FileName,First,Last) {
+plot_people <- function(FileName,First,Last) 
+{
     AllVals <- read.table(FileName,header=T);
     dates = AllVals$DATE[First:Last];
     people = AllVals$POP[First:Last];
-    typeA = AllVals$TYPEA[First:Last];
-        typeB = AllVals$TYPEB[First:Last];
-  plot(dates,people,ylim=c(0,max(people)),pch='.');
-    
-  lines(dates,people,pch='.');
+    typeA = AllVals$APOP[First:Last];
+    typeB = AllVals$BPOP[First:Last];
+    typeC = AllVals$CPOP[First:Last];
 
-   points(dates,typeA,pch='.',col="red");
-   lines(dates,typeA,pch='.',col="red");
+    ##plot all people
+    plot(dates,people,ylim=c(0,max(people)),pch='.');
+    lines(dates,people,pch='.');
 
-   points(dates,typeB,pch='.',col="blue");
-   lines(dates,typeB,pch='.',col="blue");
+    points(dates,typeA,pch='.',col="red");
+    lines(dates,typeA,pch='.',col="red");
 
-    
+    points(dates,typeB,pch='.',col="blue");
+    lines(dates,typeB,pch='.',col="blue");
+
+    points(dates,typeC,pch='.',col="green");
+    lines(dates,typeC,pch='.',col="green");
+
+    legend(490, 10, legend=c("Total Pop", "Type A", "Type B", "Type C"),  
+       fill = c("black","red","blue","green"));
 }
 
 mean_new <- function(FileName,First,Last) {
@@ -100,38 +112,6 @@ plot_new <- function(FileName,First,Last) {
 
     ## points(dates,beans,pch='.',col="blue");
     ## lines(dates,beans,pch='.',col="blue");
-
-    
-}
-
-
-plot_hometime <- function(FileName,First,Last) {
-    AllVals <- read.table(FileName,header=T);
-    dates = AllVals$DATE[First:Last];
-    hometime = AllVals$HOMETIME_MAX[First:Last];
-
-  plot(dates,hometime,ylim=c(0,max(hometime)),pch='.');
-    
-  lines(dates,hometime,pch='.');
-
-    
-}
-
-plot_hometime_two <- function(FileName,First,Last) {
-    AllVals <- read.table(FileName,header=T);
-    dates = AllVals$DATE[First:Last];
-    hometime_living= AllVals$HOMETIME_MAX_LIVING[First:Last];
-    hometime_dead= AllVals$HOMETIME_MAX_DEAD[First:Last];
-    vmax = max(c(max(hometime_living),max(hometime_dead)));
-
-  plot(dates,hometime_living,ylim=c(0,vmax),pch='.',col='red');
-    
-  lines(dates,hometime_living,pch='.',col='red');
-
-    points(dates,hometime_dead,pch='.',col="blue");
-    lines(dates,hometime_dead,pch='.',col="blue");
-    
-
 
     
 }
