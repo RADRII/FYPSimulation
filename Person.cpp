@@ -34,8 +34,8 @@ Person::Person() {
   
   max_energy = 70;
   sleepEnergyLoss = 15;
-  moveCost = 2; //fiddle
-  commCost = 2; //fiddle
+  moveCost = 4; //fiddle
+  commCost = 4; //fiddle
   max_daily_eat = 30; //fiddle
 
   willCommunicate = true;
@@ -481,6 +481,10 @@ bool Person::communicate(vector<Person*> population, int date)
   for(int o = 0; o < population.size(); o++)
   {
     PerPtr other = population[randomVector[o]];
+
+    //Don't communicate if other person can't, they're just a freeloader
+    if(!other->willCommunicate)
+      continue;
 
     //if the other person isnt home or has no energy (will be culled after) then dont share
     //they will die soon and it wont be worth it
