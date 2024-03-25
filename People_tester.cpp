@@ -1,4 +1,5 @@
 #include "Resource.h"
+#include "Setups.h"
 #include "Grid.h"
 #include "Person.h"
 #include "Util.h"
@@ -14,9 +15,9 @@
 #include "QtVis/world_show.h"
 #endif
 
-extern bool setup_all_resources_and_locations();
+extern bool setup_all_resources_and_locations(Setups* setup);
 
-extern void set_up_population();
+extern void set_up_population(Setups* setup);
 
 
 
@@ -99,11 +100,21 @@ int main(int argc, char **argv) {
   /* end boilerplate stuff */
 
   /****************************************************/
+  /* CHANGE THIS BASED ON WANTED SETUP                */
+  /* 0 - 15 of a,b,c normal perc wipe/plenty          */
+  /* 1 - 20 of a normal perc wipe/plenty              */
+  /* 2 - 20 of b normal perc wipe/plenty              */
+  /* 3 - 20 of c normal perc wipe/plenty              */
+  /* 4 - 15 of a,b,c high perc wipe/plenty            */
+  /****************************************************/
+  Setups* s = new Setups(0);
+
+  /****************************************************/
   /* SET UP RESOURCES and LOCATIONS                   */
   /* sets up all_home_loc, all_res_entry_loc, all_res */
   /* and  all links                                   */
   /****************************************************/
-  setup_all_resources_and_locations();    
+  setup_all_resources_and_locations(s);    
 
   /****************************************/
   /* first 60 days without any people     */
@@ -167,7 +178,7 @@ int main(int argc, char **argv) {
   /* SET UP POPULATION                   */
   /* sets pop                            */
   /***************************************/
-  set_up_population();
+  set_up_population(s);
   
 #if DEBUG
   pop.show();

@@ -27,8 +27,8 @@ QtVisDir = QtVis
 People_tester.o: People_tester.cpp Person.h Knowledge.h InfoRes.h Resource.h Grid.h Action.h Util.h DayStats.h Debug.h CmdLineVersions.h $(QtVisDir)/world_show.h
 	g++ -std=c++11 $(CPPFLAGS) $(INCPATH) $(QTCXXFLAGS) $(QTINCPATH) -c People_tester.cpp
 
-People_tester: People_tester.o world_setup.o Grid.o Person.o Knowledge.o InfoRes.o Resource.o Action.o Util.o DayStats.o Debug.o CmdLineVersions.o $(QtVisObjects)
-	g++ -std=c++11 $(CPPFLAGS) $(QTCXXFLAGS) $(LIBPATH) People_tester.o world_setup.o Grid.o Person.o Knowledge.o InfoRes.o Resource.o Action.o Util.o DayStats.o Debug.o CmdLineVersions.o $(LIBS) $(QtVisObjects) $(QTLFLAGS) $(QTLIBS) -o People_tester
+People_tester: People_tester.o world_setup.o Grid.o Person.o Knowledge.o InfoRes.o Resource.o Setups.o Action.o Util.o DayStats.o Debug.o CmdLineVersions.o $(QtVisObjects)
+	g++ -std=c++11 $(CPPFLAGS) $(QTCXXFLAGS) $(LIBPATH) People_tester.o world_setup.o Grid.o Person.o Knowledge.o InfoRes.o Resource.o Setups.o Action.o Util.o DayStats.o Debug.o CmdLineVersions.o $(LIBS) $(QtVisObjects) $(QTLFLAGS) $(QTLIBS) -o People_tester
 
 DayStats.o: DayStats.cpp DayStats.h
 	g++ -std=c++11 $(CPPFLAGS) $(INCPATH) -c DayStats.cpp
@@ -52,10 +52,13 @@ Knowledge.o: Knowledge.cpp Knowledge.h InfoRes.h Resource.h Grid.h Util.h Grid.h
 InfoRes.o: InfoRes.cpp InfoRes.h Resource.h
 	g++ -std=c++11 $(CPPFLAGS) $(INCPATH) -c InfoRes.cpp
 
+Setups.o: Setups.cpp Setups.h
+	g++ -std=c++11 $(CPPFLAGS) $(INCPATH) -c Setups.cpp
+
 Person.o: Person.cpp Person.h Knowledge.h InfoRes.h Resource.h Grid.h Util.h DayStats.h Debug.h
 	g++ -std=c++11 $(CPPFLAGS) $(INCPATH) $(LIBPATH) $(QTCXXFLAGS) $(QTINCPATH) -c Person.cpp
 
-world_setup.o: world_setup.cpp Person.h Resource.h Grid.h Action.h Util.h DayStats.h Debug.h
+world_setup.o: world_setup.cpp Person.h Resource.h Grid.h Action.h Util.h DayStats.h Debug.h Setups.h
 	g++ -std=c++11 $(CPPFLAGS) $(INCPATH) -c world_setup.cpp
 
 Action.o: Action.cpp Action.h Grid.h Person.h Resource.h Debug.h

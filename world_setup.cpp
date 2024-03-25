@@ -2,6 +2,7 @@
 #include "Person.h"
 #include "Util.h"
 #include "Debug.h"
+#include "Setups.h"
 #include "Grid.h"
 #include <cmath>
 #include <iostream>
@@ -11,8 +12,8 @@ int numResources = 25;
 int numObstacles = 5;
 int gridSize = 7;
 
-bool setup_all_resources_and_locations();
-void set_up_population();
+bool setup_all_resources_and_locations(Setups* setup);
+void set_up_population(Setups* s);
 
 LocGrid world = LocGrid(gridSize, false);
 vector<LocNode*> all_home_loc;
@@ -24,7 +25,7 @@ vector<LocNode*> all_resource_loc;
 // the Resources creation itself makes the Location objects within each Resources object
 // have to make entry locs first, with specific geometry, to pass to Resources contstructor
 // and get the contained locations in their turn in the right places
-bool setup_all_resources_and_locations() {
+bool setup_all_resources_and_locations(Setups* setup) {
   setup_record << "**************\n";
   setup_record << "GEOMETRY\n";
   setup_record << "**************\n";
@@ -93,6 +94,8 @@ bool setup_all_resources_and_locations() {
   for(int i = 0; i < numResources; i++) {
 
     ResPtr res_ptr = new Resources(i,all_resource_loc[i]->x,all_resource_loc[i]->y,yield,energy_conv,patch_reps[i]);
+    res_ptr->p_wipeout = setup->percentW;
+    res_ptr->p_plenty = setup->percentP;
 
     all_res.push_back(res_ptr);
     // record association of between the resorce and the nodeloc
@@ -105,8 +108,8 @@ bool setup_all_resources_and_locations() {
 
 // sets up the global pop variable
 
-void set_up_population() {
-
+void set_up_population(Setups* setup)
+{
   setup_record << "**********\n";
   setup_record << "POPULATION\n";
   setup_record << "**********\n";
@@ -121,17 +124,18 @@ void set_up_population() {
   int tribe_size;
 
   tribe_name = "noComm";
-  tribe_size = 15; //fiddle
+  tribe_size = setup->numA; //fiddle
 
   Population people(tribe_name,tribe_size);
   
   // get defaults from first person
-  people.population[0]->show_defaults(setup_record);
-  setup_record << "have " << tribe_name;
-  setup_record << " size " << tribe_size << " \n";
-
-
-  people.tribes.push_back('A');
+  if(tribe_size != 0)
+  {
+    people.population[0]->show_defaults(setup_record);
+    setup_record << "have " << tribe_name;
+    setup_record << " size " << tribe_size << " \n";
+    people.tribes.push_back('A');
+  }
 
   for(size_t i=0; i < people.population.size(); i++) {
 
@@ -148,20 +152,21 @@ void set_up_population() {
 
   //Setup B
   tribe_name = "OnlyPos";
-  tribe_size = 15; //fiddle
+  tribe_size = setup->numB; //fiddle
 
   Population peopleB(tribe_name,tribe_size);
 
-  setup_record << "have " << tribe_name;
-  setup_record << " size " << tribe_size << " \n";
+  if(tribe_size != 0)
+  {
+    setup_record << "have " << tribe_name;
+    setup_record << " size " << tribe_size << " \n";
+    peopleB.tribes.push_back('B');
+  }
 
-
-  peopleB.tribes.push_back('B');
 
   for(size_t i=0; i < peopleB.population.size(); i++) {
 
     peopleB.population[i]->type = peopleB.tribes[0];
-    
     peopleB.population[i]->home_loc = all_home_loc[0];
     peopleB.population[i]->loc = peopleB.population[i]->home_loc;
     all_home_loc[0]->occupancy = all_home_loc[0]->occupancy + 1;
@@ -169,20 +174,22 @@ void set_up_population() {
     //Tribe specific setups
     peopleB.population[i]->willCommunicate = true;
     peopleB.population[i]->onlyPos = true;
-    people.population[i]->energyExploreAbove = 25;
-    people.population[i]->communicateAboveEnergy = 20;
+    peopleB.population[i]->energyExploreAbove = 25;
+    peopleB.population[i]->communicateAboveEnergy = 20;
   }
 
   //Setup C
   tribe_name = "CommAll";
-  tribe_size = 15; //fiddle
+  tribe_size = setup->numC; //fiddle
 
   Population peopleC(tribe_name,tribe_size);
 
-  setup_record << "have " << tribe_name;
-  setup_record << " size " << tribe_size << " \n";
-
-  peopleC.tribes.push_back('C');
+  if(tribe_size > 0)
+  {
+    setup_record << "have " << tribe_name;
+    setup_record << " size " << tribe_size << " \n";
+    peopleC.tribes.push_back('C');
+  }
 
   for(size_t i=0; i < peopleC.population.size(); i++) {
 
@@ -195,13 +202,15 @@ void set_up_population() {
     //Tribe specific setups
     peopleC.population[i]->willCommunicate = true;
     peopleC.population[i]->onlyPos = true;
-    people.population[i]->energyExploreAbove = 25;
-    people.population[i]->communicateAboveEnergy = 20;
+    peopleC.population[i]->energyExploreAbove = 25;
+    peopleC.population[i]->communicateAboveEnergy = 20;
   }
 
   //Condense all tribes into one pop
-  people.add(peopleB);
-  people.add(peopleC);
+  if(setup->numB != 0)
+    people.add(peopleB);
+  if(setup->numC != 0)
+    people.add(peopleC);
 
   if(tribe_size > 0) {
     setup_record << "CUSTOM: ";
