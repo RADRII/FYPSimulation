@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
   char extinct_tribe;
 
   int date_max = 0;
-  date_max = 2500; //fiddle
+  date_max = 4000; //fiddle
 
   for(int date=60; date < date_max; date++) {
 

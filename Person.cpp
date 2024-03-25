@@ -27,7 +27,7 @@ Person::Person() {
   curiosity = 60.0;
   homeByTime = 20;
   prevAction = START;
-  energyExploreAbove = 10;
+  energyExploreAbove = 20;
   
   init_energy = 50;
   current_energy = init_energy;
@@ -40,7 +40,7 @@ Person::Person() {
 
   willCommunicate = true;
   onlyPos = false;
-  communicateAboveEnergy = 8;
+  communicateAboveEnergy = 20;
   
   eaten_today = 0;
   repro_age_start = 200;

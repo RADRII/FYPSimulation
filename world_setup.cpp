@@ -143,6 +143,7 @@ void set_up_population() {
 
     //Tribe specific setups
     people.population[i]->willCommunicate = false;
+    people.population[i]->energyExploreAbove = 20;
   }
 
   //Setup B
@@ -168,6 +169,8 @@ void set_up_population() {
     //Tribe specific setups
     peopleB.population[i]->willCommunicate = true;
     peopleB.population[i]->onlyPos = true;
+    people.population[i]->energyExploreAbove = 25;
+    people.population[i]->communicateAboveEnergy = 20;
   }
 
   //Setup C
@@ -192,6 +195,8 @@ void set_up_population() {
     //Tribe specific setups
     peopleC.population[i]->willCommunicate = true;
     peopleC.population[i]->onlyPos = true;
+    people.population[i]->energyExploreAbove = 25;
+    people.population[i]->communicateAboveEnergy = 20;
   }
 
   //Condense all tribes into one pop
